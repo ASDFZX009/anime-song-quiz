@@ -688,7 +688,15 @@ function onGrow(k){
 function onBackfill(k,target){   // keep loading more anime in the background so rounds don't repeat
   const S=onState(k); if(S.backfill) return; S.backfill=true;
   const active=()=>(cat==="online"&&onlineKey===k)||(MP.state==="game"&&MP.cat==="online:"+k);
-  (async()=>{ let g=0; while(active() && S.items.filter(x=>!x.miss).length<target && g++<40 && S.pls && S.pls.length){ await onGrow(k); } S.backfill=false; })();
+  const ready=()=>S.items.filter(x=>memCache["v3|"+x.title+"|"+x.artist]&&!x.played).length;
+  (async()=>{ let g=0;
+    while(active() && ready()<target && g++<60){
+      const todo=S.items.filter(x=>!x.miss&&!x.checking&&!memCache["v3|"+x.title+"|"+x.artist]).slice(0,6);
+      if(todo.length){ for(const x of todo){ x.checking=true; await lookup(x); x.checking=false; } }
+      else if(S.pls && S.pls.length) await onGrow(k); else break;
+      updateOnlineInfo();
+    }
+    S.backfill=false; })();
 }
 async function onEnsure(k,min,prog){
   const S=onState(k); let g=0;
@@ -698,7 +706,7 @@ async function onEnsure(k,min,prog){
 function updateOnlineInfo(){
   const el=$("onInfo"); if(!el) return; const S=onState(onlineKey);
   $("asTypeRow").classList.toggle("hidden",!onlineKey.startsWith("as:"));
-  if(onlineKey.startsWith("as:")){ el.textContent = S.pls ? (onlineKey.startsWith("as:q:") ? `พบอนิเมะ ${S.slots} เรื่องที่ตรงกับคำค้น · โหลดแล้ว ${S.asDone.size} เรื่อง · เพลงในคลัง ${S.items.length} เพลง (เพลงที่ไม่มีเสียงตัวอย่างจะถูกข้าม)` : `อนิเมะในขอบเขตนี้ ~${S.slots.toLocaleString()} เรื่อง · โหลดแล้ว ${S.asDone.size} เรื่อง · เพลงในคลัง ${S.items.length} เพลง (เพิ่มขึ้นทุกรอบ · เพลงที่ไม่มีเสียงตัวอย่างจะถูกข้าม)`) : "กำลังเปิดฐานข้อมูลอนิเมะ…"; if(cat==="online") updatePoolCount(); return; }
+  if(onlineKey.startsWith("as:")){ el.textContent = S.pls ? (onlineKey.startsWith("as:q:") ? `พบอนิเมะ ${S.slots} เรื่องที่ตรงกับคำค้น · โหลดแล้ว ${S.asDone.size} เรื่อง · เพลงในคลัง ${S.items.length} เพลง (เพลงที่ไม่มีเสียงตัวอย่างจะถูกข้าม)` : `อนิเมะในขอบเขตนี้ ~${S.slots.toLocaleString()} เรื่อง · โหลดแล้ว ${S.asDone.size} เรื่อง · เพลงในคลัง ${S.items.length} เพลง · ยืนยันว่ามีเสียงแล้ว ${S.items.filter(x=>memCache["v3|"+x.title+"|"+x.artist]).length} เพลง (เพิ่มขึ้นเรื่อยๆ · เพลงที่ไม่มีเสียงตัวอย่างจะถูกข้าม)${onlineKey==="as:all"?" · เรื่องที่ไม่ดังส่วนใหญ่ไม่มีเสียง จึงโหลดช้ากว่า":""}`) : "กำลังเปิดฐานข้อมูลอนิเมะ…"; if(cat==="online") updatePoolCount(); return; }
   el.textContent = S.pls ? `พร้อมเล่น ${S.items.length.toLocaleString()} เพลง (เพิ่มขึ้นทุกรอบ) · คลังของหมวดนี้ประมาณ ${S.slots.toLocaleString()} เพลง` : "กำลังเปิดคลังเพลง…";
   if(cat==="online") updatePoolCount();
 }
@@ -960,7 +968,7 @@ async function newRound(){
     await onEnsure(key,key.startsWith("as:")?4:12,S=>{ $("msg").textContent=`กำลังเปิดคลังเพลง “${onCat(key).name}” จาก Deezer… ${S.items.length} เพลง`; });
     if(token!==roundToken) return;
     if(!onState(key).items.length){ if(netFail) showProblem("blocked"); else $("msg").textContent="ไม่พบเพลงในหมวดนี้ ลองพิมพ์คำอื่น"; $("play").disabled=false; return; }
-    if(key.startsWith("as:")) onBackfill(key,40); else onGrow(key);   // keep growing in the background
+    if(key.startsWith("as:")) onBackfill(key,20); else onGrow(key);   // keep growing in the background
   }
   else if(diff==="endless"){
     $("play").disabled=true; $("answerChoice").innerHTML=""; $("result").style.display="none";
@@ -979,7 +987,8 @@ async function newRound(){
   const maxTries = (cat==="online"&&onlineKey.startsWith("as:")) ? 15 : 6;
   while(tries<maxTries){
     let cand=p.filter(s=>!recent.includes(s.title)||p.length<=recent.length+1);
-    if(cat==="online"){ const fresh=cand.filter(s=>!s.played); if(fresh.length) cand=fresh; }
+    if(cat==="online"){ const fresh=cand.filter(s=>!s.played); if(fresh.length) cand=fresh;
+      const ok=cand.filter(x=>memCache["v3|"+x.title+"|"+x.artist]); if(ok.length) cand=ok; }   // prefer songs already confirmed to have audio
     const known=cand.filter(x=>x.info||cache["v3|"+x.title+"|"+x.artist]);
     if(Q.waiting>0 && known.length) cand=known;          // Apple queue busy -> prefer songs already loaded
     cand=cand.filter(x=>cache["v3|"+x.title+"|"+x.artist]!==null&&!x.miss); if(!cand.length) cand=p.filter(x=>!x.miss); if(!cand.length) cand=p;
@@ -991,7 +1000,12 @@ async function newRound(){
     if(curInfo) break;
     tries++;
   }
-  if(!curInfo){ showProblem(netFail?"blocked":"none"); $("play").disabled=false; return; }
+  if(!curInfo){
+    if(cat==="online" && onlineKey.startsWith("as:") && !netFail && (newRound.auto=(newRound.auto||0)+1)<=6){
+      $("msg").textContent="🔎 กำลังหาเพลงที่มีเสียงตัวอย่าง… (อนิเมะที่ไม่ค่อยดังหลายเรื่องไม่มีเสียงให้ฟัง)"; onBackfill(onlineKey,20);
+      setTimeout(()=>{ if(token===roundToken) newRound(); },3000); return; }
+    newRound.auto=0; showProblem(netFail?"blocked":"none"); $("play").disabled=false; return; }
+  newRound.auto=0;
   recent.push(cur.title); if(recent.length>Math.min(15,p.length-1)) recent.shift(); cur.played=true;
   hideProblem();
   audio.src=curInfo.preview; audio.load();
@@ -1362,7 +1376,7 @@ function hostPrepare(){
       info= song.info || await lookup(song);
     }
     if(MP.set==="endless") endlessFetchOne();
-    if((MP.cat||"").startsWith("online:")){ const k=MP.cat.slice(7); if(k.startsWith("as:")) onBackfill(k,40); else onGrow(k); }
+    if((MP.cat||"").startsWith("online:")){ const k=MP.cat.slice(7); if(k.startsWith("as:")) onBackfill(k,20); else onGrow(k); }
     return info?{song,info}:null;
   })();
 }
