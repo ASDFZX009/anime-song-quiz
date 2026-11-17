@@ -579,7 +579,7 @@ function onAdd(S,t){
   return true;
 }
 // ================= ANIME: every anime via AniList (anime list) + AniSongDB (its OP/ED/insert songs) =================
-const AS_SCOPES=[{k:"as:top100",pages:2},{k:"as:top500",pages:10},{k:"as:top2000",pages:40},{k:"as:all",pages:400},{k:"as:2020s",pages:20,yFrom:2020},{k:"as:2010s",pages:20,yFrom:2010,yTo:2019},{k:"as:2000s",pages:20,yFrom:2000,yTo:2009},{k:"as:old",pages:20,yTo:1999}];
+const AS_SCOPES=[{k:"as:top100",pages:2},{k:"as:top500",pages:10},{k:"as:top2000",pages:40},{k:"as:all",pages:100,slots:20000,sorts:["POPULARITY_DESC","POPULARITY","ID","ID_DESC","START_DATE","START_DATE_DESC","TITLE_ROMAJI","TITLE_ROMAJI_DESC","SCORE_DESC","SCORE"]},{k:"as:2020s",pages:20,yFrom:2020},{k:"as:2010s",pages:20,yFrom:2010,yTo:2019},{k:"as:2000s",pages:20,yFrom:2000,yTo:2009},{k:"as:old",pages:20,yTo:1999}];
 const AS_NAMES={"as:top100": "🎌 อนิเมะยอดนิยม 100 เรื่องแรก", "as:top500": "🎌 อนิเมะยอดนิยม 500 เรื่อง", "as:top2000": "🎌 อนิเมะยอดนิยม 2,000 เรื่อง", "as:all": "🎌 อนิเมะทุกเรื่อง (~20,000 เรื่อง)", "as:2020s": "🎌 อนิเมะยุค 2020", "as:2010s": "🎌 อนิเมะยุค 2010", "as:2000s": "🎌 อนิเมะยุค 2000", "as:old": "🎌 อนิเมะยุคก่อน 2000"};
 let asTypes={op:true,ed:true,ins:false}; try{ const t=JSON.parse(localStorage.getItem("asq_astypes")); if(t) asTypes=t; }catch(e){}
 async function jfetch(u,opt,ms){ const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms||9000); try{ const r=await fetch(u,{...opt,signal:c.signal}); if(r.status===429){ await sleep(2500); return null; } return r.ok?await r.json():null; }catch(e){ return null; } finally{ clearTimeout(t); } }
@@ -595,7 +595,7 @@ async function asdbSearch(name){
   return Array.isArray(d)?d:[];
 }
 const AL_PAGE=`query($p:Int,$yg:FuzzyDateInt,$yl:FuzzyDateInt){Page(page:$p,perPage:50){media(type:ANIME,sort:POPULARITY_DESC,startDate_greater:$yg,startDate_lesser:$yl){idMal title{romaji english native}}}}`;
-const AL_PAGE_ALL=`query($p:Int){Page(page:$p,perPage:50){media(type:ANIME,sort:POPULARITY_DESC){idMal title{romaji english native}}}}`;
+const AL_PAGE_ALL=`query($p:Int,$s:[MediaSort]){Page(page:$p,perPage:50){media(type:ANIME,sort:$s){idMal title{romaji english native}}}}`;   // AniList serves at most 100 pages per sort order, so "all" mixes several orders
 const AL_SEARCH=`query($q:String){Page(perPage:12){media(type:ANIME,search:$q,sort:SEARCH_MATCH){idMal title{romaji english native}}}}`;
 async function asSongsFor(m){
   let list=(await asdbSearch(m.title.romaji)).filter(x=>x.linked_ids&&+x.linked_ids.myanimelist===m.idMal);
@@ -618,7 +618,7 @@ async function asInit(k,S){
   if(k.startsWith("as:q:")){
     const d=await anilist(AL_SEARCH,{q:k.slice(5)});
     S.asQueue=((d&&d.Page&&d.Page.media)||[]).filter(m=>m.idMal); S.slots=S.asQueue.length; if(!S.asQueue.length) S.pls=[];
-  } else { const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1]; S.slots=sc.pages*50; }
+  } else { const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1]; S.slots=sc.slots||sc.pages*50; }
   return S;
 }
 async function asGrow(k,S){
@@ -628,12 +628,13 @@ async function asGrow(k,S){
     const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1];
     for(let a=0;a<4&&!m;a++){
       const p=1+Math.floor(Math.random()*sc.pages);
-      let pg=S.pageCache[p];
+      const sort=sc.sorts?sc.sorts[Math.floor(Math.random()*sc.sorts.length)]:"POPULARITY_DESC";
+      const ck=sort+"|"+p; let pg=S.pageCache[ck];
       if(!pg){
         // AniList rejects explicit nulls, so only send the date filters a scope actually uses
         const v={p}; if(sc.yFrom) v.yg=(sc.yFrom-1)*10000+1231; v.yl= sc.yTo ? (sc.yTo+1)*10000+101 : 30000101;
-        const d= (sc.yFrom||sc.yTo) ? await anilist(AL_PAGE,v) : await anilist(AL_PAGE_ALL,{p});
-        pg=S.pageCache[p]=((d&&d.Page&&d.Page.media)||[]).filter(x=>x.idMal); }
+        const d= (sc.yFrom||sc.yTo) ? await anilist(AL_PAGE,v) : await anilist(AL_PAGE_ALL,{p,s:[sort]});
+        pg=S.pageCache[ck]=((d&&d.Page&&d.Page.media)||[]).filter(x=>x.idMal); }
       const cand=pg.filter(x=>!S.asDone.has(x.idMal)); if(cand.length) m=cand[Math.floor(Math.random()*cand.length)];
     }
   }
@@ -939,7 +940,7 @@ async function newRound(){
   if(cat==="online"){
     $("play").disabled=true; $("answerChoice").innerHTML=""; $("result").style.display="none";
     const key=onlineKey;
-    await onEnsure(key,12,S=>{ $("msg").textContent=`กำลังเปิดคลังเพลง “${onCat(key).name}” จาก Deezer… ${S.items.length} เพลง`; });
+    await onEnsure(key,key.startsWith("as:")?4:12,S=>{ $("msg").textContent=`กำลังเปิดคลังเพลง “${onCat(key).name}” จาก Deezer… ${S.items.length} เพลง`; });
     if(token!==roundToken) return;
     if(!onState(key).items.length){ if(netFail) showProblem("blocked"); else $("msg").textContent="ไม่พบเพลงในหมวดนี้ ลองพิมพ์คำอื่น"; $("play").disabled=false; return; }
     onGrow(key);   // keep growing in the background
@@ -1321,7 +1322,7 @@ async function hostStart(){
   Object.values(MP.players).forEach(p=>p.score=0);
   MP.state="game"; MP.used=[]; MP.n=0; $("mpStart").disabled=true;
   if(MP.set==="endless"){ await endlessEnsure(15,()=>{ $("mpWait").textContent=`กำลังรวบรวมเพลง… ${endlessPool.length} เพลง`; }); }
-  if(MP.cat.startsWith("online:")){ MP.set="all"; await onEnsure(MP.cat.slice(7),20,S=>{ $("mpWait").textContent=`กำลังเปิดคลังเพลงออนไลน์… ${S.items.length} เพลง`; }); }
+  if(MP.cat.startsWith("online:")){ MP.set="all"; await onEnsure(MP.cat.slice(7),MP.cat.slice(7).startsWith("as:")?8:20,S=>{ $("mpWait").textContent=`กำลังเปิดคลังเพลงออนไลน์… ${S.items.length} เพลง`; }); }
   MP.next=null; hostPrepare();
   $("mpStart").disabled=false;
   hostNextRound();
