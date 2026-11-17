@@ -161,9 +161,12 @@
     </div>
     <div class="row hidden" id="onlineRow" style="margin-bottom:10px">
       <span class="label">หมวดออนไลน์:</span>
-      <select id="onSel"><option value="" disabled>🔍 ค้นหาเอง</option><option value="th-hits">🇹🇭 เพลงไทยฮิต</option><option value="th-luktung">🌾 ลูกทุ่ง</option><option value="th-molam">🪘 หมอลำ / อีสาน</option><option value="th-90s">📼 เพลงไทยยุค 90–2000</option><option value="th-indie">🎸 อินดี้ / ร็อคไทย</option><option value="th-ost">📺 เพลงประกอบละคร/ซีรีส์ไทย</option><option value="th-love">💗 เพลงรักไทย</option><option value="anime">🎌 อนิเมะ</option><option value="ghibli">🏯 Ghibli / Joe Hisaishi</option><option value="jpop">🇯🇵 J-Pop</option><option value="vocaloid">🎤 Vocaloid</option><option value="kpop">🇰🇷 K-Pop</option><option value="kdrama">💔 K-Drama OST</option><option value="cpop">🇨🇳 C-Pop</option><option value="pop">🌎 Pop สากล</option><option value="rock">🤘 Rock</option><option value="metal">💀 Metal</option><option value="hiphop">🎧 Hip-Hop / Rap</option><option value="rnb">💜 R&B / Soul</option><option value="edm">⚡ EDM / Dance</option><option value="latin">💃 Latin</option><option value="country">🤠 Country</option><option value="jazz">🎷 Jazz</option><option value="classical">🎻 Classical</option><option value="reggae">🌴 Reggae</option><option value="indie">🌙 Indie</option><option value="70s">🪩 ยุค 70</option><option value="80s">🕺 ยุค 80</option><option value="90s">💿 ยุค 90</option><option value="2000s">📱 ยุค 2000</option><option value="2010s">🎶 ยุค 2010</option><option value="disney">🏰 Disney</option><option value="movie">🎬 เพลงจากหนัง</option><option value="game">🎮 เพลงเกม</option><option value="tiktok">📲 TikTok / ไวรัล</option><option value="christmas">🎄 คริสต์มาส</option><option value="kids">🧸 เพลงเด็ก</option></select>
-      <input type="text" id="onQ" maxlength="60" placeholder="หรือพิมพ์หมวดเอง เช่น Bodyslam, Ghibli, เพลงรักยุค 90" style="flex:1;min-width:200px">
+      <select id="onSel"><option value="" disabled>🔍 ค้นหาเอง</option><optgroup label="🎌 อนิเมะทุกเรื่อง (ฐานข้อมูล AniSongDB)"><option value="as:top100">🎌 อนิเมะยอดนิยม 100 เรื่องแรก</option><option value="as:top500">🎌 อนิเมะยอดนิยม 500 เรื่อง</option><option value="as:top2000">🎌 อนิเมะยอดนิยม 2,000 เรื่อง</option><option value="as:all">🎌 อนิเมะทุกเรื่อง (~20,000 เรื่อง)</option><option value="as:2020s">🎌 อนิเมะยุค 2020</option><option value="as:2010s">🎌 อนิเมะยุค 2010</option><option value="as:2000s">🎌 อนิเมะยุค 2000</option><option value="as:old">🎌 อนิเมะยุคก่อน 2000</option></optgroup><optgroup label="🌐 หมวดเพลงทั่วไป"><option value="th-hits">🇹🇭 เพลงไทยฮิต</option><option value="th-luktung">🌾 ลูกทุ่ง</option><option value="th-molam">🪘 หมอลำ / อีสาน</option><option value="th-90s">📼 เพลงไทยยุค 90–2000</option><option value="th-indie">🎸 อินดี้ / ร็อคไทย</option><option value="th-ost">📺 เพลงประกอบละคร/ซีรีส์ไทย</option><option value="th-love">💗 เพลงรักไทย</option><option value="anime">🎌 อนิเมะ</option><option value="ghibli">🏯 Ghibli / Joe Hisaishi</option><option value="jpop">🇯🇵 J-Pop</option><option value="vocaloid">🎤 Vocaloid</option><option value="kpop">🇰🇷 K-Pop</option><option value="kdrama">💔 K-Drama OST</option><option value="cpop">🇨🇳 C-Pop</option><option value="pop">🌎 Pop สากล</option><option value="rock">🤘 Rock</option><option value="metal">💀 Metal</option><option value="hiphop">🎧 Hip-Hop / Rap</option><option value="rnb">💜 R&B / Soul</option><option value="edm">⚡ EDM / Dance</option><option value="latin">💃 Latin</option><option value="country">🤠 Country</option><option value="jazz">🎷 Jazz</option><option value="classical">🎻 Classical</option><option value="reggae">🌴 Reggae</option><option value="indie">🌙 Indie</option><option value="70s">🪩 ยุค 70</option><option value="80s">🕺 ยุค 80</option><option value="90s">💿 ยุค 90</option><option value="2000s">📱 ยุค 2000</option><option value="2010s">🎶 ยุค 2010</option><option value="disney">🏰 Disney</option><option value="movie">🎬 เพลงจากหนัง</option><option value="game">🎮 เพลงเกม</option><option value="tiktok">📲 TikTok / ไวรัล</option><option value="christmas">🎄 คริสต์มาส</option><option value="kids">🧸 เพลงเด็ก</option></optgroup></select>
+      <input type="text" id="onQ" maxlength="60" placeholder="พิมพ์ชื่ออนิเมะ (เช่น Naruto, Frieren) หรือหมวดเพลง (เช่น Bodyslam)" style="flex:1;min-width:200px">
       <button class="btn ghost" id="onGo">🔍 สร้างหมวด</button>
+      <button class="btn" id="onAnime">🎌 ค้นหาอนิเมะเรื่องนี้</button>
+      <div class="row hidden" id="asTypeRow" style="width:100%;gap:14px"><span class="label">เพลงจากอนิเมะ:</span>
+        <label><input type="checkbox" id="asOp" checked> OP เพลงเปิด</label><label><input type="checkbox" id="asEd" checked> ED เพลงปิด</label><label><input type="checkbox" id="asIns"> เพลงแทรก</label></div>
       <div class="label" id="onInfo" style="width:100%"></div>
     </div>
     <div class="row" id="diffRow" style="margin-bottom:10px">
@@ -329,7 +332,7 @@
       </div>
       <div id="mpHostSet" class="row hidden" style="margin-top:12px">
         <span class="label">ชุดเพลง</span>
-        <span class="label">หมวด</span><select id="mpCat"><option value="anime">🎌 อนิเมะ</option><option value="thai">🇹🇭 เพลงไทย</option><option value="inter">🌎 สากล</option><option value="kpop">🇰🇷 K-pop</option><option value="mix">🎲 รวมทุกหมวด</option><optgroup label="🌐 คลังออนไลน์"><option value="online:th-hits">🇹🇭 เพลงไทยฮิต</option><option value="online:th-luktung">🌾 ลูกทุ่ง</option><option value="online:th-molam">🪘 หมอลำ / อีสาน</option><option value="online:th-90s">📼 เพลงไทยยุค 90–2000</option><option value="online:th-indie">🎸 อินดี้ / ร็อคไทย</option><option value="online:th-ost">📺 เพลงประกอบละคร/ซีรีส์ไทย</option><option value="online:th-love">💗 เพลงรักไทย</option><option value="online:anime">🎌 อนิเมะ</option><option value="online:ghibli">🏯 Ghibli / Joe Hisaishi</option><option value="online:jpop">🇯🇵 J-Pop</option><option value="online:vocaloid">🎤 Vocaloid</option><option value="online:kpop">🇰🇷 K-Pop</option><option value="online:kdrama">💔 K-Drama OST</option><option value="online:cpop">🇨🇳 C-Pop</option><option value="online:pop">🌎 Pop สากล</option><option value="online:rock">🤘 Rock</option><option value="online:metal">💀 Metal</option><option value="online:hiphop">🎧 Hip-Hop / Rap</option><option value="online:rnb">💜 R&B / Soul</option><option value="online:edm">⚡ EDM / Dance</option><option value="online:latin">💃 Latin</option><option value="online:country">🤠 Country</option><option value="online:jazz">🎷 Jazz</option><option value="online:classical">🎻 Classical</option><option value="online:reggae">🌴 Reggae</option><option value="online:indie">🌙 Indie</option><option value="online:70s">🪩 ยุค 70</option><option value="online:80s">🕺 ยุค 80</option><option value="online:90s">💿 ยุค 90</option><option value="online:2000s">📱 ยุค 2000</option><option value="online:2010s">🎶 ยุค 2010</option><option value="online:disney">🏰 Disney</option><option value="online:movie">🎬 เพลงจากหนัง</option><option value="online:game">🎮 เพลงเกม</option><option value="online:tiktok">📲 TikTok / ไวรัล</option><option value="online:christmas">🎄 คริสต์มาส</option><option value="online:kids">🧸 เพลงเด็ก</option></optgroup></select>
+        <span class="label">หมวด</span><select id="mpCat"><option value="anime">🎌 อนิเมะ</option><option value="thai">🇹🇭 เพลงไทย</option><option value="inter">🌎 สากล</option><option value="kpop">🇰🇷 K-pop</option><option value="mix">🎲 รวมทุกหมวด</option><optgroup label="🎌 อนิเมะทุกเรื่อง"><option value="online:as:top100">🎌 อนิเมะยอดนิยม 100 เรื่องแรก</option><option value="online:as:top500">🎌 อนิเมะยอดนิยม 500 เรื่อง</option><option value="online:as:top2000">🎌 อนิเมะยอดนิยม 2,000 เรื่อง</option><option value="online:as:all">🎌 อนิเมะทุกเรื่อง (~20,000 เรื่อง)</option></optgroup><optgroup label="🌐 คลังออนไลน์"><option value="online:th-hits">🇹🇭 เพลงไทยฮิต</option><option value="online:th-luktung">🌾 ลูกทุ่ง</option><option value="online:th-molam">🪘 หมอลำ / อีสาน</option><option value="online:th-90s">📼 เพลงไทยยุค 90–2000</option><option value="online:th-indie">🎸 อินดี้ / ร็อคไทย</option><option value="online:th-ost">📺 เพลงประกอบละคร/ซีรีส์ไทย</option><option value="online:th-love">💗 เพลงรักไทย</option><option value="online:anime">🎌 อนิเมะ</option><option value="online:ghibli">🏯 Ghibli / Joe Hisaishi</option><option value="online:jpop">🇯🇵 J-Pop</option><option value="online:vocaloid">🎤 Vocaloid</option><option value="online:kpop">🇰🇷 K-Pop</option><option value="online:kdrama">💔 K-Drama OST</option><option value="online:cpop">🇨🇳 C-Pop</option><option value="online:pop">🌎 Pop สากล</option><option value="online:rock">🤘 Rock</option><option value="online:metal">💀 Metal</option><option value="online:hiphop">🎧 Hip-Hop / Rap</option><option value="online:rnb">💜 R&B / Soul</option><option value="online:edm">⚡ EDM / Dance</option><option value="online:latin">💃 Latin</option><option value="online:country">🤠 Country</option><option value="online:jazz">🎷 Jazz</option><option value="online:classical">🎻 Classical</option><option value="online:reggae">🌴 Reggae</option><option value="online:indie">🌙 Indie</option><option value="online:70s">🪩 ยุค 70</option><option value="online:80s">🕺 ยุค 80</option><option value="online:90s">💿 ยุค 90</option><option value="online:2000s">📱 ยุค 2000</option><option value="online:2010s">🎶 ยุค 2010</option><option value="online:disney">🏰 Disney</option><option value="online:movie">🎬 เพลงจากหนัง</option><option value="online:game">🎮 เพลงเกม</option><option value="online:tiktok">📲 TikTok / ไวรัล</option><option value="online:christmas">🎄 คริสต์มาส</option><option value="online:kids">🧸 เพลงเด็ก</option></optgroup></select>
         <select id="mpSet"><option value="all">ทุกระดับ</option><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="endless">♾️ ไม่จำกัด (อนิเมะ)</option></select>
         <span class="label">ทาย</span>
         <select id="mpTarget"><option value="title">ชื่อเพลง</option><option value="anime">ชื่ออนิเมะ</option><option value="artist">ศิลปิน</option><option value="year">ปีที่ออก</option></select>
@@ -548,7 +551,7 @@ function catList(){ return listFor(cat); }
 const ONLINE_CATS=[{"k": "th-hits", "name": "🇹🇭 เพลงไทยฮิต", "q": ["เพลงไทยฮิต", "Thai hits", "T-Pop", "เพลงไทยใหม่"]}, {"k": "th-luktung", "name": "🌾 ลูกทุ่ง", "q": ["ลูกทุ่ง", "Luk Thung", "ลูกทุ่งฮิต"]}, {"k": "th-molam", "name": "🪘 หมอลำ / อีสาน", "q": ["หมอลำ", "เพลงอีสาน", "ลูกทุ่งอีสาน"]}, {"k": "th-90s", "name": "📼 เพลงไทยยุค 90–2000", "q": ["เพลงไทย 90", "Thai 90s", "เพลงไทย 2000", "เพลงเก่าไทย"]}, {"k": "th-indie", "name": "🎸 อินดี้ / ร็อคไทย", "q": ["Thai indie", "Thai rock", "ร็อคไทย"]}, {"k": "th-ost", "name": "📺 เพลงประกอบละคร/ซีรีส์ไทย", "q": ["เพลงประกอบละคร", "GMMTV", "Thai drama OST", "ซีรีส์วาย OST"]}, {"k": "th-love", "name": "💗 เพลงรักไทย", "q": ["เพลงรัก", "เพลงเศร้า", "เพลงอกหัก"]}, {"k": "anime", "name": "🎌 อนิเมะ", "q": ["anime opening", "anisong", "anime ending", "anime hits"]}, {"k": "ghibli", "name": "🏯 Ghibli / Joe Hisaishi", "q": ["Studio Ghibli", "Joe Hisaishi"]}, {"k": "jpop", "name": "🇯🇵 J-Pop", "q": ["J-Pop", "Japanese pop hits", "city pop"]}, {"k": "vocaloid", "name": "🎤 Vocaloid", "q": ["Vocaloid", "Hatsune Miku"]}, {"k": "kpop", "name": "🇰🇷 K-Pop", "q": ["K-Pop", "K-Pop hits", "kpop girl group", "kpop boy group"]}, {"k": "kdrama", "name": "💔 K-Drama OST", "q": ["K-Drama OST", "Korean drama OST"]}, {"k": "cpop", "name": "🇨🇳 C-Pop", "q": ["Mandopop", "C-Pop", "Chinese pop"]}, {"k": "pop", "name": "🌎 Pop สากล", "q": ["Pop hits", "Today's top hits", "pop classics"]}, {"k": "rock", "name": "🤘 Rock", "q": ["Rock classics", "Rock hits", "alternative rock"]}, {"k": "metal", "name": "💀 Metal", "q": ["Metal essentials", "heavy metal"]}, {"k": "hiphop", "name": "🎧 Hip-Hop / Rap", "q": ["Hip hop hits", "Rap hits", "hip hop classics"]}, {"k": "rnb", "name": "💜 R&B / Soul", "q": ["R&B hits", "soul classics"]}, {"k": "edm", "name": "⚡ EDM / Dance", "q": ["EDM hits", "Dance hits", "house music"]}, {"k": "latin", "name": "💃 Latin", "q": ["Reggaeton", "Latin hits"]}, {"k": "country", "name": "🤠 Country", "q": ["Country hits", "country classics"]}, {"k": "jazz", "name": "🎷 Jazz", "q": ["Jazz classics", "jazz standards"]}, {"k": "classical", "name": "🎻 Classical", "q": ["Classical essentials", "classical piano"]}, {"k": "reggae", "name": "🌴 Reggae", "q": ["Reggae", "reggae classics"]}, {"k": "indie", "name": "🌙 Indie", "q": ["Indie hits", "indie pop"]}, {"k": "70s", "name": "🪩 ยุค 70", "q": ["70s hits", "disco"]}, {"k": "80s", "name": "🕺 ยุค 80", "q": ["80s hits"]}, {"k": "90s", "name": "💿 ยุค 90", "q": ["90s hits"]}, {"k": "2000s", "name": "📱 ยุค 2000", "q": ["2000s hits"]}, {"k": "2010s", "name": "🎶 ยุค 2010", "q": ["2010s hits"]}, {"k": "disney", "name": "🏰 Disney", "q": ["Disney songs", "Disney hits"]}, {"k": "movie", "name": "🎬 เพลงจากหนัง", "q": ["Movie soundtracks", "film soundtrack hits"]}, {"k": "game", "name": "🎮 เพลงเกม", "q": ["Video game music", "gaming soundtrack"]}, {"k": "tiktok", "name": "📲 TikTok / ไวรัล", "q": ["TikTok hits", "Viral hits"]}, {"k": "christmas", "name": "🎄 คริสต์มาส", "q": ["Christmas songs"]}, {"k": "kids", "name": "🧸 เพลงเด็ก", "q": ["kids songs", "nursery rhymes"]}];
 const ON={};
 let onlineKey="th-hits"; try{ const k=JSON.parse(localStorage.getItem("asq_onkey")); if(k) onlineKey=k; }catch(e){}
-function onCat(k){ if(k.startsWith("q:")) return {k,name:"🔍 "+k.slice(2),q:[k.slice(2)]}; return ONLINE_CATS.find(c=>c.k===k)||ONLINE_CATS[0]; }
+function onCat(k){ if(k.startsWith("as:q:")) return {k,name:"🎌 "+k.slice(5),q:[]}; if(k.startsWith("as:")) return {k,name:AS_NAMES[k]||"🎌 อนิเมะ",q:[]}; if(k.startsWith("q:")) return {k,name:"🔍 "+k.slice(2),q:[k.slice(2)]}; return ONLINE_CATS.find(c=>c.k===k)||ONLINE_CATS[0]; }
 function onState(k){ return ON[k]||(ON[k]={pls:null,items:[],seen:new Set(),slots:0,busy:null}); }
 let dzOnLast=0;
 async function dzCall(path){
@@ -575,8 +578,69 @@ function onAdd(S,t){
   S.items.push({title,artist,jaArtist:"",anime:"",diff:"medium",year:null,type:"other",series:"",cat:"online",dz:t.id});
   return true;
 }
+// ================= ANIME: every anime via AniList (anime list) + AniSongDB (its OP/ED/insert songs) =================
+const AS_SCOPES=[{k:"as:top100",pages:2},{k:"as:top500",pages:10},{k:"as:top2000",pages:40},{k:"as:all",pages:400},{k:"as:2020s",pages:20,yFrom:2020},{k:"as:2010s",pages:20,yFrom:2010,yTo:2019},{k:"as:2000s",pages:20,yFrom:2000,yTo:2009},{k:"as:old",pages:20,yTo:1999}];
+const AS_NAMES={"as:top100": "🎌 อนิเมะยอดนิยม 100 เรื่องแรก", "as:top500": "🎌 อนิเมะยอดนิยม 500 เรื่อง", "as:top2000": "🎌 อนิเมะยอดนิยม 2,000 เรื่อง", "as:all": "🎌 อนิเมะทุกเรื่อง (~20,000 เรื่อง)", "as:2020s": "🎌 อนิเมะยุค 2020", "as:2010s": "🎌 อนิเมะยุค 2010", "as:2000s": "🎌 อนิเมะยุค 2000", "as:old": "🎌 อนิเมะยุคก่อน 2000"};
+let asTypes={op:true,ed:true,ins:false}; try{ const t=JSON.parse(localStorage.getItem("asq_astypes")); if(t) asTypes=t; }catch(e){}
+async function jfetch(u,opt,ms){ const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms||9000); try{ const r=await fetch(u,{...opt,signal:c.signal}); if(r.status===429){ await sleep(2500); return null; } return r.ok?await r.json():null; }catch(e){ return null; } finally{ clearTimeout(t); } }
+let alLast=0, asLast=0;
+async function anilist(query,variables){
+  for(let a=0;a<2;a++){ const w=alLast+700-Date.now(); if(w>0) await sleep(w); alLast=Date.now();
+    const d=await jfetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({query,variables})}); if(d&&d.data) return d.data; }
+  return null;
+}
+async function asdbSearch(name){
+  const w=asLast+350-Date.now(); if(w>0) await sleep(w); asLast=Date.now();
+  const d=await jfetch("https://anisongdb.com/api/search_request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({anime_search_filter:{search:name,partial_match:true},opening_filter:true,ending_filter:true,insert_filter:true})},10000);
+  return Array.isArray(d)?d:[];
+}
+const AL_PAGE=`query($p:Int,$yg:Int,$yl:Int){Page(page:$p,perPage:50){media(type:ANIME,sort:POPULARITY_DESC,seasonYear_greater:$yg,seasonYear_lesser:$yl){idMal title{romaji english native}}}}`;
+const AL_SEARCH=`query($q:String){Page(perPage:12){media(type:ANIME,search:$q,sort:SEARCH_MATCH){idMal title{romaji english native}}}}`;
+async function asSongsFor(m){
+  let list=(await asdbSearch(m.title.romaji)).filter(x=>x.linked_ids&&+x.linked_ids.myanimelist===m.idMal);
+  if(!list.length&&m.title.english) list=(await asdbSearch(m.title.english)).filter(x=>x.linked_ids&&+x.linked_ids.myanimelist===m.idMal);
+  return list;
+}
+function asAdd(S,x){
+  if(!x||x.isDub||x.isRebroadcast||!x.songName||!x.songArtist) return false;
+  const ty=/^Opening/i.test(x.songType)?"op":/^Ending/i.test(x.songType)?"ed":"other";
+  if(ty==="op"&&!asTypes.op || ty==="ed"&&!asTypes.ed || ty==="other"&&!asTypes.ins) return false;
+  const k="as"+x.annSongId; if(S.seen.has(k)) return false; S.seen.add(k);
+  const main=x.songArtist.replace(/\s*\([^)]*\)/g,"").split(/,|&| x | feat\.?| featuring | with /i)[0].trim();
+  const y=+((x.animeVintage||"").match(/\d{4}/)||[0])[0]||null;
+  const anime=x.animeENName||x.animeJPName;
+  S.items.push({title:x.songName,artist:x.songArtist,jaArtist:main,anime,series:anime,diff:(x.songDifficulty>=55?"easy":x.songDifficulty>=30?"medium":"hard"),year:y,type:ty,cat:"online",asType:x.songType,noApple:true});
+  return true;
+}
+async function asInit(k,S){
+  S.asDone=new Set(); S.pageCache={}; S.pls=[1];
+  if(k.startsWith("as:q:")){
+    const d=await anilist(AL_SEARCH,{q:k.slice(5)});
+    S.asQueue=((d&&d.Page.media)||[]).filter(m=>m.idMal); S.slots=S.asQueue.length; if(!S.asQueue.length) S.pls=[];
+  } else { const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1]; S.slots=sc.pages*50; }
+  return S;
+}
+async function asGrow(k,S){
+  let m=null;
+  if(S.asQueue){ m=S.asQueue.shift(); if(!S.asQueue.length) S.pls=[]; }
+  else {
+    const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1];
+    for(let a=0;a<4&&!m;a++){
+      const p=1+Math.floor(Math.random()*sc.pages);
+      let pg=S.pageCache[p];
+      if(!pg){ const d=await anilist(AL_PAGE,{p,yg:sc.yFrom?sc.yFrom-1:null,yl:sc.yTo?sc.yTo+1:null}); pg=S.pageCache[p]=((d&&d.Page.media)||[]).filter(x=>x.idMal); }
+      const cand=pg.filter(x=>!S.asDone.has(x.idMal)); if(cand.length) m=cand[Math.floor(Math.random()*cand.length)];
+    }
+  }
+  if(!m) return 0;
+  S.asDone.add(m.idMal);
+  const before=S.items.length; (await asSongsFor(m)).forEach(x=>asAdd(S,x));
+  return S.items.length-before;
+}
+
 async function onInit(k){
   const S=onState(k); if(S.pls) return S;
+  if(k.startsWith("as:")) return asInit(k,S);
   const c=onCat(k); const ids=new Map();
   for(const q of c.q){
     const d=await dzCall("/search/playlist?q="+encodeURIComponent(q)+"&limit=25");
@@ -596,6 +660,7 @@ function onGrow(k){
   S.busy=(async()=>{
     await onInit(k);
     if(!S.pls.length) return 0;
+    if(k.startsWith("as:")) return asGrow(k,S);
     const p=S.pls[Math.floor(Math.random()*S.pls.length)];
     const pages=Math.max(1,Math.ceil(Math.min(p.n,2000)/100));
     const d=await dzCall(`/playlist/${p.id}/tracks?limit=100&index=${100*Math.floor(Math.random()*pages)}`);
@@ -606,19 +671,21 @@ function onGrow(k){
 }
 async function onEnsure(k,min,prog){
   const S=onState(k); let g=0;
-  while(S.items.length<min && g++<10){ prog&&prog(S); await onGrow(k); if(S.pls&&!S.pls.length&&S.items.length) break; if(S.pls&&!S.pls.length&&!S.items.length) break; }
+  while(S.items.length<min && g++<(k.startsWith("as:")?20:10)){ prog&&prog(S); await onGrow(k); if(S.pls&&!S.pls.length&&S.items.length) break; if(S.pls&&!S.pls.length&&!S.items.length) break; }
   return S;
 }
 function updateOnlineInfo(){
   const el=$("onInfo"); if(!el) return; const S=onState(onlineKey);
+  $("asTypeRow").classList.toggle("hidden",!onlineKey.startsWith("as:"));
+  if(onlineKey.startsWith("as:")){ el.textContent = S.pls ? (onlineKey.startsWith("as:q:") ? `พบอนิเมะ ${S.slots} เรื่องที่ตรงกับคำค้น · โหลดแล้ว ${S.asDone.size} เรื่อง · เพลงในคลัง ${S.items.length} เพลง (เพลงที่ไม่มีเสียงตัวอย่างจะถูกข้าม)` : `อนิเมะในขอบเขตนี้ ~${S.slots.toLocaleString()} เรื่อง · โหลดแล้ว ${S.asDone.size} เรื่อง · เพลงในคลัง ${S.items.length} เพลง (เพิ่มขึ้นทุกรอบ · เพลงที่ไม่มีเสียงตัวอย่างจะถูกข้าม)`) : "กำลังเปิดฐานข้อมูลอนิเมะ…"; if(cat==="online") updatePoolCount(); return; }
   el.textContent = S.pls ? `พร้อมเล่น ${S.items.length.toLocaleString()} เพลง (เพิ่มขึ้นทุกรอบ) · คลังของหมวดนี้ประมาณ ${S.slots.toLocaleString()} เพลง` : "กำลังเปิดคลังเพลง…";
   if(cat==="online") updatePoolCount();
 }
 function setOnlineKey(k){
   onlineKey=k; try{ localStorage.setItem("asq_onkey",JSON.stringify(k)); }catch(e){}
-  $("onSel").value= k.startsWith("q:") ? "" : k;
+  $("onSel").value= (k.startsWith("q:")||k.startsWith("as:q:")) ? "" : k;
   $("catTitle").textContent=onCat(k).name.replace(/^\S+\s/,"");
-  recent=[]; updateOnlineInfo(); afterSettingsChange();
+  recent=[]; updateOnlineInfo(); if(cat==="online") applyCat(); afterSettingsChange();
 }
 
 const CLUES = [0.1,0.5,2,8,15];
@@ -723,6 +790,7 @@ async function lookup(song){
   // 1) Deezer first: fast and not easily rate-limited
   const dz=await lookupDeezer(song,aOK,tOK);
   if(dz){ memCache[key]=dz; return dz; }
+  if(song.noApple){ song.miss=true; return null; }
   // 2) Apple (throttled queue)
   if(cache[key]===null) return null;
   const term=(song.jaTitle||song.title)+" "+(song.jaArtist||song.artist);
@@ -889,7 +957,7 @@ async function newRound(){
     let cand=p.filter(s=>!recent.includes(s.title)||p.length<=recent.length+1);
     const known=cand.filter(x=>x.info||cache["v3|"+x.title+"|"+x.artist]);
     if(Q.waiting>0 && known.length) cand=known;          // Apple queue busy -> prefer songs already loaded
-    cand=cand.filter(x=>cache["v3|"+x.title+"|"+x.artist]!==null); if(!cand.length) cand=p;
+    cand=cand.filter(x=>cache["v3|"+x.title+"|"+x.artist]!==null&&!x.miss); if(!cand.length) cand=p.filter(x=>!x.miss); if(!cand.length) cand=p;
     cur=cand[Math.floor(Math.random()*cand.length)];
     $("msg").textContent="กำลังโหลดเพลง…";
     curInfo= cur.info || await lookup(cur);
@@ -1094,16 +1162,19 @@ function applyCat(){
   const isAnime=cat==="anime";
   $("endlessChip").classList.toggle("hidden",!isAnime);
   $("fType").classList.toggle("hidden",!isAnime); $("fSeries").classList.toggle("hidden",!isAnime);
-  document.querySelector('[data-target="anime"]').classList.toggle("hidden",!(isAnime||cat==="mix"));
+  const animeDb = isOnline && onlineKey.startsWith("as:");
+  document.querySelector('[data-target="anime"]').classList.toggle("hidden",!(isAnime||cat==="mix"||animeDb));
   if(!isAnime){ F.type="all"; F.series="all"; $("fType").value="all"; $("fSeries").value="all"; }
   if(!isAnime && diff==="endless"){ diff="all"; document.querySelectorAll("[data-diff]").forEach(x=>x.classList.toggle("on",x.dataset.diff==="all")); }
-  if(!(isAnime||cat==="mix") && target==="anime"){ target="title"; document.querySelectorAll("[data-target]").forEach(x=>x.classList.toggle("on",x.dataset.target==="title")); }
+  if(!(isAnime||cat==="mix"||animeDb) && target==="anime"){ target="title"; document.querySelectorAll("[data-target]").forEach(x=>x.classList.toggle("on",x.dataset.target==="title")); }
   updatePoolCount();
 }
 document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{ cat=b.dataset.cat; try{localStorage.setItem("asq_cat",JSON.stringify(cat))}catch(e){} recent=[]; applyCat(); afterSettingsChange(); });
 function afterSettingsChange(){ if(gmode==="daily"){ dailyOpen(); return; } if(gmode==="surv"){ survStart(); return; } if(gmode==="ta"){ taStop(false); stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); $("msg").textContent="กด ▶ เริ่ม 60 วินาที"; return; } newRound(); }
 
 $("onSel").onchange=()=>{ $("onQ").value=""; setOnlineKey($("onSel").value); };
+$("onAnime").onclick=()=>{ const q=$("onQ").value.trim(); if(q.length<2){ $("onQ").focus(); return; } setOnlineKey("as:q:"+q); };
+["asOp","asEd","asIns"].forEach((id,i)=>{ $(id).checked=asTypes[["op","ed","ins"][i]]; $(id).onchange=()=>{ asTypes={op:$("asOp").checked,ed:$("asEd").checked,ins:$("asIns").checked}; if(!asTypes.op&&!asTypes.ed&&!asTypes.ins){ asTypes.op=true; $("asOp").checked=true; } try{localStorage.setItem("asq_astypes",JSON.stringify(asTypes))}catch(e){} Object.keys(ON).filter(k=>k.startsWith("as:")).forEach(k=>delete ON[k]); setOnlineKey(onlineKey); }; });
 $("onGo").onclick=()=>{ const q=$("onQ").value.trim(); if(q.length<2){ $("onQ").focus(); return; } setOnlineKey("q:"+q); };
 $("onQ").addEventListener("keydown",e=>{ if(e.key==="Enter") $("onGo").click(); });
 (function(){ if(!onlineKey.startsWith("q:")) $("onSel").value=onlineKey; else { $("onSel").value=""; $("onQ").value=onlineKey.slice(2); } })();
@@ -1385,8 +1456,9 @@ $("installX").onclick=()=>{ $("installBar").style.display="none"; store.set("asq
 // ================= GAME MODES: normal / time attack / daily =================
 let gmode="normal";
 const TA={on:false,left:60,ok:0,ans:0,last:0,raf:null};
-function boardKey(){ const k = cat==="online" ? "on-"+onlineKey : cat; return k.replace(/^on-q:/,"q-").toLowerCase().normalize("NFKC").replace(/[^a-z0-9ก-๙\-]+/g,"-").slice(0,40)||"x"; }
-function boardName(k){ k=k||boardKey(); if(k.startsWith("on-")) return onCat(k.slice(3)).name; if(k.startsWith("q-")) return "🔍 "+k.slice(2); return CATS[k]||k; }
+const BOARD_NAMES={};
+function boardKey(){ const k = cat==="online" ? "on-"+onlineKey : cat; const key= k.replace(/^on-q:/,"q-").toLowerCase().normalize("NFKC").replace(/[^a-z0-9ก-๙\-]+/g,"-").slice(0,40)||"x"; BOARD_NAMES[key]= cat==="online"?onCat(onlineKey).name:(CATS[cat]||cat); try{ const m=store.get("asq_bnames",{}); if(m[key]!==BOARD_NAMES[key]){ m[key]=BOARD_NAMES[key]; store.set("asq_bnames",m); } }catch(e){} return key; }
+function boardName(k){ k=k||boardKey(); const known=BOARD_NAMES[k]||store.get("asq_bnames",{})[k]; if(known) return known; if(k.startsWith("on-")) return onCat(k.slice(3)).name; if(k.startsWith("q-")) return "🔍 "+k.slice(2); return CATS[k]||k; }
 function setGmode(m){
   gmode=m; document.querySelectorAll("[data-gmode]").forEach(x=>x.classList.toggle("on",x.dataset.gmode===m));
   const daily=m==="daily";
