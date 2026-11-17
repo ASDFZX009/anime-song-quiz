@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0d1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ทายเพลง">
+<meta name="description" content="เกมทายเพลงอนิเมะ ไทย สากล K-pop และคลังออนไลน์ 100,000+ เพลง ไม่มีโฆษณา">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>ทายเพลง — Song Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f0d1a; --panel:#1a1730; --panel2:#24203f; --text:#f3f0ff; --muted:#a59fc7;
+    --accent:#ff4d8d; --accent2:#7c5cff; --good:#2bd98a; --bad:#ff5d5d; --line:#2f2a52;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Prompt,system-ui,sans-serif;background:radial-gradient(1200px 600px at 80% -10%,#3a1d5c 0,transparent 60%),var(--bg);color:var(--text);min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1{font-size:28px;margin:0;font-weight:800;letter-spacing:.5px}
+  h1 span{color:var(--accent)}
+  .stats{display:flex;gap:10px;flex-wrap:wrap}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 14px;text-align:center;min-width:80px}
+  .stat b{display:block;font-size:20px}
+  .stat small{color:var(--muted);font-size:12px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:16px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .chip{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:14px}
+  .chip.on{background:var(--accent2);border-color:var(--accent2)}
+  .label{color:var(--muted);font-size:13px;margin-right:4px}
+  .player{display:flex;flex-direction:column;align-items:center;gap:16px;padding:10px 0}
+  .playbtn{width:110px;height:110px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:42px;box-shadow:0 10px 40px #ff4d8d55;transition:transform .1s}
+  .playbtn:active{transform:scale(.95)}
+  .playbtn:disabled{opacity:.4;cursor:wait}
+  .clues{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .clue{font:inherit;border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:10px;padding:8px 12px;cursor:pointer;min-width:72px}
+  .clue small{display:block;font-size:11px}
+  .clue.unlocked{color:var(--text)}
+  .clue.current{border-color:var(--accent);box-shadow:0 0 0 2px #ff4d8d44 inset}
+  .clue:disabled{opacity:.35;cursor:not-allowed}
+  .bar{width:100%;max-width:420px;height:6px;background:var(--panel2);border-radius:6px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--accent)}
+  .choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  @media(max-width:560px){.choices{grid-template-columns:1fr}}
+  .choice{font:inherit;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:12px 14px;border-radius:12px;cursor:pointer}
+  .choice small{color:var(--muted);display:block;font-size:12px}
+  .choice:hover:not(:disabled){border-color:var(--accent2)}
+  .choice.right{background:#123a2a;border-color:var(--good)}
+  .choice.wrong{background:#3a1515;border-color:var(--bad)}
+  input[type=text],input[type=range]{font:inherit}
+  input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:12px 14px;border-radius:12px}
+  .btn{font:inherit;border:none;border-radius:12px;padding:11px 18px;cursor:pointer;background:var(--accent);color:#fff;font-weight:600}
+  .btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--text);font-weight:400}
+  .result{display:none;gap:14px;align-items:center;margin-top:14px;padding:14px;border-radius:14px;background:var(--panel2)}
+  .result img{width:86px;height:86px;border-radius:10px;object-fit:cover;background:#000}
+  .result h3{margin:0 0 2px}
+  .result p{margin:2px 0;color:var(--muted);font-size:14px}
+  .result a{color:var(--accent)}
+  .msg{text-align:center;color:var(--muted);min-height:22px;font-size:14px}
+  .big{font-size:22px;font-weight:800}
+  .good{color:var(--good)} .bad{color:var(--bad)}
+  details summary{cursor:pointer;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+  td,th{padding:6px;border-bottom:1px solid var(--line);text-align:left}
+  .x{background:none;border:none;color:var(--bad);cursor:pointer}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}
+  .tabs{display:flex;gap:8px;margin-top:16px}
+  .tab{flex:1;font:inherit;font-size:16px;font-weight:600;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--muted);cursor:pointer}
+  .tab.on{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+  .code{font-size:40px;font-weight:800;letter-spacing:8px;color:var(--accent)}
+  .plist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .pl{display:flex;justify-content:space-between;background:var(--panel2);border-radius:10px;padding:8px 12px}
+  .pl.me{outline:1px solid var(--accent2)}
+  .pl .ok{color:var(--good)} .pl .no{color:var(--bad)}
+  select{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px}
+  .choice.picked{border-color:var(--accent2);background:#2c2350}
+  .hidden{display:none!important}
+  .ynq{grid-column:1/-1;text-align:center;font-size:18px;padding:10px;background:var(--panel2);border-radius:12px}
+  .ynq b{color:var(--accent)}
+  button,select,input{touch-action:manipulation}
+  .wrap{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(60px,env(safe-area-inset-bottom))}
+  #installBar{display:none;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--accent2);border-radius:14px;padding:10px 14px;margin-top:12px;font-size:14px}
+  @media(max-width:560px){
+    .wrap{padding-top:14px}
+    h1{font-size:22px}
+    .stats{width:100%;justify-content:space-between}
+    .stat{min-width:0;flex:1;padding:6px 4px}
+    .stat b{font-size:17px}
+    .panel{padding:14px;border-radius:16px}
+    .chip{padding:10px 14px;font-size:15px}
+    .choice{padding:15px 14px;font-size:17px;min-height:56px}
+    .clue{min-width:58px;padding:10px 8px}
+    .btn{padding:13px 18px;font-size:16px}
+    select,input[type=text]{font-size:16px;padding:12px}
+    .playbtn{width:120px;height:120px}
+    .tab{padding:14px 8px;font-size:15px}
+    .result{flex-direction:column;text-align:center}
+    .code{font-size:34px;letter-spacing:6px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎵 ทายเพลง<span id="catTitle">อนิเมะ</span></h1>
+    <div class="stats">
+      <div class="stat"><b id="sScore">0</b><small>คะแนน</small></div>
+      <div class="stat"><b id="sRound">0</b><small>รอบ</small></div>
+      <div class="stat"><b id="sAcc">–</b><small>ถูก %</small></div>
+      <div class="stat"><b id="sStreak">0</b><small>ถูกติดกัน</small></div>
+    </div>
+  </header>
+
+  <div id="installBar"><span style="flex:1">📲 ติดตั้งเกมไว้ที่หน้าจอหลัก เปิดได้เหมือนแอป</span><button class="btn" id="installBtn">ติดตั้ง</button><button class="btn ghost" id="installX">✕</button></div>
+  <div class="tabs"><button class="tab on" id="tabSolo">🎧 เล่นคนเดียว</button><button class="tab" id="tabMp">👥 เล่นกับเพื่อน</button></div>
+  <div id="soloView">
+  <div class="panel" style="padding:10px 14px">
+    <div class="row"><span class="label">โหมด:</span>
+      <button class="chip on" data-gmode="normal">🎯 ปกติ</button>
+      <button class="chip" data-gmode="ta">⏱️ จับเวลา 60 วิ</button>
+      <button class="chip" data-gmode="daily">📅 เพลงประจำวัน</button>
+      <span style="flex:1"></span>
+      <button class="chip" id="statsBtn">🏆 สถิติ & อันดับ</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="row" style="margin-bottom:10px">
+      <span class="label">หมวด:</span>
+      <button class="chip" data-cat="anime">🎌 อนิเมะ</button>
+      <button class="chip" data-cat="thai">🇹🇭 เพลงไทย</button>
+      <button class="chip" data-cat="inter">🌎 สากล</button>
+      <button class="chip" data-cat="kpop">🇰🇷 K-pop</button>
+      <button class="chip" data-cat="mix">🎲 รวมทุกหมวด</button>
+      <button class="chip" data-cat="online">🌐 คลังออนไลน์ 100,000+ เพลง</button>
+    </div>
+    <div class="row hidden" id="onlineRow" style="margin-bottom:10px">
+      <span class="label">หมวดออนไลน์:</span>
+      <select id="onSel"><option value="" disabled>🔍 ค้นหาเอง</option><option value="th-hits">🇹🇭 เพลงไทยฮิต</option><option value="th-luktung">🌾 ลูกทุ่ง</option><option value="th-molam">🪘 หมอลำ / อีสาน</option><option value="th-90s">📼 เพลงไทยยุค 90–2000</option><option value="th-indie">🎸 อินดี้ / ร็อคไทย</option><option value="th-ost">📺 เพลงประกอบละคร/ซีรีส์ไทย</option><option value="th-love">💗 เพลงรักไทย</option><option value="anime">🎌 อนิเมะ</option><option value="ghibli">🏯 Ghibli / Joe Hisaishi</option><option value="jpop">🇯🇵 J-Pop</option><option value="vocaloid">🎤 Vocaloid</option><option value="kpop">🇰🇷 K-Pop</option><option value="kdrama">💔 K-Drama OST</option><option value="cpop">🇨🇳 C-Pop</option><option value="pop">🌎 Pop สากล</option><option value="rock">🤘 Rock</option><option value="metal">💀 Metal</option><option value="hiphop">🎧 Hip-Hop / Rap</option><option value="rnb">💜 R&B / Soul</option><option value="edm">⚡ EDM / Dance</option><option value="latin">💃 Latin</option><option value="country">🤠 Country</option><option value="jazz">🎷 Jazz</option><option value="classical">🎻 Classical</option><option value="reggae">🌴 Reggae</option><option value="indie">🌙 Indie</option><option value="70s">🪩 ยุค 70</option><option value="80s">🕺 ยุค 80</option><option value="90s">💿 ยุค 90</option><option value="2000s">📱 ยุค 2000</option><option value="2010s">🎶 ยุค 2010</option><option value="disney">🏰 Disney</option><option value="movie">🎬 เพลงจากหนัง</option><option value="game">🎮 เพลงเกม</option><option value="tiktok">📲 TikTok / ไวรัล</option><option value="christmas">🎄 คริสต์มาส</option><option value="kids">🧸 เพลงเด็ก</option></select>
+      <input type="text" id="onQ" maxlength="60" placeholder="หรือพิมพ์หมวดเอง เช่น Bodyslam, Ghibli, เพลงรักยุค 90" style="flex:1;min-width:200px">
+      <button class="btn ghost" id="onGo">🔍 สร้างหมวด</button>
+      <div class="label" id="onInfo" style="width:100%"></div>
+    </div>
+    <div class="row" id="diffRow" style="margin-bottom:10px">
+      <span class="label">ระดับ:</span>
+      <button class="chip on" data-diff="all">ทั้งหมด</button>
+      <button class="chip" data-diff="easy">ง่าย</button>
+      <button class="chip" data-diff="medium">กลาง</button>
+      <button class="chip" data-diff="hard">ยาก</button>
+      <button class="chip" data-diff="custom" id="customChip">เพลงของฉัน</button>
+      <button class="chip" data-diff="endless" id="endlessChip">♾️ ไม่จำกัด (หลายพันเพลง)</button>
+    </div>
+    <div class="row" id="filterRow" style="margin-bottom:10px">
+      <span class="label">เลือกเพลง:</span>
+      <select id="fEra"><option value="all">ทุกยุค</option><option value="old">ก่อนปี 2000</option><option value="2000">ยุค 2000–2009</option><option value="2010">ยุค 2010–2019</option><option value="2020">ยุค 2020 ขึ้นไป</option></select>
+      <select id="fType"><option value="all">ทุกประเภท</option><option value="op">OP เพลงเปิด</option><option value="ed">ED เพลงปิด</option><option value="movie">เพลงจากหนัง</option><option value="other">เพลงประกอบอื่นๆ</option></select>
+      <select id="fSeries"><option value="all">ทุกเรื่อง</option></select>
+      <span class="label" id="poolCount"></span>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <span class="label">ทายอะไร:</span>
+      <button class="chip on" data-target="title">🎵 ชื่อเพลง</button>
+      <button class="chip" data-target="anime">📺 ชื่ออนิเมะ</button>
+      <button class="chip" data-target="artist">🎤 ศิลปิน</button>
+      <button class="chip" data-target="year">📅 ปีที่ออก</button>
+    </div>
+    <div class="row">
+      <span class="label">แบบตอบ:</span>
+      <button class="chip on" data-fmt="c4">4 ตัวเลือก</button>
+      <button class="chip" data-fmt="c6">6 ตัวเลือก ×1.25</button>
+      <button class="chip" data-fmt="yn">ใช่ / ไม่ใช่ ×0.5</button>
+      <button class="chip" data-fmt="type">พิมพ์ตอบ ×1.5</button>
+      <span style="flex:1"></span>
+      <span class="label">🔊</span><input type="range" id="vol" min="0" max="1" step="0.05" value="0.7">
+    </div>
+  </div>
+
+  <div class="panel" id="playerPanel">
+    <div id="taBar" class="hidden" style="margin-bottom:12px">
+      <div class="row" style="justify-content:space-between">
+        <span class="big" id="taTime">60.0</span>
+        <span>✅ <b id="taOk">0</b> ข้อ <span class="label">/ ตอบ <span id="taAns">0</span></span></span>
+        <span class="label">สถิติหมวดนี้: <b id="taBest">0</b></span>
+        <button class="btn" id="taStart">▶ เริ่ม 60 วินาที</button>
+      </div>
+      <div class="bar" style="max-width:none;margin-top:8px"><i id="taBarFill" style="width:100%;background:var(--good)"></i></div>
+      <div class="label" style="margin-top:6px">เวลาเดินเฉพาะตอนเพลงพร้อมให้ตอบ (หยุดระหว่างโหลดเพลง) · ใช่/ไม่ใช่ จะถูกเปลี่ยนเป็น 4 ตัวเลือก</div>
+      <div id="taResult" class="hidden" style="margin-top:12px;padding:14px;background:var(--panel2);border-radius:14px;text-align:center"></div>
+    </div>
+    <div class="player">
+      <button class="playbtn" id="play" title="เล่นคลิป">▶</button>
+      <div class="bar"><i id="prog"></i></div>
+      <div class="clues" id="clues"></div>
+      <div id="apiWait" style="display:none;color:var(--muted);font-size:13px">⏳ Apple ให้ค้นหาเพลงได้จำกัด กำลังรอสักครู่แล้วจะลองใหม่เอง…</div>
+      <div id="problem" style="display:none;background:#3a1530;border:1px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.6;max-width:560px"></div>
+      <div class="msg" id="msg">กด ▶ เพื่อฟังคลิป 0.1 วินาที ยิ่งทายได้เร็ว ยิ่งได้คะแนนเยอะ</div>
+    </div>
+
+    <div id="answerChoice" class="choices"></div>
+    <div id="answerType" style="display:none">
+      <div class="row">
+        <input type="text" id="guess" list="songList" placeholder="พิมพ์คำตอบ…" autocomplete="off" style="flex:1">
+        <button class="btn" id="submit">ตอบ</button>
+      </div>
+      <datalist id="songList"></datalist>
+    </div>
+
+    <div class="result" id="result">
+      <img id="rArt" alt="">
+      <div style="flex:1">
+        <div id="rVerdict" class="big"></div>
+        <h3 id="rTitle"></h3>
+        <p id="rInfo"></p>
+        <p><a id="rLink" href="#" target="_blank" rel="noopener">ฟังเต็มเพลง ↗</a></p>
+      </div>
+    </div>
+
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn ghost" id="giveup">ยอมแพ้ / เฉลย</button>
+      <button class="btn" id="next">เพลงถัดไป ⏭</button>
+    </div>
+  </div>
+
+
+  <div class="panel hidden" id="dailyPanel">
+    <div class="row" style="justify-content:space-between">
+      <div><div class="big">📅 เพลงประจำวัน</div><div class="label" id="dDate"></div></div>
+      <div class="label" id="dNext"></div>
+    </div>
+    <div class="label" style="margin:6px 0 10px">ทุกคนได้เพลงเดียวกันในวันนี้ (แยกตามหมวด) · ทายชื่อเพลงให้ได้ภายใน 6 ครั้ง · ผิดหรือข้าม = คลิปยาวขึ้น (1 → 2 → 4 → 7 → 11 → 16 วินาที)</div>
+    <div class="player">
+      <button class="playbtn" id="dPlay">▶</button>
+      <div class="bar"><i id="dProg"></i></div>
+      <div class="clues" id="dSteps"></div>
+      <div class="msg" id="dMsg"></div>
+    </div>
+    <div id="dInput" class="row">
+      <input type="text" id="dGuess" list="dList" placeholder="พิมพ์ชื่อเพลง… (มีรายชื่อขึ้นให้เลือก)" autocomplete="off" style="flex:1;min-width:180px">
+      <button class="btn" id="dSubmit">ตอบ</button>
+      <button class="btn ghost" id="dSkip">ข้าม ⏭</button>
+      <datalist id="dList"></datalist>
+    </div>
+    <div class="plist" id="dHistory" style="margin-top:10px"></div>
+    <div class="result" id="dResult"><img id="dArt" alt=""><div style="flex:1"><div id="dVerdict" class="big"></div><h3 id="dTitle"></h3><p id="dInfo"></p>
+      <pre id="dShareText" style="white-space:pre-wrap;font-family:inherit;background:var(--bg);padding:10px;border-radius:10px;text-align:left"></pre>
+      <button class="btn" id="dShare">📋 คัดลอกผลไปแชร์</button></div></div>
+  </div>
+
+  <div class="panel hidden" id="statsPanel">
+    <div class="row" style="justify-content:space-between"><div class="big">🏆 สถิติ & อันดับ</div><button class="btn ghost" id="statsClose">ปิด</button></div>
+    <div id="myStats" style="margin-top:10px"></div>
+    <h3 style="margin:16px 0 4px">🌍 อันดับโลก — โหมดจับเวลา 60 วิ</h3>
+    <div class="row"><select id="lbBoard"></select><button class="btn ghost" id="lbLoad">🔄 โหลดอันดับ</button></div>
+    <div class="label" style="margin-top:4px">ทดลอง: เก็บผ่านเซิร์ฟเวอร์สาธารณะฟรี อาจหายหรือถูกรีเซ็ตได้ · แสดง 20 อันดับแรก</div>
+    <div class="plist" id="lbList" style="margin-top:8px"></div>
+  </div>
+  <div class="panel">
+    <details>
+      <summary>➕ เพิ่มเพลงของคุณเอง (เก็บไว้ในเบราว์เซอร์นี้)</summary>
+      <div class="row" style="margin-top:10px">
+        <input type="text" id="cTitle" placeholder="ชื่อเพลง เช่น Gurenge" style="flex:2;min-width:160px">
+        <input type="text" id="cArtist" placeholder="ศิลปิน เช่น LiSA" style="flex:1;min-width:120px">
+        <input type="text" id="cAnime" placeholder="อนิเมะ" style="flex:1;min-width:120px">
+        <button class="btn" id="cAdd">เพิ่ม</button>
+      </div>
+      <table id="cTable"></table>
+    </details>
+  </div>
+
+  <div class="panel">
+    <details id="chk">
+      <summary>🔎 ตรวจเพลงทั้งหมด (ดูว่าเพลงไหนมีเสียง)</summary>
+      <div class="row" style="margin-top:10px"><button class="btn" id="chkRun">เริ่มตรวจ</button><span class="label">(Apple ให้ค้นหาได้ ~20 ครั้ง/นาที — ตรวจครบ 100 เพลงใช้เวลาราว 5–8 นาที ครั้งต่อไปจะเร็วเพราะจำไว้แล้ว)</span><span id="chkSum" class="label"></span></div>
+      <table id="chkTable"></table>
+    </details>
+  </div>
+
+  </div>
+  <div id="mpView" class="hidden">
+    <div class="panel" id="mpLobby">
+      <h3 style="margin:0 0 10px">👥 เล่นกับเพื่อน</h3>
+      <div class="row"><span class="label">ชื่อของคุณ</span><input type="text" id="mpName" maxlength="16" placeholder="เช่น Ken" style="flex:1;min-width:160px"></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="mpCreate">➕ สร้างห้อง</button>
+        <span class="label">หรือ</span>
+        <input type="text" id="mpCodeIn" maxlength="5" placeholder="รหัสห้อง 5 ตัว" style="width:150px;text-transform:uppercase">
+        <button class="btn ghost" id="mpJoin">เข้าห้อง</button>
+      </div>
+      <div class="msg" id="mpMsg" style="margin-top:10px"></div>
+    </div>
+
+    <div class="panel hidden" id="mpRoom">
+      <div class="row" style="justify-content:space-between">
+        <div><span class="label">รหัสห้อง</span><div class="code" id="mpCode"></div></div>
+        <div class="row"><button class="btn ghost" id="mpCopy">📋 คัดลอกลิงก์ชวนเพื่อน</button><button class="btn ghost" id="mpLeave">ออกจากห้อง</button></div>
+      </div>
+      <div id="mpHostSet" class="row hidden" style="margin-top:12px">
+        <span class="label">ชุดเพลง</span>
+        <span class="label">หมวด</span><select id="mpCat"><option value="anime">🎌 อนิเมะ</option><option value="thai">🇹🇭 เพลงไทย</option><option value="inter">🌎 สากล</option><option value="kpop">🇰🇷 K-pop</option><option value="mix">🎲 รวมทุกหมวด</option><optgroup label="🌐 คลังออนไลน์"><option value="online:th-hits">🇹🇭 เพลงไทยฮิต</option><option value="online:th-luktung">🌾 ลูกทุ่ง</option><option value="online:th-molam">🪘 หมอลำ / อีสาน</option><option value="online:th-90s">📼 เพลงไทยยุค 90–2000</option><option value="online:th-indie">🎸 อินดี้ / ร็อคไทย</option><option value="online:th-ost">📺 เพลงประกอบละคร/ซีรีส์ไทย</option><option value="online:th-love">💗 เพลงรักไทย</option><option value="online:anime">🎌 อนิเมะ</option><option value="online:ghibli">🏯 Ghibli / Joe Hisaishi</option><option value="online:jpop">🇯🇵 J-Pop</option><option value="online:vocaloid">🎤 Vocaloid</option><option value="online:kpop">🇰🇷 K-Pop</option><option value="online:kdrama">💔 K-Drama OST</option><option value="online:cpop">🇨🇳 C-Pop</option><option value="online:pop">🌎 Pop สากล</option><option value="online:rock">🤘 Rock</option><option value="online:metal">💀 Metal</option><option value="online:hiphop">🎧 Hip-Hop / Rap</option><option value="online:rnb">💜 R&B / Soul</option><option value="online:edm">⚡ EDM / Dance</option><option value="online:latin">💃 Latin</option><option value="online:country">🤠 Country</option><option value="online:jazz">🎷 Jazz</option><option value="online:classical">🎻 Classical</option><option value="online:reggae">🌴 Reggae</option><option value="online:indie">🌙 Indie</option><option value="online:70s">🪩 ยุค 70</option><option value="online:80s">🕺 ยุค 80</option><option value="online:90s">💿 ยุค 90</option><option value="online:2000s">📱 ยุค 2000</option><option value="online:2010s">🎶 ยุค 2010</option><option value="online:disney">🏰 Disney</option><option value="online:movie">🎬 เพลงจากหนัง</option><option value="online:game">🎮 เพลงเกม</option><option value="online:tiktok">📲 TikTok / ไวรัล</option><option value="online:christmas">🎄 คริสต์มาส</option><option value="online:kids">🧸 เพลงเด็ก</option></optgroup></select>
+        <select id="mpSet"><option value="all">ทุกระดับ</option><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="endless">♾️ ไม่จำกัด (อนิเมะ)</option></select>
+        <span class="label">ทาย</span>
+        <select id="mpTarget"><option value="title">ชื่อเพลง</option><option value="anime">ชื่ออนิเมะ</option><option value="artist">ศิลปิน</option><option value="year">ปีที่ออก</option></select>
+        <select id="mpOpts"><option value="4">4 ตัวเลือก</option><option value="6">6 ตัวเลือก</option></select>
+        <span class="label">จำนวนรอบ</span>
+        <select id="mpRounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select>
+        <button class="btn" id="mpStart">▶ เริ่มเกม</button>
+      </div>
+      <div class="msg" id="mpWait" style="margin-top:10px"></div>
+      <div class="plist" id="mpPlayers"></div>
+    </div>
+
+    <div class="panel hidden" id="mpGame">
+      <div class="row" style="justify-content:space-between"><b id="mpRoundLbl"></b><span class="label" id="mpAnswered"></span></div>
+      <div class="bar" style="max-width:none;margin:12px 0"><i id="mpBar"></i></div>
+      <div class="msg" id="mpHint">ฟังแล้วเลือกคำตอบ — ยิ่งตอบเร็วยิ่งได้คะแนนเยอะ</div>
+      <div class="choices" id="mpChoices"></div>
+      <div class="result" id="mpResult"><img id="mpArt" alt=""><div style="flex:1"><div id="mpVerdict" class="big"></div><h3 id="mpTitle"></h3><p id="mpInfo"></p></div></div>
+      <div class="plist" id="mpScores" style="margin-top:12px"></div>
+    </div>
+
+    <div class="panel hidden" id="mpEnd">
+      <h2 style="margin:0 0 6px">🏆 จบเกม!</h2>
+      <div class="plist" id="mpFinal"></div>
+      <div class="row" style="margin-top:14px"><button class="btn hidden" id="mpAgain">เล่นอีกรอบ</button><span class="label" id="mpEndMsg"></span></div>
+    </div>
+  </div>
+
+  <footer>
+    คลิปเสียงเป็นตัวอย่าง 30 วินาทีจาก Deezer / Apple โหลดตรงจากเบราว์เซอร์ของคุณ — ไม่มีโฆษณา ไม่มีการเก็บไฟล์เพลง<br>
+    คะแนน: 0.1s = 1200 · 0.5s = 975 · 2s = 750 · 8s = 525 · 15s = 300 (คูณตามแบบตอบ: 6 ตัวเลือก ×1.25 · ใช่/ไม่ใช่ ×0.5 · พิมพ์ตอบ ×1.5)
+  </footer>
+</div>
+
+<script>
+// ---------------- Song bank ----------------
+const SONGS = [
+  // easy
+  ["Gurenge","LiSA","Demon Slayer","easy","紅蓮華",""],
+  ["unravel","TK from Ling tosite sigure","Tokyo Ghoul","easy","","TK from 凛として時雨"],
+  ["Blue Bird","Ikimonogakari","Naruto Shippuden","easy","ブルーバード","いきものがかり"],
+  ["Guren no Yumiya","Linked Horizon","Attack on Titan","easy","紅蓮の弓矢",""],
+  ["KICK BACK","Kenshi Yonezu","Chainsaw Man","easy","","米津玄師"],
+  ["Idol","YOASOBI","Oshi no Ko","easy"],
+  ["CHA-LA HEAD-CHA-LA","Hironobu Kageyama","Dragon Ball Z","easy","","影山ヒロノブ"],
+  ["We Are!","Hiroshi Kitadani","One Piece","easy","ウィーアー!","きただにひろし"],
+  ["A Cruel Angel's Thesis","Yoko Takahashi","Neon Genesis Evangelion","easy","残酷な天使のテーゼ","高橋洋子"],
+  ["again","YUI","Fullmetal Alchemist: Brotherhood","easy"],
+  ["Silhouette","KANA-BOON","Naruto Shippuden","easy","シルエット",""],
+  ["SPECIALZ","King Gnu","Jujutsu Kaisen","easy"],
+  ["Kaikai Kitan","Eve","Jujutsu Kaisen","easy","廻廻奇譚",""],
+  ["Mixed Nuts","Official HIGE DANdism","Spy x Family","easy","ミックスナッツ","Official髭男dism"],
+  ["Ao no Sumika","Tatsuya Kitani","Jujutsu Kaisen S2","easy","青のすみか","キタニタツヤ"],
+  // medium
+  ["Homura","LiSA","Demon Slayer: Mugen Train","medium","炎",""],
+  ["Shinzou wo Sasageyo!","Linked Horizon","Attack on Titan","medium","心臓を捧げよ!",""],
+  ["Peace Sign","Kenshi Yonezu","My Hero Academia","medium","ピースサイン","米津玄師"],
+  ["THE DAY","Porno Graffitti","My Hero Academia","medium","","ポルノグラフィティ"],
+  ["Bling-Bang-Bang-Born","Creepy Nuts","Mashle","medium"],
+  ["Zankyou Sanka","Aimer","Demon Slayer","medium","残響散歌",""],
+  ["Inferno","Mrs. GREEN APPLE","Fire Force","medium","インフェルノ",""],
+  ["STYX HELIX","MYTH & ROID","Re:Zero","medium"],
+  ["Hacking to the Gate","Kanako Itou","Steins;Gate","medium","","いとうかなこ"],
+  ["Sobakasu","JUDY AND MARY","Rurouni Kenshin","medium","そばかす",""],
+  ["Kyouran Hey Kids!!","THE ORAL CIGARETTES","Noragami Aragoto","medium","狂乱 Hey Kids!!",""],
+  ["Hikaru Nara","Goose house","Your Lie in April","medium","光るなら",""],
+  ["ODD FUTURE","UVERworld","My Hero Academia","medium"],
+  ["My War","Shinsei Kamattechan","Attack on Titan","medium","僕の戦争","神聖かまってちゃん"],
+  ["crossing field","LiSA","Sword Art Online","medium"],
+  // hard
+  ["Tank!","SEATBELTS","Cowboy Bebop","hard","","シートベルツ"],
+  ["Sorairo Days","Shoko Nakagawa","Gurren Lagann","hard","空色デイズ","中川翔子"],
+  ["God knows...","Aya Hirano","The Melancholy of Haruhi Suzumiya","hard","","平野綾"],
+  ["Connect","ClariS","Puella Magi Madoka Magica","hard","コネクト",""],
+  ["only my railgun","fripSide","A Certain Scientific Railgun","hard"],
+  ["Kimi no Shiranai Monogatari","supercell","Bakemonogatari","hard","君の知らない物語",""],
+  ["COLORS","FLOW","Code Geass","hard"],
+  ["IGNITE","Eir Aoi","Sword Art Online II","hard","","藍井エイル"],
+  ["Sign","FLOW","Naruto Shippuden","hard"],
+  ["Rolling star","YUI","Bleach","hard"],
+  ["Asterisk","ORANGE RANGE","Bleach","hard","アスタリスク",""],
+  ["Haruka Kanata","ASIAN KUNG-FU GENERATION","Naruto","hard","遥か彼方",""],
+  ["READY STEADY GO","L'Arc~en~Ciel","Fullmetal Alchemist","hard"],
+  ["Melissa","Porno Graffitti","Fullmetal Alchemist","hard","メリッサ","ポルノグラフィティ"],
+  ["database","MAN WITH A MISSION","Log Horizon","hard"],
+  ["Paradisus-Paradoxum","MYTH & ROID","Re:Zero","hard"],
+  // ---- added: more fan favourites ----
+  ["Yuusha","YOASOBI","Frieren: Beyond Journey's End","easy","勇者",""],
+  ["Shukufuku","YOASOBI","Gundam: The Witch from Mercury","easy","祝福",""],
+  ["Akuma no Ko","Ai Higuchi","Attack on Titan","easy","悪魔の子","ヒグチアイ"],
+  ["Kizuna no Kiseki","MAN WITH A MISSION × milet","Demon Slayer","easy","絆ノ奇跡","MAN WITH A MISSION"],
+  ["Ichizu","King Gnu","Jujutsu Kaisen 0","easy","一途",""],
+  ["Kura Kura","Ado","Spy x Family","easy","クラクラ",""],
+  ["New Genesis","Ado","One Piece Film: Red","easy","新時代",""],
+  ["Otonoke","Creepy Nuts","Dandadan","easy","オトノケ",""],
+  ["Seishun Complex","Kessoku Band","Bocchi the Rock!","easy","青春コンプレックス","結束バンド"],
+  ["Hana ni Natte","Ryokuoushoku Shakai","The Apothecary Diaries","easy","花になって","緑黄色社会"],
+  ["Mezase Pokemon Master","Rica Matsumoto","Pokémon","easy","めざせポケモンマスター","松本梨香"],
+  ["Butter-Fly","Kouji Wada","Digimon Adventure","easy","","和田光司"],
+  ["Jiyuu no Tsubasa","Linked Horizon","Attack on Titan","easy","自由の翼",""],
+  ["GO!!!","FLOW","Naruto","easy","",""],
+  ["Kamado Tanjiro no Uta","Go Shiina","Demon Slayer","easy","竈門炭治郎のうた","椎名豪"],
+  ["Akeboshi","LiSA","Demon Slayer","easy","明け星",""],
+  ["SOUVENIR","BUMP OF CHICKEN","Spy x Family","easy","",""],
+  ["The Rumbling","SiM","Attack on Titan","easy","",""],
+  ["Fighting Gold","Coda","JoJo's Bizarre Adventure","easy","",""],
+  ["departure!","Masatoshi Ono","Hunter x Hunter","easy","","小野正利"],
+  ["Imagination","SPYAIR","Haikyu!!","easy","イマジネーション",""],
+  ["Black Rover","Vickeblanka","Black Clover","easy","ブラックローバー",""],
+  ["LOST IN PARADISE","ALI","Jujutsu Kaisen","medium","",""],
+  ["VIVID VICE","Who-ya Extended","Jujutsu Kaisen","medium","",""],
+  ["CHAINSAW BLOOD","Vaundy","Chainsaw Man","medium","",""],
+  ["Comedy","Gen Hoshino","Spy x Family","medium","喜劇","星野源"],
+  ["Anytime Anywhere","milet","Frieren: Beyond Journey's End","medium","",""],
+  ["Guitar to Kodoku to Aoi Hoshi","Kessoku Band","Bocchi the Rock!","medium","ギターと孤独と蒼い惑星","結束バンド"],
+  ["Mephisto","QUEEN BEE","Oshi no Ko","medium","メフィスト","女王蜂"],
+  ["Red Swan","YOSHIKI feat. HYDE","Attack on Titan","medium","",""],
+  ["katharsis","TK from Ling tosite sigure","Tokyo Ghoul:re","medium","","TK from 凛として時雨"],
+  ["Golden Time Lover","Sukima Switch","Fullmetal Alchemist: Brotherhood","medium","ゴールデンタイムラバー","スキマスイッチ"],
+  ["Rewrite","ASIAN KUNG-FU GENERATION","Fullmetal Alchemist","medium","リライト",""],
+  ["Hologram","NICO Touches the Walls","Fullmetal Alchemist: Brotherhood","medium","ホログラム",""],
+  ["Period","CHEMISTRY","Fullmetal Alchemist: Brotherhood","medium","",""],
+  ["Hero's Come Back!!","nobodyknows+","Naruto Shippuden","medium","",""],
+  ["Diver","NICO Touches the Walls","Naruto Shippuden","medium","",""],
+  ["Ichirin no Hana","HIGH and MIGHTY COLOR","Bleach","medium","一輪の花",""],
+  ["Polaris","BLUE ENCOUNT","My Hero Academia","medium","ポラリス",""],
+  ["Hikari Are","BURNOUT SYNDROMES","Haikyu!!","medium","ヒカリアレ",""],
+  ["Haruka Mirai","Kankaku Piero","Black Clover","medium","ハルカミライ","感覚ピエロ"],
+  ["Sugar Song to Bitter Step","UNISON SQUARE GARDEN","Blood Blockade Battlefront","medium","シュガーソングとビターステップ",""],
+  ["oath sign","LiSA","Fate/Zero","medium","",""],
+  ["Brave Shine","Aimer","Fate/stay night: Unlimited Blade Works","medium","",""],
+  ["Zetsubou Billy","MAXIMUM THE HORMONE","Death Note","medium","絶望ビリー","マキシマム ザ ホルモン"],
+  ["the WORLD","NIGHTMARE","Death Note","medium","","ナイトメア"],
+  ["Renai Circulation","Kana Hanazawa","Bakemonogatari","medium","恋愛サーキュレーション","花澤香菜"],
+  ["Kawaki wo Ameku","Minami","Domestic Girlfriend","medium","カワキヲアメク","美波"],
+  ["Ai wo Torimodose!!","Crystal King","Fist of the North Star","hard","愛をとりもどせ!!","クリスタルキング"],
+  ["JoJo Sono Chi no Sadame","Hiroaki TOMMY Tominaga","JoJo's Bizarre Adventure","hard","ジョジョ〜その血の運命〜","富永TOMMY弘明"],
+  ["Kuusou Mesorogiwi","Yousei Teikoku","Future Diary","hard","空想メソロギヰ","妖精帝国"],
+  ["Hare Hare Yukai","Aya Hirano","The Melancholy of Haruhi Suzumiya","hard","ハレ晴レユカイ","平野綾"],
+  ["Tamashii no Refrain","Yoko Takahashi","Evangelion: Death & Rebirth","hard","魂のルフラン","高橋洋子"],
+  ["Kanashimi wo Yasashisa ni","little by little","Naruto","hard","かなしみをやさしさに",""],
+].map(([title,artist,anime,diff,jaTitle,jaArtist])=>({title,artist,anime,diff,jaTitle,jaArtist}));
+
+
+// year + type for every built-in song (op = opening, ed = ending, movie = film theme, other = insert/character song)
+const META={"Gurenge":[2019,"op"],"unravel":[2014,"op"],"Blue Bird":[2008,"op"],"Guren no Yumiya":[2013,"op"],"KICK BACK":[2022,"op"],"Idol":[2023,"op"],"CHA-LA HEAD-CHA-LA":[1989,"op"],"We Are!":[1999,"op"],"A Cruel Angel's Thesis":[1995,"op"],"again":[2009,"op"],"Silhouette":[2014,"op"],"SPECIALZ":[2023,"op"],"Kaikai Kitan":[2020,"op"],"Mixed Nuts":[2022,"op"],"Ao no Sumika":[2023,"op"],
+"Homura":[2020,"movie"],"Shinzou wo Sasageyo!":[2017,"op"],"Peace Sign":[2017,"op"],"THE DAY":[2016,"op"],"Bling-Bang-Bang-Born":[2024,"op"],"Zankyou Sanka":[2021,"op"],"Inferno":[2019,"op"],"STYX HELIX":[2016,"ed"],"Hacking to the Gate":[2011,"op"],"Sobakasu":[1996,"op"],"Kyouran Hey Kids!!":[2015,"op"],"Hikaru Nara":[2014,"op"],"ODD FUTURE":[2018,"op"],"My War":[2020,"op"],"crossing field":[2012,"op"],
+"Tank!":[1998,"op"],"Sorairo Days":[2007,"op"],"God knows...":[2006,"other"],"Connect":[2011,"op"],"only my railgun":[2009,"op"],"Kimi no Shiranai Monogatari":[2009,"ed"],"COLORS":[2006,"op"],"IGNITE":[2014,"op"],"Sign":[2010,"op"],"Rolling star":[2007,"op"],"Asterisk":[2004,"op"],"Haruka Kanata":[2003,"op"],"READY STEADY GO":[2004,"op"],"Melissa":[2003,"op"],"database":[2013,"op"],"Paradisus-Paradoxum":[2016,"op"],
+"Yuusha":[2023,"op"],"Shukufuku":[2022,"op"],"Akuma no Ko":[2022,"ed"],"Kizuna no Kiseki":[2023,"op"],"Ichizu":[2021,"movie"],"Kura Kura":[2023,"op"],"New Genesis":[2022,"movie"],"Otonoke":[2024,"op"],"Seishun Complex":[2022,"op"],"Hana ni Natte":[2023,"op"],"Mezase Pokemon Master":[1997,"op"],"Butter-Fly":[1999,"op"],"Jiyuu no Tsubasa":[2013,"op"],"GO!!!":[2004,"op"],"Kamado Tanjiro no Uta":[2019,"other"],"Akeboshi":[2021,"op"],"SOUVENIR":[2022,"op"],"The Rumbling":[2022,"op"],"Fighting Gold":[2018,"op"],"departure!":[2011,"op"],"Imagination":[2014,"op"],"Black Rover":[2017,"op"],
+"LOST IN PARADISE":[2020,"ed"],"VIVID VICE":[2021,"op"],"CHAINSAW BLOOD":[2022,"ed"],"Comedy":[2022,"ed"],"Anytime Anywhere":[2023,"ed"],"Guitar to Kodoku to Aoi Hoshi":[2022,"other"],"Mephisto":[2023,"ed"],"Red Swan":[2018,"op"],"katharsis":[2018,"op"],"Golden Time Lover":[2009,"op"],"Rewrite":[2004,"op"],"Hologram":[2009,"op"],"Period":[2010,"op"],"Hero's Come Back!!":[2007,"op"],"Diver":[2010,"op"],"Ichirin no Hana":[2005,"op"],"Polaris":[2019,"op"],"Hikari Are":[2016,"op"],"Haruka Mirai":[2017,"op"],"Sugar Song to Bitter Step":[2015,"ed"],"oath sign":[2011,"op"],"Brave Shine":[2015,"op"],"Zetsubou Billy":[2007,"ed"],"the WORLD":[2006,"op"],"Renai Circulation":[2009,"op"],"Kawaki wo Ameku":[2019,"op"],
+"Ai wo Torimodose!!":[1984,"op"],"JoJo Sono Chi no Sadame":[2012,"op"],"Kuusou Mesorogiwi":[2011,"op"],"Hare Hare Yukai":[2006,"ed"],"Tamashii no Refrain":[1997,"movie"],"Kanashimi wo Yasashisa ni":[2003,"ed"]};
+const SERIES_RULES=[[/naruto/i,"Naruto"],[/fullmetal/i,"Fullmetal Alchemist"],[/demon slayer/i,"Demon Slayer"],[/jujutsu/i,"Jujutsu Kaisen"],[/attack on titan/i,"Attack on Titan"],[/sword art/i,"Sword Art Online"],[/tokyo ghoul/i,"Tokyo Ghoul"],[/evangelion/i,"Evangelion"],[/haruhi/i,"Haruhi Suzumiya"],[/one piece/i,"One Piece"],[/re:zero/i,"Re:Zero"],[/frieren/i,"Frieren"],[/bocchi/i,"Bocchi the Rock!"],[/fate/i,"Fate"],[/monogatari/i,"Monogatari"]];
+function seriesOf(a){ a=a||""; for(const [re,n] of SERIES_RULES) if(re.test(a)) return n; return a; }
+SONGS.forEach(s=>{ const m=META[s.title]; s.year=m?m[0]:null; s.type=m?m[1]:"other"; s.series=seriesOf(s.anime); });
+// [title, artist, year(0 = unknown), alias for artist (optional)]
+const THAI_RAW=[
+["ฝนตกไหม","Three Man Down",2020],["ถ้าเธอรักใครคนหนึ่ง","Ink Waruntorn",2019,"อิ้งค์ วรันธร"],["ลาลาลอย","The TOYS",2019],["ก่อนฤดูฝน","The TOYS",2018],
+["ความเชื่อ","Bodyslam",2008,"บอดี้สแลม"],["แสงสุดท้าย","Bodyslam",2005,"บอดี้สแลม"],["ยาพิษ","Bodyslam",2007,"บอดี้สแลม"],
+["ทรงอย่างแบด","Paper Planes",2021],["ดาวหางฮัลเลย์","fellow fellow",2020],["เล่นของสูง","Big Ass",2005,"บิ๊กแอส"],["ทางของฝุ่น","Atom Chanakan",2018,"อะตอม ชนกันต์"],
+["Good Morning Teacher","Atom Chanakan",2014,"อะตอม ชนกันต์"],
+["เรื่องที่ขอ","Lula",0,"ลุลา"],["โต๊ะริม","Nont Tanont",2019,"นนท์ ธนนท์"],["แค่คุณ","Musketeers",2019],
+["เวลาเธอยิ้ม","Polycat",2016],["ไม่บอกเธอ","Bedroom Audio",2012],["โปรดส่งใครมารักฉันที","Instinct",0],
+["ทุกอย่าง","Scrubb",0],["ขี้หึง","Silly Fools",0],["ซมซาน","Loso",0],["ทิ้งไว้กลางทาง","Potato",0,"โปเตโต้"],
+["ซ่อนกลิ่น","Palmy",2004,"ปาล์มมี่"],["ฝากฟ้าทะเลฝัน","Thongchai McIntyre",0,"เบิร์ด ธงไชย"],
+
+["เพื่อนเล่น ไม่เล่นเพื่อน","Tilly Birds",2020],["คิดมาก","Palmy",0,"ปาล์มมี่"],["รักแท้ ดูแลไม่ได้","Potato",0,"โปเตโต้"],
+["เราและนาย","Loso",0],["ขอบฟ้า","Bodyslam",0,"บอดี้สแลม"],
+["มันเป็นใคร","Polycat",0],["พบกันใหม่","Polycat",0],["ถ้าเราเจอกันอีก","Tilly Birds",2020],["Ghost","Jeff Satur",2022],["Why Don't You Stay","Jeff Satur",2022],
+["สุดปัง","MILLI",0],["คราม","Bodyslam",0,"บอดี้สแลม"],["ชีวิตยังคงสวยงาม","Bodyslam",0,"บอดี้สแลม"],["คิดถึง","Bodyslam",0,"บอดี้สแลม"],["คู่กัด","Thongchai McIntyre",0,"เบิร์ด ธงไชย"],
+["สบาย สบาย","Thongchai McIntyre",0,"เบิร์ด ธงไชย"],["ใกล้","Scrubb",0],["ใจสั่งมา","Loso",0],["เกี่ยวกันไหม","Ink Waruntorn",0,"อิ้งค์ วรันธร"],["เพลงรัก","Three Man Down",0],["อยู่ตรงนี้ นานกว่านี้","Getsunova",0,"เก็ตสึโนวา"]];
+const INTER_RAW=[
+["Shape of You","Ed Sheeran",2017],["Perfect","Ed Sheeran",2017],["Thinking Out Loud","Ed Sheeran",2014],["Photograph","Ed Sheeran",2014],["Shivers","Ed Sheeran",2021],
+["Blinding Lights","The Weeknd",2019],["bad guy","Billie Eilish",2019],["lovely","Billie Eilish",2018],["BIRDS OF A FEATHER","Billie Eilish",2024],
+["Someone Like You","Adele",2011],["Rolling in the Deep","Adele",2010],["Uptown Funk","Mark Ronson",2014],["Despacito","Luis Fonsi",2017],["See You Again","Wiz Khalifa",2015],
+["Happy","Pharrell Williams",2013],["Let It Go","Idina Menzel",2013],["Shallow","Lady Gaga",2018],["Bad Romance","Lady Gaga",2009],["Poker Face","Lady Gaga",2008],
+["Die With A Smile","Lady Gaga",2024],["Love Story","Taylor Swift",2008],["Shake It Off","Taylor Swift",2014],["Anti-Hero","Taylor Swift",2022],["Cruel Summer","Taylor Swift",2019],
+["Flowers","Miley Cyrus",2023],["drivers license","Olivia Rodrigo",2021],["good 4 u","Olivia Rodrigo",2021],["As It Was","Harry Styles",2022],["Watermelon Sugar","Harry Styles",2019],
+["Levitating","Dua Lipa",2020],["Don't Start Now","Dua Lipa",2019],["STAY","The Kid LAROI",2021],["Peaches","Justin Bieber",2021],["Baby","Justin Bieber",2010],["Sorry","Justin Bieber",2015],
+["Señorita","Shawn Mendes",2019],["Attention","Charlie Puth",2017],["We Don't Talk Anymore","Charlie Puth",2016],["Counting Stars","OneRepublic",2013],
+["Viva La Vida","Coldplay",2008],["Yellow","Coldplay",2000],["Fix You","Coldplay",2005],["Closer","The Chainsmokers",2016],
+["Believer","Imagine Dragons",2017],["Radioactive","Imagine Dragons",2012],["Thunder","Imagine Dragons",2017],["Numb","Linkin Park",2003],["In the End","Linkin Park",2000],
+["Mr. Brightside","The Killers",2004],["Smells Like Teen Spirit","Nirvana",1991],["Bohemian Rhapsody","Queen",1975],["Billie Jean","Michael Jackson",1982],
+["Hotel California","Eagles",1976],["Sweet Child O' Mine","Guns N' Roses",1987],["Livin' On A Prayer","Bon Jovi",1986],["I Will Always Love You","Whitney Houston",1992],
+["...Baby One More Time","Britney Spears",1998],["Toxic","Britney Spears",2003],["I Want It That Way","Backstreet Boys",1999],
+["Wannabe","Spice Girls",1996],["Umbrella","Rihanna",2007],["Diamonds","Rihanna",2012],["Halo","Beyoncé",2008],["Crazy In Love","Beyoncé",2003],["Firework","Katy Perry",2010],
+["Roar","Katy Perry",2013],["All of Me","John Legend",2013],["Just the Way You Are","Bruno Mars",2010],["Grenade","Bruno Mars",2010],["24K Magic","Bruno Mars",2016],
+["Espresso","Sabrina Carpenter",2024],["Calm Down","Rema",2022],["Unholy","Sam Smith",2022],["Stay With Me","Sam Smith",2014],["Wake Me Up","Avicii",2013],["Faded","Alan Walker",2015],
+["Let Her Go","Passenger",2012],["Payphone","Maroon 5",2012],["Memories","Maroon 5",2019],["Someone You Loved","Lewis Capaldi",2018],
+["Heat Waves","Glass Animals",2020],["Old Town Road","Lil Nas X",2019],["Dance Monkey","Tones And I",2019]];
+const KPOP_RAW=[
+["Dynamite","BTS",2020],["Butter","BTS",2021],["Boy With Luv","BTS",2019],["Spring Day","BTS",2017],["Seven","Jung Kook",2023],
+["DDU-DU DDU-DU","BLACKPINK",2018],["Kill This Love","BLACKPINK",2019],
+["APT.","ROSÉ",2024],["Gangnam Style","PSY",2012],["Gee","Girls' Generation",2009],
+["FANCY","TWICE",2019],["TT","TWICE",2016],["What is Love?","TWICE",2018],["LOVE DIVE","IVE",2022],["After LIKE","IVE",2022],["I AM","IVE",2023],
+["Hype Boy","NewJeans",2022],["Ditto","NewJeans",2022],["Super Shy","NewJeans",2023],["OMG","NewJeans",2023],["ANTIFRAGILE","LE SSERAFIM",2022],["UNFORGIVEN","LE SSERAFIM",2023],
+["Queencard","(G)I-DLE",2023],["TOMBOY","(G)I-DLE",2022],["Next Level","aespa",2021],["Psycho","Red Velvet",2019],
+["Red Flavor","Red Velvet",2017],["Cupid","FIFTY FIFTY",2023],["BANG BANG BANG","BIGBANG",2015],["FANTASTIC BABY","BIGBANG",2012],
+["LOVE SCENARIO","iKON",2018],["Very Nice","SEVENTEEN",2016],["Magnetic","ILLIT",2024],];
+
+const CATS={online:"🌐 คลังออนไลน์",anime:"🎌 อนิเมะ",thai:"🇹🇭 เพลงไทย",inter:"🌎 สากล",kpop:"🇰🇷 K-pop",mix:"🎲 รวมทุกหมวด"};
+const CAT_TITLE={online:"ออนไลน์",anime:"อนิเมะ",thai:"ไทย",inter:"สากล",kpop:"K-pop",mix:"ฮิต"};
+function mkExtra(raw,c){ return raw.map(([title,artist,year,alias])=>{ const y=year||null;
+  const d = c==="thai" ? (y>=2015?"easy":(y&&y<2005?"hard":"medium")) : (y>=2016?"easy":(y>=2005?"medium":"hard"));
+  return {title,artist,jaArtist:alias||"",anime:"",diff:d,year:y,type:"other",series:"",cat:c}; }); }
+SONGS.forEach(s=>s.cat="anime");
+
+// ---- more songs collected from Deezer: [title, artist, year, deezer track id, difficulty e/m/h] ----
+const DZ={"anime":[["AIZO","King Gnu",2026,3710089132,"e"],["IRIS OUT","Kenshi Yonezu",2025,3540533651,"e"],["夜に駆ける","YOASOBI",2019,824731152,"e"],["Mirage","Creepy Nuts",2025,3440829701,"e"],["DARK ARIA <LV2>","SawanoHiroyuki[nZk]",2024,2615305912,"e"],["ReawakeR (feat. Felix of Stray Kids)","LiSA",2025,3126427261,"e"],["怪物","YOASOBI",2021,1171495792,"e"],["Attack on Titan","Hiroyuki Sawano",2014,367620991,"e"],["Daten","Creepy Nuts",2022,1799810607,"e"],["Cry Baby","OFFICIAL HIGE DANDISM",2021,1347377252,"e"],["Fatal","GEMN",2024,2867731472,"e"],["Yofukashino Uta","Creepy Nuts",2019,976219862,"e"],["Hotarunohikari","Ikimonogakari",2009,975958552,"e"],["JANE DOE","Kenshi Yonezu",2025,3557642081,"e"],["Under the Tree","SiM",2023,2152253197,"e"],["Chikyugi - Spinning Globe","Kenshi Yonezu",2023,2353060455,"e"],["たぶん","YOASOBI",2020,1002378782,"e"],["Mukanjyo","Survive Said The Prophet",2019,975899312,"e"],["Ranbu No Melody","SID",2010,975992652,"e"],["Sora Ni Utaeba","amazarashi",2017,976227682,"e"],["Wild Side","ALI",2019,1024948992,"e"],["FLY HIGH!!","BURNOUT SYNDROMES",2016,976022032,"e"],["LEveL","SawanoHiroyuki[nZk]",2024,2588892792,"e"],["Sunny","Yorushika",2024,2595471032,"e"],["Hadaka No Yusha","Vaundy",2022,1590096692,"e"],["Rain","SID",2010,976068472,"e"],["Re:Re:","Asian Kung-Fu Generation",2004,1100590722,"e"],["Perfect Time","Hiroyuki Sawano",2014,1220973532,"e"],["Daddy ! Daddy ! Do !","Masayuki Suzuki",2020,1100264192,"e"],["Limit Break x Survivor","Kiyoshi Hikawa",2017,2328649655,"e"],["Shoukei to Shikabane no Michi","Linked Horizon",2019,1195131122,"e"],["White Noise","OFFICIAL HIGE DANDISM",2023,2073424367,"e"],["Driver's High","L'Arc-en-Ciel",1999,976294042,"e"],["QUEEN","LiSA",2024,3017302601,"e"],["TAIDADA","ZUTOMAYO",2024,3017892051,"e"],["Tagatame","TK from Ling tosite sigure",2024,2754150751,"e"],["Sakayume","King Gnu",2021,1591373282,"e"],["Kasuka na Hana","Tatsuya Kitani",2026,3758072732,"e"],["Avid","SawanoHiroyuki[nZk]",2021,1331089312,"e"],["Core Pride","UVERworld",2011,976372622,"e"],["Love Dramatic","Masayuki Suzuki",2019,976086872,"e"],["Same Blue","OFFICIAL HIGE DANDISM",2024,2992910741,"e"],["Prayer X","King Gnu",2018,975887152,"e"],["All Night Radio","Ado",2023,2491186731,"e"],["saikai","Vaundy",2025,3438914441,"e"],["Red Swan - TV Edit -","Yoshiki",2018,531924711,"e"],["Fairy Tail ～Yakusoku No Hi～","Chihiro Yonekura",2017,367621651,"e"],["Gurenge -TV version-","LiSA",2019,976228212,"e"],["UNDEAD","YOASOBI",2024,2854241052,"e"],["Starmarker","KANA-BOON",2020,1024973872,"e"],["PAPERMOON","Tommy heavenly6",2008,975978682,"m"],["The Story of Us","milet",2026,3735164422,"m"],["BOY","King Gnu",2021,1509640142,"m"],["Kaze","YAMAZARU",2015,975901382,"m"],["PHOENIX","BURNOUT SYNDROMES",2021,1400300352,"m"],["Nisennen... Moshiku wa... Nimannen Go no Kimi e","Linked Horizon",2023,2531850021,"m"],["Nidone","Creepy Nuts",2024,2692719242,"m"],["GO GHOST","King Gnu",2026,4174282622,"m"],["Orange","Spyair",2024,2644406432,"m"],["Drown","milet",2020,1100435192,"m"],["New me","YOASOBI",2024,3077758261,"m"],["doppelgänger","Creepy Nuts",2025,3193596591,"m"],["Howling","Flow",2018,450058562,"m"],["Make My Story","Lenny Code Fiction",2018,537151152,"m"],["Baton road","KANA-BOON",2017,976020892,"m"],["モノトーン","YOASOBI",2024,2985941781,"m"],["RUN SAKAMOTO RUN","Vaundy",2025,3140688441,"m"],["Azalea","Kenshi Yonezu",2024,3066665361,"m"],["Kisetsu Wa Tsugitsugi Shindeiku","amazarashi",2015,975978612,"m"],["Gotoubun no Katachi","Nakanoke no Itsutsugo (Kana Hanazawa, Ayana Taketatsu, Miku Ito, Ayane Sakura, Inori Minase)",2021,1174145002,"m"],["SUPERNOVA","KANA-BOON",2025,3423089521,"m"],["3 min 29 sec","Hitorie",2021,1342240002,"m"],["Sayonara, Mata Itsuka! - Sayonara","Kenshi Yonezu",2024,2714593212,"m"],["BAKU","Ikimonogakari",2021,1190729412,"m"],["ANIMA","ReoNa",2020,1086620732,"m"],["Fiction","sumika",2018,823122692,"m"],["Plazma","Kenshi Yonezu",2025,3176278781,"m"],["Chained","Tatsuya Kitani",2024,3024074861,"m"],["Before My Body Is Dry","Hiroyuki Sawano",2013,1220736942,"m"],["Shine in the Cruel Night","LiSA",2025,3467186191,"m"],["Saigo no Kyojin","Linked Horizon",2023,2531788491,"m"],["Rockn' Roll, Morning Light Falls on You","kessoku band",2022,2044744397,"m"],["Lilac","Mrs. GREEN APPLE",2024,2737587691,"m"],["MASCARA","King Gnu",2024,3015207701,"m"],["If I could be a constellation","kessoku band",2022,2044744377,"m"],["V.I.P","SID",2012,975922932,"m"],["Netsujo No Spectrum","Ikimonogakari",2014,976076782,"m"],["milky way","kessoku band",2024,2966177431,"m"],["Todome no ichigeki (feat. Cory Wong)","Vaundy",2023,2465979145,"m"],["Asura","King Gnu",2023,2541650271,"m"],["My Dearest","Supercell",2011,976109912,"m"],["Kill the Noise","Spyair",2026,3734688512,"m"],["Longing","Yuna (CV:Sayaka Kanda)",2017,1404430332,"m"],["Monokuro No Kiss","SID",2008,976002562,"m"],["Tsuki Wo Miteita - Moongazing","Kenshi Yonezu",2023,2321299245,"m"],["Twin Fates","Hiroyuki Sawano",2024,3004118821,"m"],["A World Where the Sun Never Rises","Aimer",2025,3467184381,"m"],["Doppelganger","kessoku band",2024,2922455721,"m"],["I’m invincible","Ado",2022,1791273817,"m"],["To the Beginning","Kalafina",2012,976029182,"m"],["NEVER SAY GOODBYE","ALI",2022,1922350687,"m"],["Toppako","SUPER BEAVER",2020,1100846722,"m"],["Torch of Liberty","KANA-BOON",2020,1095216802,"m"],["LOST HEAVEN","L'Arc-en-Ciel",2005,976541392,"m"],["Some Like It Hot!!","Spyair",2021,1176876372,"m"],["Ginpatsu no Shonen","Yoshihisa Hirano",2012,2665360132,"m"],["Catch the Moment","LiSA",2017,1355425922,"m"],["REALiZE","LiSA",2023,2298946435,"m"],["GIRI GIRI","Masayuki Suzuki",2022,1703081497,"m"],["Aoi Shiori","Galileo Galilei",2015,975911872,"m"],["Homunculus","Vaundy",2024,2857688372,"m"],["Garakuta - JUNK","Kenshi Yonezu",2024,2922325711,"m"],["1/2","Makoto Kawamoto",1997,1647284862,"m"],["Shouted Serenade","LiSA",2024,2721060222,"m"],["Kamihitoe","Uru",2023,2213852417,"m"],["SOULSOUP","OFFICIAL HIGE DANDISM",2023,2553427362,"m"],["Orion","Kenshi Yonezu",2017,1355534372,"m"],["Love is Show","Masayuki Suzuki",2022,2043773187,"m"],["End of All","Aimer",2024,2819940702,"m"],["Kimijyanakya Damemitai","Masayoshi Oishi",2017,1585077842,"m"],["Asa ga kuru","Aimer",2022,1549796222,"m"],["Magia","Kalafina",2013,1345819962,"m"],["Preview of Me","Tatsuya Kitani",2024,2732994691,"m"],["Koi Kogare","milet",2023,2224270857,"m"],["舞台に立って","YOASOBI",2024,2892274232,"m"],["Season","ALISA TAKIGAWA",2016,136449322,"m"],["Unmeichan","Ikimonogakari",2024,2705022122,"m"],["BLIZZARD","BURNOUT SYNDROMES",2021,1300592382,"m"],["Fujin","Vaundy",2024,3023246571,"m"],["I will...","Eir Aoi",2020,1100230032,"m"],["Black Box","LiSA",2024,2856623082,"m"],["RED OUT","Kenshi Yonezu",2024,2914167311,"m"],["BRAVER","Zaq",2022,3430482411,"m"],["One Day","Spyair",2020,1080285072,"m"],["SWEET MAGIC","LiSA",2026,3789864332,"m"],["Shine as usual","kessoku band",2024,2815128432,"m"],["Touhikou","Eve",2023,2553182752,"h"],["SENAKAAWASE","AliA",2024,2853988092,"h"],["sirius","Eir Aoi",2013,975935642,"h"],["Resonance","T.M.Revolution",2016,1100606902,"h"],["Shout Baby","Ryokuoushoku Shakai",2020,1024949382,"h"],["ALWAYS BE WITH YOU XD","Tatsuya Kitani",2024,2787037782,"h"],["odd:I","SawanoHiroyuki[nZk]",2023,2356643715,"h"],["I'm a Believer","Spyair",2015,1100516632,"h"],["Found & Lost","Survive Said The Prophet",2018,976292022,"h"],["Good Morning World!","BURNOUT SYNDROMES",2019,975907032,"h"],["Ambiguous","GARNiDELiA",2014,976099482,"h"],["Ienai","Ryokuoushoku Shakai",2024,2885598082,"h"],["SCOPE","Aimer",2025,3126427281,"h"],["illusion","Ryokuoushoku Shakai",2025,3423801461,"h"],["Nichijo","OFFICIAL HIGE DANDISM",2023,2419975705,"h"],["Get Back To Jinsei","OFFICIAL HIGE DANDISM",2024,2866079532,"h"],["PLAYERS","YOASOBI",2025,3278334001,"h"],["Mata Ashita","Madoka Kaname (CV:Aoi Yuki)",2013,1345819752,"h"],["Brainwashing","LiSA",2024,2933191791,"h"],["Touch off","UVERworld",2019,976037752,"h"],["Break","Uru",2020,1089312062,"h"],["Time Paradox","Vaundy",2024,2583432962,"h"],["Seikai fuseikai","CIVILIAN",2020,1043818972,"h"],["Life is Beautiful","Asian Kung-Fu Generation",2025,3151808031,"h"],["Apollodorus","Mrs. GREEN APPLE",2024,2864463712,"h"],["Dark Crow","Man With A Mission",2019,1024949912,"h"],["Wren","Aimer",2024,2948588931,"h"],["Circle","Kana Hanazawa",2023,2195726167,"h"],["By Your Side in Moonlight","Uru",2026,3757883532,"h"],["GLASS WINDOW","King Gnu",2023,2541650291,"h"],["Shake & Shake","sumika",2021,1377073882,"h"],["Now, I'm going from underground","kessoku band",2024,2815128442,"h"],["My Hero","Man With A Mission",2018,976241982,"h"],["Happy Boogie Woogie","Yoshie Nakano, Yu Sakai & Shuri",2023,2530536381,"h"],["Song of the Dead","KANA-BOON",2023,2443552455,"h"],["KUNOICHI","BURNOUT SYNDROMES",2023,2464910185,"h"],["Kakawari","TrySail",2018,1327107652,"h"],["What Planet Is This.","Seatbelts",2001,1006827352,"h"],["Skyreach","Sora Amamiya",2014,976046752,"h"],["Brave The Ocean","Hiroyuki Sawano",2017,1220974062,"h"],["Red Liberation","Fripside",2023,3272493791,"h"],["O2","Orange Range",2008,975977832,"h"],["スクラップアート","Inori Minase",2023,2423444755,"h"],["GG","ReoNa",2024,3013311201,"h"],["Uso","SID",2013,976712072,"h"],["Turn the World","Nana Mizuki",2023,2575035532,"h"],["Elegy Dedicated With Love","Ophelia (Vo.acane_madder)",2021,1370149772,"h"],["Snow Is Falling","Yuki Kajiura",2011,1434602612,"h"],["Moonlight Magic","Kana Hanazawa",2022,1633075462,"h"],["I Wanna Be...","Spyair",2021,1275280962,"h"],["Sakuramitsutsuki","Spyair",2013,1100516512,"h"],["Kodo","Eir Aoi",2021,1279459202,"h"],["hallucinate","LiSA",2024,2793793352,"h"],["SHINSEKAI","Flow",2020,1085379992,"h"],["Preserved Roses","T.M.Revolution",2013,1100606852,"h"],["It's My Thing","Kana Hanazawa",2024,2698005592,"h"],["Imperfect","Masayoshi Oishi",2021,1282233842,"h"],["ADRENALIZED","Nana Mizuki",2024,2713094041,"h"],["Sugar Doughnuts","Nana Mizuki",2023,2453366855,"h"],["Flowers","Hiro Shimono",2023,2338821515,"h"]],"thai":[["Ride or Die","Jeff Satur",2025,3141291181,"e"],["ที่ชอบที่ชอบ (Grief Eaters)","Jeff Satur",2026,4364230721,"e"],["Dum Dum","Jeff Satur",2023,2182288037,"e"],["Tell Me The Name","Jeff Satur",2025,3404489971,"e"],["Passion Fruit","Jeff Satur",2025,3643355072,"e"],["แฟนใครปะคะ (Final Call)","PP KRIT",2026,4296240352,"e"],["Call it over","Jeff Satur",2025,3643355192,"e"],["Am I in Love","Slot Machine",2025,3459118251,"e"],["เหมือนวิวาห์","Jeff Satur",2024,2930231901,"e"],["hot2hot","4EVE",2024,3420899041,"e"],["นาฬิกาทราย (sign)","BOWKYLION",2026,4120568781,"e"],["Far Side of the Moon","Slot Machine",2025,3459103221,"e"],["ใครคนนั้น","Bedroom Audio",2012,69940488,"e"],["สัมผัสรัก (Touch my heart)","BOWKYLION",2026,4052418871,"e"],["ที่คั่นหนังสือ (Sometimes)","BOWKYLION",2025,3483767791,"e"],["คิด(แต่ไม่)ถึง (Same Page?)","Tilly Birds",2020,3488639571,"e"],["แค่พี่น้อง (Status)","Tilly Birds",2019,3488631991,"e"],["Smoke","Violette Wautier",2020,991210982,"e"],["สบาย สบาย","เบิร์ด ธงไชย",2014,3489033351,"e"],["ตื่น (Wake Up Call)","PP KRIT",2025,3244360201,"e"],["รักแรก (First Love)","NONT TANONT",2023,3495149321,"e"],["ลามปาม (circus)","BOWKYLION",2025,3487289431,"e"],["เคลิ้ม","Slot Machine",2013,2256053177,"e"],["Shake!","PiXXiE",2026,3940360461,"e"],["ผ่าน","Slot Machine",2013,73707758,"e"],["คู่กัน (Soulmate)","SCRUBB",2005,56889371,"e"],["เพื่อนสนิท (Platonic Love)","Three Man Down",2026,3758064672,"e"],["คืนที่หมาเต็มวัด (Temple Dogs)","NONT TANONT",2025,3415563841,"e"],["FIRE BOY","PP KRIT",2022,1985649797,"e"],["คู่ชีวิต","Cocktail",2014,3488802201,"e"],["ปักเมนแฟน (I STAN YOU)","PP KRIT",2026,4138520301,"e"],["เข้ากันดี","SCRUBB",2007,13341578,"e"],["เก็บมันเอาไว้","SCRUBB",2003,57466921,"e"],["Too Far","I N D I G O",2016,2887344312,"e"],["เสี้ยววินาที","Bodyslam",2007,3488801361,"e"],["ยิ้มง่าย (Better Together)","Fellow Fellow",2025,3494966551,"e"],["ล้มแชมป์ (Only You Can)","Tilly Birds",2025,3488643411,"e"],["กีดกัน (Skyline)","BILLKIN",2020,1444230022,"e"],["พรหมลิขิต","Big Ass",2007,3488821441,"e"],["DUSTY","PiXXiE",2026,4291530382,"e"],["ใจความสำคัญ","Musketeers",2014,91573952,"e"],["ลึก ลึก (Deep)","SCRUBB",2013,2255429927,"e"],["FEAT","PiXXiE",2024,3808514872,"e"],["ความรัก","Bodyslam",2010,3488825591,"e"],["พลังงานจน","Labanoon",2016,3498168491,"e"],["Yours Ever","Cocktail",2024,3488756951,"e"],["Bad For Me","I N D I G O",2016,2888498582,"e"],["รักแรกพบ (Knock Knock)","BILLKIN",2025,3277003261,"e"],["แปลไม่ออก (Untold Answer)","BILLKIN",2021,1572002072,"e"],["เหงา...เข้าใจ","4EVE",2026,4219237222,"e"],["จำนน","NONT TANONT",2024,2689590892,"e"],["ทุกวันพรุ่งนี้ (Along The Way)","Tilly Birds",2022,3488643281,"e"],["เชือกวิเศษ","Labanoon",2015,3497124631,"e"],["I'll Do It How You Like It","PP KRIT",2022,1636081142,"e"],["รักกันตอนเลิกกัน (Too Late)","PiXXiE",2026,4291530422,"e"],["คิดฮอด","Bodyslam",2010,3488825611,"e"],["Proud","Fellow Fellow",2024,2865045372,"e"],["งมงาย","Bodyslam",2015,104246370,"e"],["เสนอตัว (Ooh!)","PP KRIT",2024,2684414232,"e"],["วัดปะหล่ะ? (TEST ME)","4EVE",2021,3420908561,"e"],["รู้งี้เป็นแฟนกันตั้งนานแล้ว (Safe Zone)","BILLKIN",2020,1444230242,"e"],["ฉันตะโกนดังพอหรือยัง","Big Ass",2007,3488821531,"e"],["DEJAYOU","PiXXiE",2023,3808514732,"e"],["ความเงียบดังที่สุด","Getsunova",2018,3497251461,"e"],["ตั้งแต่มีเธอฉันมีความสุข (This Time)","Violette Wautier",2021,1462276272,"e"],["ยิ้มลา (jasmine)","BOWKYLION",2024,3479439711,"e"],["สักวันฉันจะหายดี","Ink Waruntorn",2025,3199677681,"e"],["ถ้าเธอรักฉันจริง","Three Man Down",2021,3488626221,"e"],["เพลงรักเพลงแรก (Blooming)","LANDOKMAI",2023,3479373131,"e"],["รักใครไม่ไหว","Three Man Down",2025,3488510771,"e"],["บานปลาย (best wishes)","BOWKYLION",2021,3479437111,"e"],["Woh oh oh","4EVE",2025,3425653371,"e"],["ย้อน","Slot Machine",2015,2255862727,"e"],["See You Somewhere","BILLKIN",2025,3277003271,"e"],["คำยินดี","Klear",2012,3496373341,"e"],["Ded","PiXXiE",2021,3808514262,"e"],["ใจ... กลางเมือง","Labanoon",2016,3498168571,"e"],["ไปอยู่ที่ไหนมา","Lipta",2014,77739053,"e"],["HUH?","PiXXiE",2025,3808793152,"e"],["wanna be yours (อยากให้เธอรัก)","Violette Wautier",2025,3508371381,"e"],["Unlovable","MILD",2008,64939761,"e"],["คลั่งเธอ","NONT TANONT",2024,2958392991,"e"],["ลงใจ (longjai)","BOWKYLION",2019,3479433921,"e"],["หมดที่ชีวิตของคนคนนึงจะมี (La La La La)","Jetset'er",2026,3935316621,"e"],["แพ้ทาง","Labanoon",2016,3498168551,"e"],["ความทรงจำ","Musketeers",2012,115042068,"e"],["เล่าสู่กันฟัง","เบิร์ด ธงไชย",2018,3489045201,"e"],["ก่อนตาย","Big Ass",2015,104300314,"e"],["ถ่านไฟเก่า","เบิร์ด ธงไชย",1998,3489030081,"e"],["จังหวะจะรัก","Violette Wautier",2017,2187024127,"e"],["ทักครับ","Lipta",2022,1652587632,"e"],["วาดไว้ (recall)","BOWKYLION",2022,3479437291,"e"],["พิง","NONT TANONT",2021,3498866801,"e"],["วัยหนุ่ม","TaitosmitH",2024,3495099821,"m"],["ไม่เป็นรอง","Cocktail",2024,3488757001,"m"],["ใจลอย (Join a line)","NONT TANONT",2026,4376483521,"m"],["จากกันด้วยดี (Ordinary)","Tilly Birds",2018,3488636111,"m"],["ไม่ปล่อยมือ (Coming of Age)","BILLKIN",2021,1444230562,"m"],["ไม่ให้ไป","Three Man Down",2025,3488510791,"m"],["Mr. Everything","BILLKIN",2022,2043459417,"m"],["Starry Night","4EVE",2025,3369058051,"m"],["Sticker","Bodyslam",2010,3488825601,"m"],["It's Okay Not To Be Alright","PP KRIT",2021,1457120072,"m"],["ข้างกัน (City)","Three Man Down",2021,3488626211,"m"],["ตามหาคนหาย","Labanoon",2026,4018796781,"m"],["My world","NONT TANONT",2020,1156246802,"m"],["MY CHAINZ","4EVE",2026,3981186191,"m"],["รอ","Slot Machine",2004,13250655,"m"],["คนจริงใจ","Cocktail",2022,3488804761,"m"],["พบรัก","Ink Waruntorn",2024,2904772431,"m"],["Together","Retrospect",2019,3287363061,"m"],["เธอทำให้ฉันเสียใจ","Cocktail",2011,3488826671,"m"],["สวยงามเสมอ (Ever-Forever)","BILLKIN",2024,2713184961,"m"],["ไกล","Musketeers",2012,115042072,"m"],["ด้วยรักและผูกพัน","เบิร์ด ธงไชย",2014,3489033361,"m"],["ดูดี","Polycat",2018,573569522,"m"],["ของขวัญ","Musketeers",2012,115042090,"m"],["ดีซะกว่า","Cocktail",2024,3488756941,"m"],["รางวัลปลอบใจ","Zom Marie",2019,2175590197,"m"],["แฟนเก่า","Labanoon",2002,104298756,"m"],["สิ่งเล็กน้อย (LESS IS MORE)","4EVE",2022,3420908661,"m"],["ขอโทษละกัน (friend to friend)","PP KRIT",2024,3051069911,"m"],["Undo","Pop Pongkool",2020,3498817041,"m"],["ที่ปรึกษา","4EVE",2026,4289926962,"m"],["บางสิ่ง (Something)","Moderndog",2012,58779881,"m"],["สภาวะหัวใจล้มเหลวเฉียบพลัน","Sweet Mullet",2010,3496859421,"m"],["โคโยตี้","TaitosmitH",2022,3498855231,"m"],["I Believe","Tata Young",2004,477803722,"m"],["ฉันก็คง","Labanoon",2016,3498168521,"m"],["ว่าไงคนเก่ง","TaitosmitH",2025,3614542502,"m"],["ไอ้สอง","TaitosmitH",2022,3498855271,"m"],["อยากให้เธอลอง","Musketeers",2012,114983508,"m"],["ฝุ่น","Big Ass",2008,3487762501,"m"],["จูบ (Kiss)","Jetset'er",2006,65460299,"m"],["ลั่นทม","Cocktail",2024,3488757031,"m"],["แฟนจ๋า","เบิร์ด ธงไชย",2002,3489037341,"m"],["สาริกาลิ้นทอง (Smooth-talker)","Paper Planes",2024,3495193171,"m"],["คิดคิด (Let Me Know)","4EVE",2024,3420899261,"m"],["ยอม (Surrender)","BILLKIN",2024,2886073042,"m"],["สักเท่าไหร่ (Whatever)","Moderndog",1997,60906184,"m"],["อยู่ได้แล้ว","Lipta",2024,2892688112,"m"],["Mutelu","PiXXiE",2021,3808815592,"m"],["ติ๋ม (Tim)","Moderndog",1997,60906182,"m"],["ช่างมัน","Cocktail",2019,3488801491,"m"],["ลบไม่ได้ช่วยให้ลืม (Erase)","Ink Waruntorn",2020,2902690371,"m"],["แตกต่างเหมือนกัน","Getsunova",2016,3498032981,"m"],["191","Labanoon",2006,104450078,"m"],["ก็แค่พูดมา","Three Man Down",2025,3488510751,"m"],["ไม่เปลี่ยนเลย (Best Luck)","Fellow Fellow",2023,2556679402,"m"],["Call It A Day","Tilly Birds",2025,3637260792,"m"],["ซาโยนาระ","MILD",2018,2175683317,"m"],["อาวรณ์","Polycat",2018,535644012,"m"],["นิทาน","Musketeers",2012,114983510,"m"],["อยากเก็บเธอไว้ทั้งสองคน","Tata Young",2003,409313362,"m"],["ขอ (Ask)","Moderndog",1997,60906186,"m"],["ลังเล","PP KRIT",2023,2143158527,"m"],["เธอคงไม่เหมือนที่ผ่านมา","Season Five",2026,3883136791,"m"],["เหมือนเป็นคนอื่น","เบิร์ด ธงไชย",1987,3489034811,"m"],["พูดไม่คิด","Season Five",2016,121050684,"m"],["กากี","Big Ass",2015,104298800,"m"],["เลิกตั้งแต่เริ่ม (EndBeforeStart)","Getsunova",2024,3495229781,"m"],["ปฏิเสธไม่ไหว","Lipta",2024,3059423251,"m"],["ฉันมาบอกว่า","Season Five",2016,124435418,"m"],["ฝันถึงแฟนเก่า","Three Man Down",2020,3488496781,"m"],["จันทร์เจ้า (Goodbye)","Slot Machine",2011,10697535,"m"],["นอนจับมือกันครั้งแรก","Season Five",2017,3973647641,"m"],["ชอบตัวเองเวอร์ชันนี้","Fellow Fellow",2024,3014706121,"m"],["ทิ้งไว้ในใจ","Big Ass",2015,104298808,"m"],["กลับมาเพื่อบอกลา (Just To Let Me Know)","Paper Planes",2023,3495218051,"m"],["The Trouble is..ปัญหาของฉัน","Violette Wautier",2024,2982027551,"m"],["ส่วนต่าง (do it without me)","BOWKYLION",2024,3479437611,"m"],["แต่งครับ","Lipta",2023,2207119477,"m"],["อยากมีแฟนแล้ว","Lipta",2019,1672966807,"m"],["รักโกรธ","Season Five",2018,3247608721,"m"],["เลือกเองกับมือ (Bad Choices)","Season Five",2025,3603539202,"m"],["ดีใจรึเปล่า (D Jai)","Whal & Dolph",2024,3478763281,"m"],["Kidding?","Zom Marie",2022,2175589907,"m"],["แหลก","Season Five",2013,3496872381,"m"],["จำไว้","Ink Waruntorn",2026,4018938321,"m"],["คำตอบ","SCRUBB",2010,6488279,"h"],["สุดที่รัก","Retrospect",2007,3497666311,"h"],["รักที่ไม่มีวันเป็นจริง","เบิร์ด ธงไชย",2016,3489042201,"h"],["หากว่าเราไม่คิดถึงกัน","Zom Marie",2022,2175590007,"h"],["แข็งแรงไม่พอ","Bedroom Audio",2014,79292133,"h"],["ด้วยใจยินดี (Willingly)","LANDOKMAI",2021,3479372841,"h"],["ขาวดำ","LAZYLOXY",2020,1178247622,"h"],["นาฬิกาตาย","Bodyslam",2007,3488801391,"h"],["สิ่งที่ตามหา","Getsunova",2016,3498032951,"h"],["ดีลีต","Fellow Fellow",2020,2258338427,"h"],["เพ้อเจ้อ","Season Five",2013,3496872461,"h"],["Hello Mama","TaitosmitH",2020,3496760541,"h"],["เธอเหมือนเดือนกุมภา","Fellow Fellow",2021,2256012987,"h"],["ฉันคือความทรงจำดีๆของเธอรึเปล่า","Fellow Fellow",2023,2403184645,"h"],["โดดเดี่ยวด้วยกัน","Getsunova",2016,3498033021,"h"],["คำสุดท้าย","Slot Machine",2006,135918104,"h"],["ให้เธอ","SCRUBB",2008,865303172,"h"],["เหนื่อยไหมหัวใจ","Retrospect",2017,3496834281,"h"],["เพลงที่เธอไม่ฟัง","Bedroom Audio",2021,2256106517,"h"],["เสมอตลอดมา","Klear",2021,3498856301,"h"],["แดงกับเขียว","TaitosmitH",2020,3498852121,"h"],["อยากเริ่มต้นใหม่กับคนเดิม (repeat)","Ink Waruntorn",2020,2902690641,"h"],["แอบเก็บความในใจไว้ภายในแว่นเรย์แบนสีดำ","TaitosmitH",2024,3495205551,"h"],["ตัวสำรอง","Bedroom Audio",2019,2256078317,"h"],["ช็อต","Tata Young",2001,409313722,"h"],["Taxi","LANDOKMAI",2024,3479368551,"h"],["สายตาหลอกกันไม่ได้","Ink Waruntorn",2022,2903685141,"h"],["คนไม่เอาถ่าน","Big Ass",2000,3487762601,"h"],["เพราะว่ารัก","Retrospect",2007,3497666251,"h"],["โปรดเถิดรัก","Cocktail",2014,3496762811,"h"],["Crush on You","Tata Young",2004,477803792,"h"],["ดวงจันทร์กลางวัน (AFTERMOON)","Getsunova",2019,3498185461,"h"],["The Diary","LANDOKMAI",2019,775932232,"h"],["ปล่อยฉัน","Retrospect",2007,3497666231,"h"],["จะรักหรือจะร้าย","Klear",2017,3495205741,"h"],["คนบนฟ้า","Retrospect",2007,3497666221,"h"],["ความฝันของเรา","Retrospect",2007,3497666241,"h"],["สิ่งกีดขวาง","Big Ass",2006,3488821881,"h"],["ใจเดียว (Jai 1)","Whal & Dolph",2021,3490681101,"h"],["รักมือสอง","Bedroom Audio",2021,2256106457,"h"],["ดั่งฝันฉันใด","Klear",2012,3496373361,"h"],["ยอม (White Flag)","LANDOKMAI",2024,3479368511,"h"],["ตอนที่เธอมานอนที่ตัก","Polycat",2021,1238176122,"h"],["ความเศร้าเลือกเราเสมอ","Lipta",2023,2564429702,"h"],["ถ้าเธอคิดจะลืมเขา","Polycat",2012,145174230,"h"],["ยาม","Labanoon",2015,104299636,"h"],["นิทานหลอกเด็ก","Sweet Mullet",2016,3495264381,"h"],["ลมหนาว","Polycat",2025,3579546661,"h"],["คืนแห่งความเหงา","Retrospect",2007,3497666281,"h"],["ถ้าเธอไม่อยากโชคร้ายเรื่องความรัก","NONT TANONT",2022,1834632997,"h"],["หลับตา กลั้นใจ บอกลา","Klear",2010,3497414131,"h"],["ร่มสีเทา","Klear",2010,3496902461,"h"],["เพลงสุดท้าย","Clash",2013,3497950111,"h"],["สักวันฉันจะดีพอ","Bodyslam",2015,104246372,"h"],["แค่นิยาย","Retrospect",2008,3498117541,"h"],["Romantic","MILD",2010,64939775,"h"],["หวานเย็น","MILD",2008,64939759,"h"],["ไกลสุดไกล","Sweet Mullet",2007,3496544561,"h"],["ควัน (Tearless)","Paper Planes",2025,3494992531,"h"],["Too Cute","PiXXiE",2022,3808499782,"h"],["เพลงไม่รัก","Bedroom Audio",2017,2256044577,"h"],["ภาพติดตา","Sweet Mullet",2010,3496859451,"h"],["เหตุผลที่ไม่มีเหตุผล","Getsunova",2018,3495254261,"h"],["ไม่รู้ฉันจม","LAZYLOXY",2023,2286301997,"h"],["ฤดูฝัน (Drizzle)","LANDOKMAI",2024,3479368521,"h"],["เพลงส่วนบุคคล","Fellow Fellow",2017,2255985167,"h"],["มัธยม","Polycat",2021,1238176112,"h"],["วันครบเลิก","NONT TANONT",2021,1551965132,"h"],["Whisper","Violette Wautier",2015,115708216,"h"],["บูมเมอแรง","เบิร์ด ธงไชย",1993,3489032331,"h"],["ชีวิตหลังเอ่ยคำลา","Sweet Mullet",2019,3496674481,"h"],["เชื่อในตัวฉัน (Trust)","Jetset'er",2005,65413908,"h"],["คนหลงทาง","Big Ass",2006,3488821851,"h"],["ชายในฝัน","Jetset'er",2010,3496514701,"h"]],"inter":[["The Fate of Ophelia","Taylor Swift",2025,3579685431,"e"],["Patient Zero","Taylor Swift",2026,4304169612,"e"],["hate that i made you love me","Ariana Grande",2026,4045817471,"e"],["Housewife","Tate McRae",2026,4350411742,"e"],["Man I Need","Olivia Dean",2025,3503857201,"e"],["Nicole Kidman","ADÉLA",2026,4250696681,"e"],["Dai Dai","Shakira",2026,4015341011,"e"],["Love Me Not","Ravyn Lenae",2024,2755315691,"e"],["Don't Stop The Music","Rihanna",2008,925108,"e"],["All I Want for Christmas Is You","Mariah Carey",1994,62710442,"e"],["Babydoll","Dominic Fike",2018,564326662,"e"],["We Found Love","Rihanna",2011,14525574,"e"],["Dracula","Tame Impala",2026,3818963601,"e"],["DtMF","Bad Bunny",2025,3171003131,"e"],["Self Aware","Temper City",2026,3848530521,"e"],["back to friends","sombr",2024,3151351511,"e"],["Beauty And A Beat","Justin Bieber",2012,37027991,"e"],["Golden","HUNTR/X",2025,3412534581,"e"],["Choosin' Texas","Ella Langley",2025,3602074142,"e"],["drop dead","Olivia Rodrigo",2026,3965376601,"e"],["Thriller","Michael Jackson",1982,555639,"e"],["Starboy","The Weeknd",2016,136889400,"e"],["BbY WOW","KAROL G",2026,4208859922,"e"],["Loser","Tame Impala",2025,3602329332,"e"],["Legendary Lovers","Katy Perry",2013,71645432,"e"],["The One That Got Away","Katy Perry",2010,17135114,"e"],["Beat It","Michael Jackson",1982,4763165,"e"],["Talk To You","ANOTR",2026,3784724892,"e"],["Training Season","Dua Lipa",2024,2661514912,"e"],["Only Girl (In The World)","Rihanna",2010,13529563,"e"],["stupid song","Olivia Rodrigo",2026,4078104881,"e"],["Coming Up Roses","Harry Styles",2026,3881984701,"e"],["WILDFLOWER","Billie Eilish",2024,2801558062,"e"],["Good Luck, Babe!","Chappell Roan",2024,2728070371,"e"],["Beautiful Things","Benson Boone",2024,2610711672,"e"],["Locked out of Heaven","Bruno Mars",2012,62724015,"e"],["Sign of the Times","Harry Styles",2017,360301951,"e"],["Take Me To Church","Hozier",2014,84791735,"e"],["Bass Persuades","Miley Cyrus",2026,4262469891,"e"],["honeybee","Olivia Rodrigo",2026,4078104901,"e"],["I Just Might","Bruno Mars",2026,3763842212,"e"],["Young And Beautiful","Lana Del Rey",2013,66660698,"e"],["Die On This Hill","SIENNA SPIRO",2025,3584616411,"e"],["So Easy (To Fall In Love)","Olivia Dean",2025,3562948071,"e"],["12 to 12","sombr",2025,3471224101,"e"],["Earrings","Malcolm Todd",2024,2732302771,"e"],["Stay","Rihanna",2012,62376291,"e"],["On My Soul","Bruno Mars",2026,3867905131,"e"],["Abracadabra","Lady Gaga",2025,3214169391,"e"],["Save Your Tears","The Weeknd",2020,908604632,"e"],["Gabriela","KATSEYE",2025,3412611901,"e"],["505","Arctic Monkeys",2007,4315389,"e"],["What I've Done","Linkin Park",2007,676847,"e"],["Clocks","Coldplay",2002,3098841,"e"],["when the party's over","Billie Eilish",2019,655095962,"e"],["Always Remember Us This Way","Lady Gaga",2018,561856792,"e"],["the cure","Olivia Rodrigo",2026,4078104981,"e"],["S&M","Rihanna",2010,13529559,"e"],["When I Was Your Man","Bruno Mars",2012,62724019,"e"],["Somebody That I Used To Know","Gotye",2011,14993990,"e"],["vampire","Olivia Rodrigo",2023,2440763155,"e"],["The Scientist","Coldplay",2002,3098840,"e"],["No Broke Boys","Disco Lines",2025,3410229851,"e"],["One Of The Girls","The Weeknd",2023,2338371075,"e"],["Dark Horse","Katy Perry",2013,71645436,"e"],["oh yeah?","Steve Lacy",2026,4151325372,"e"],["I Feel It Coming","The Weeknd",2016,136889434,"e"],["Faint","Linkin Park",2003,14628999,"e"],["Paparazzi","Lady Gaga",2009,4709950,"e"],["This Is What You Came For","Calvin Harris",2016,123883254,"e"],["Bad Dreams","Teddy Swims",2024,2972837781,"e"],["Opalite","Taylor Swift",2025,3579685451,"e"],["Bad Liar","Imagine Dragons",2018,579893072,"e"],["Hymn for the Weekend","Coldplay",2015,114811546,"e"],["Do I Wanna Know?","Arctic Monkeys",2013,70322130,"e"],["Cinnamon Girl","Lana Del Rey",2019,739421502,"e"],["CHIHIRO","Billie Eilish",2024,2801558042,"e"],["Apologize","OneRepublic",2007,916829,"e"],["Azizam","Ed Sheeran",2025,3303979891,"e"],["California Gurls","Katy Perry",2010,17135110,"e"],["Paradise","Coldplay",2011,14299589,"e"],["Too Sweet","Hozier",2024,2704610682,"e"],["Don't Stop 'Til You Get Enough","Michael Jackson",1979,15586296,"e"],["7 rings","Ariana Grande",2019,629899842,"e"],["Lose Control","Teddy Swims",2023,2319265555,"e"],["Pink Pony Club","Chappell Roan",2023,2454854845,"e"],["Timeless","The Weeknd",2025,3210598501,"e"],["Last Friday Night (T.G.I.F.)","Katy Perry",2010,17135109,"e"],["Gimme More","Britney Spears",2007,15589893,"e"],["Paint The Town Red","Doja Cat",2023,2387373015,"e"],["Havana","Camila Cabello",2018,447098092,"e"],["Love Me Harder","Ariana Grande",2014,83844556,"e"],["Don't Let Me Down","The Chainsmokers",2016,119302924,"e"],["Womanizer","Britney Spears",2008,82199332,"e"],["What Was I Made For?","Billie Eilish",2023,2366043655,"e"],["I Ain't Worried","OneRepublic",2022,1764283667,"e"],["Stargazing","Myles Smith",2024,2758844701,"e"],["Into You","Ariana Grande",2016,1375215242,"e"],["DAISIES","Justin Bieber",2025,3454558661,"e"],["The Dead Dance","Lady Gaga",2025,3537990861,"e"],["Enemy","Imagine Dragons",2021,1535046792,"e"],["Summer","Calvin Harris",2014,88936747,"e"],["Natural","Imagine Dragons",2018,579892872,"e"],["American Girls","Harry Styles",2026,3881984641,"e"],["Say Yes To Heaven","Lana Del Rey",2023,2287764037,"e"],["Chicago","Michael Jackson",2014,78213531,"e"],["Outside","Calvin Harris",2014,88936743,"e"],["Breaking the Habit","Linkin Park",2003,677219,"e"],["Risk It All","Bruno Mars",2026,3867905081,"e"],["Wrecked","Imagine Dragons",2021,1420768152,"e"],["Oops!...I Did It Again","Britney Spears",2000,13142617,"e"],["Promises","Calvin Harris",2018,542335432,"e"],["Mystical Magical","Benson Boone",2025,3333720471,"e"],["WHITE KEYS","Dominic Fike",2025,3651959272,"e"],["Love Again","Dua Lipa",2020,1124841712,"e"],["The Nights","Avicii",2014,90632837,"e"],["Criminal","Britney Spears",2011,10287270,"e"],["Human Nature","Michael Jackson",1982,831196,"e"],["Basket Case","Green Day",1994,678044,"e"],["Whatever It Takes","Imagine Dragons",2018,528330431,"e"],["LUNCH","Billie Eilish",2024,2801558032,"e"],["How Deep Is Your Love","Calvin Harris",2015,103996098,"e"],["The Door","Teddy Swims",2023,2319265575,"e"],["One More Night","Maroon 5",2012,44230981,"e"],["Before You Go","Lewis Capaldi",2019,807205422,"e"],["Mercy","Shawn Mendes",2017,351594971,"e"],["Feels","Calvin Harris",2017,374051471,"e"],["Stitches","Shawn Mendes",2015,113418500,"e"],["Wake Me up When September Ends","Green Day",2004,773430,"e"],["Complicated","Avril Lavigne",2002,15587465,"e"],["This Love","Maroon 5",2002,1165301,"e"],["Woman","Doja Cat",2021,1410738042,"m"],["Why'd You Only Call Me When You're High?","Arctic Monkeys",2013,70322139,"m"],["GIRLS","The Kid LAROI",2024,2861811462,"m"],["No. 1 Party Anthem","Arctic Monkeys",2013,70322136,"m"],["What Do You Mean?","Justin Bieber",2015,112662364,"m"],["Addicted To You","Avicii",2013,70266759,"m"],["Say You Won't Let Go","James Arthur",2016,131742260,"m"],["Say So","Doja Cat",2019,797228462,"m"],["I'm Yours","Jason Mraz",2008,2686140,"m"],["Somebody Told Me","The Killers",2004,2947342,"m"],["R U Mine?","Arctic Monkeys",2013,70322132,"m"],["Blank Space","Taylor Swift",2014,89077547,"m"],["Waiting For Love","Avicii",2015,107346368,"m"],["Confident","Justin Bieber",2014,78671337,"m"],["You Give Love A Bad Name","Bon Jovi",1986,577487242,"m"],["Without Me","Halsey",2018,1088873812,"m"],["What Makes You Beautiful","One Direction",2011,16667911,"m"],["Elizabeth Taylor","Taylor Swift",2025,3579685441,"m"],["Heather","Conan Gray",2020,903771442,"m"],["Always","Bon Jovi",1994,538586982,"m"],["Fame is a Gun","Addison Rae",2025,3387454721,"m"],["Dream As One","Miley Cyrus",2025,3648482872,"m"],["Snooze","SZA",2022,2055292087,"m"],["It's My Life","Bon Jovi",2000,577487252,"m"],["rockstar","Post Malone",2017,491446942,"m"],["Hey Brother","Avicii",2013,70266758,"m"],["I Wanna Dance with Somebody (Who Loves Me)","Whitney Houston",1987,75981528,"m"],["Galway Girl","Ed Sheeran",2017,142986208,"m"],["INDUSTRY BABY","Lil Nas X",2021,1439691952,"m"],["In My Blood","Shawn Mendes",2018,504135662,"m"],["If I Were a Boy","Beyoncé",2008,2455091,"m"],["Circus","Britney Spears",2008,82199334,"m"],["New Rules","Dua Lipa",2017,366297921,"m"],["Kill Bill","SZA",2022,2055292027,"m"],["Holiday","Green Day",2005,715954,"m"],["Bam Bam","Camila Cabello",2022,1666673152,"m"],["We Belong Together","Mariah Carey",2005,2511970,"m"],["These Walls","Dua Lipa",2024,3070297111,"m"],["American Idiot","Green Day",2004,773367,"m"],["Shameless","Camila Cabello",2019,744266542,"m"],["A Couple Minutes","Olivia Dean",2025,3562948141,"m"],["Kiss Me More","Doja Cat",2021,1410738172,"m"],["CUFF IT","Beyoncé",2022,1842063487,"m"],["Adore You","Harry Styles",2019,830336932,"m"],["Tears","Sabrina Carpenter",2025,3529873491,"m"],["Boyfriend","Justin Bieber",2012,37027901,"m"],["Streets","Doja Cat",2019,797228502,"m"],["I Know What You Did Last Summer","Shawn Mendes",2015,113418522,"m"],["Slow It Down","Benson Boone",2024,2696385562,"m"],["MONTERO (Call Me By Your Name)","Lil Nas X",2021,1283264142,"m"],["Fluorescent Adolescent","Arctic Monkeys",2007,4315382,"m"],["Summertime Sadness","Lana Del Rey",2012,16149860,"m"],["THATS WHAT I WANT","Lil Nas X",2021,1493915892,"m"],["RUNAWAY","OneRepublic",2023,2292149325,"m"],["iloveitiloveitiloveit","Bella Kay",2026,3763687462,"m"],["I'm with You","Avril Lavigne",2002,15587475,"m"],["Sk8er Boi","Avril Lavigne",2002,15587466,"m"],["Marvin Gaye","Charlie Puth",2015,94424876,"m"],["Be Her","Ella Langley",2026,3834003271,"m"],["STAR WALKIN'","Lil Nas X",2022,1924639057,"m"],["bittersweet","Madison Beer",2025,3591340192,"m"],["Edge of the Earth","The Beaches",2023,2397171765,"m"],["Cry","Benson Boone",2024,2704682212,"m"],["Steal My Girl","One Direction",2014,90248129,"m"],["Never Be the Same","Camila Cabello",2018,447098062,"m"],["Folded","Kehlani",2025,3410232121,"m"],["Come & Get It","Selena Gomez",2013,66404487,"m"],["Without You","Avicii",2017,393460732,"m"],["Better Now","Post Malone",2018,491446972,"m"],["Train Wreck","James Arthur",2016,134945408,"m"],["I Like Me Better","Lauv",2017,3025895871,"m"],["Candy","Doja Cat",2019,637121412,"m"],["IDGAF","Dua Lipa",2017,366297871,"m"],["The Time Of My Life","Benson Boone",2026,4081857641,"m"],["Sorry I'm Here For Someone Else","Benson Boone",2025,3245608751,"m"],["Girlfriend","Avril Lavigne",2007,5495885,"m"],["We Can't Stop","Miley Cyrus",2013,71137161,"m"],["luther","Kendrick Lamar",2024,3106586641,"m"],["Need You More","Teddy Swims",2025,3420131111,"m"],["Without You","Mariah Carey",1993,595920,"m"],["Jealous Type","Doja Cat",2025,3514216471,"m"],["Night Changes","One Direction",2014,90248141,"m"],["Good Riddance (Time of Your Life)","Green Day",1997,778429,"m"],["Forget Me","Lewis Capaldi",2022,1896602817,"m"],["Car's Outside","James Arthur",2019,770299532,"m"],["One Call Away","Charlie Puth",2016,117797204,"m"],["My Love Is Your Love","Whitney Houston",1998,962260,"m"],["petal","Ariana Grande",2026,4182548192,"m"],["People You Know","Selena Gomez",2020,926219252,"m"],["Run","OneRepublic",2021,1364016952,"m"],["Angels Like You","Miley Cyrus",2020,1151489402,"m"],["Survive","Lewis Capaldi",2025,3423848071,"m"],["The Subway","Chappell Roan",2025,3476801931,"m"],["Paris","The Chainsmokers",2017,139904165,"m"],["When Did You Get Hot?","Sabrina Carpenter",2025,3529873551,"m"],["Now And Then","The Beatles",2023,2522288451,"m"],["Why Why Why","Shawn Mendes",2024,2935318981,"m"],["How Long","Charlie Puth",2017,413468802,"m"],["Suspicious Minds","Elvis Presley",1969,1055776,"m"],["My Oh My","Camila Cabello",2019,823567772,"m"],["Roses","The Chainsmokers",2015,99756342,"m"],["Runaway","Bon Jovi",1984,74628075,"m"],["Casual","Chappell Roan",2023,2454854775,"m"],["Headphones On","Addison Rae",2025,3326208711,"m"],["Congratulations","Post Malone",2016,137726987,"m"],["Drag Me Down","One Direction",2015,112667890,"m"],["Lose You To Love Me","Selena Gomez",2019,847637202,"m"],["Taste","Sabrina Carpenter",2024,2949737371,"m"],["Wherever I Go","OneRepublic",2016,133584912,"m"],["The Climb","Miley Cyrus",2009,4307896,"m"],["Lucky","Jason Mraz",2008,845910,"m"],["Boulevard of Broken Dreams","Green Day",2004,427638182,"m"],["Good For You","Selena Gomez",2015,109169062,"m"],["What the Hell","Avril Lavigne",2011,637113922,"m"],["Be By You","Luke Combs",2026,3838327301,"m"],["HOT TO GO!","Chappell Roan",2023,2454854795,"m"],["Circles","Post Malone",2019,747399352,"m"],["Don't Go Yet","Camila Cabello",2021,1438790502,"m"],["Human","The Killers",2008,71955252,"m"],["The Cut That Always Bleeds","Conan Gray",2020,903771402,"m"],["Open Arms","SZA",2022,2055292207,"m"],["Perfect Man","Teddy Swims",2026,4293579412,"m"],["When You Were Young","The Killers",2006,1109953,"m"],["Lonely Together","Avicii",2017,393460712,"m"],["Something In The Heavens","Lewis Capaldi",2025,3497263701,"m"],["Secrets","OneRepublic",2009,5425214,"m"],["As Long as You Love Me","Backstreet Boys",1997,15608664,"m"],["WITHOUT YOU","The Kid LAROI",2021,1445417732,"m"],["Born To Die","Lana Del Rey",2012,62220851,"m"],["Best Song Ever","One Direction",2013,72544948,"m"],["Always On My Mind","Elvis Presley",1972,129231820,"m"],["HOLIDAY","Lil Nas X",2020,1139537482,"m"],["Saturn","SZA",2024,2672689962,"m"],["Tieduprightnow","Parcels",2018,490821062,"m"],["Bad At Love","Halsey",2017,472400862,"m"],["Perfect","One Direction",2015,112667892,"m"],["Take A Slice","Glass Animals",2016,130851540,"m"],["Never Seen the Rain","Tones And I",2019,739870832,"m"],["Colors","Halsey",2015,105710128,"m"],["Can't Help Falling In Love","Elvis Presley",1961,104952384,"m"],["Panini","Lil Nas X",2019,699056202,"m"],["93 Million Miles","Jason Mraz",2012,17827566,"h"],["Show Me the Meaning of Being Lonely","Backstreet Boys",1999,13141171,"h"],["A Little Less Conversation","Elvis Presley",1968,404045132,"h"],["Larger Than Life","Backstreet Boys",1999,13141169,"h"],["It's Not Right But It's Okay","Whitney Houston",1998,962142,"h"],["Obsessed","Mariah Carey",2009,4247257,"h"],["I Kissed A Girl","Katy Perry",2008,441805332,"h"],["When You're Gone","Avril Lavigne",2007,13705100,"h"],["Femininomenon","Chappell Roan",2023,2454854735,"h"]],"kpop":[["Animal","KATSEYE",2026,4159582602,"e"],["SWIM","BTS",2026,3907717261,"e"],["You’re Under Arrest","ILLIT",2026,4368548071,"e"],["Hootie Frutti","KATSEYE",2026,4332612222,"e"],["SUIATSU","Stray Kids",2026,4389906951,"e"],["Tarantino","LISA",2026,4359977211,"e"],["JUMP","BLACKPINK",2025,3454677991,"e"],["SaWaDiKa","LISA",2026,4261602111,"e"],["ICONIC BY MISTAKE","LE SSERAFIM",2026,4076508991,"e"],["Body to Body","BTS",2026,3907717191,"e"],["This & That","Stray Kids",2026,4204153972,"e"],["PINKY UP","KATSEYE",2026,3938727511,"e"],["Touch","KATSEYE",2024,2897230071,"e"],["2.0","BTS",2026,3907717241,"e"],["Hooligan","BTS",2026,3907717201,"e"],["NORMAL","BTS",2026,3907717281,"e"],["like JENNIE","JENNIE",2025,3262816591,"e"],["BAD","ATEEZ",2026,4027935751,"e"],["Like Animals","BTS",2026,3907717291,"e"],["Drip","ATEEZ",2026,4330416222,"e"],["It's Me","ILLIT",2026,3989506131,"e"],["Chk Chk Boom","Stray Kids",2024,2893837431,"e"],["RUN IT","Stray Kids",2026,4103855641,"e"],["Bloody Paradise","ENHYPEN",2026,4232461262,"e"],["MANIAC","Stray Kids",2022,1688660007,"e"],["Do It","Stray Kids",2025,3664415392,"e"],["LALALALA","Stray Kids",2023,2533705261,"e"],["BOOMBAYAH","BLACKPINK",2016,2516649591,"e"],["MEGAVERSE","Stray Kids",2023,2533705251,"e"],["LEMONADE","aespa",2026,4037009371,"e"],["new trick","ROSÉ",2026,4292854112,"e"],["Red Lights","Stray Kids",2021,1642054172,"e"],["CHOOM","BABYMONSTER",2026,3986645071,"e"],["TAKEDOWN","TWICE",2025,3412534541,"e"],["Standing Next to You","JUNG KOOK",2023,2523324931,"e"],["Rockstar","LISA",2024,2852760252,"e"],["SPAGHETTI","LE SSERAFIM",2025,3614444782,"e"],["NOT CUTE ANYMORE","ILLIT",2025,3667806702,"e"],["Goals","LISA",2026,4022865081,"e"],["RUDE!","Hearts2Hearts",2026,3827375541,"e"],["DRIP","BABYMONSTER",2024,3063891981,"e"],["Strategy","TWICE",2025,3412534591,"e"],["Bite Me","ENHYPEN",2023,2289924375,"e"],["GO","BLACKPINK",2026,3866248761,"e"],["Drunk-Dazed","ENHYPEN",2021,1345071172,"e"],["jellyous","ILLIT",2025,3410990811,"e"],["Adrenaline","ATEEZ",2026,3762104002,"e"],["Who","Jimin",2024,2893833601,"e"],["Tick-Tack","ILLIT",2024,3049682591,"e"],["CRAZY","LE SSERAFIM",2024,2967699621,"e"],["HEAVEN","JENNIE",2026,4247616851,"e"],["BOOMPALA","LE SSERAFIM",2026,4032818971,"e"],["Less than a Lover","JENNIE",2026,4170431392,"e"],["Made My Night","LE SSERAFIM",2026,4274980322,"e"],["3D","JUNG KOOK",2023,2473397771,"e"],["Still With You","JUNG KOOK",2020,2347317335,"e"],["Mantra","JENNIE",2024,3038395741,"e"],["toxic till the end","ROSÉ",2024,3124823321,"e"],["Ice On My Teeth","ATEEZ",2024,3075722491,"e"],["Dreamers","JUNG KOOK",2022,2023640587,"e"],["FALLEN ANGEL","JENNIE",2026,4247616841,"e"],["BANG BANG","IVE",2026,3823100291,"e"],["XO (Only If You Say Yes)","ENHYPEN",2024,2883618912,"e"],["Looks Can Kill","IVE",2026,4352064492,"e"],["Knife","ENHYPEN",2026,3773149032,"e"],["BOUNCY (K-HOT CHILLI PEPPERS)","ATEEZ",2023,2320139425,"e"],["In Your Fantasy","ATEEZ",2025,3428993801,"e"],["CELEBRATION","LE SSERAFIM",2026,3976069491,"e"],["Nxde","(G)I-DLE",2022,3281013531,"e"],["Seoul City","JENNIE",2025,3262816701,"e"],["Messy","ROSÉ",2025,3355094441,"e"],["NASA","ATEEZ",2026,3762104012,"e"],["New Jeans","NewJeans",2023,2373775125,"e"],["That That","Psy",2022,2371967975,"e"],["Love Shot","EXO",2018,727835802,"e"],["THIS IS FOR","TWICE",2025,3451046521,"e"],["The Feels","TWICE",2021,1533348982,"e"],["Supernatural","NewJeans",2024,2853677102,"e"],["Like Crazy","Jimin",2023,2203061907,"e"],["Deja Vu","TOMORROW X TOGETHER",2024,2726775541,"e"],["ETA","NewJeans",2023,2373775145,"e"],["Me and my","BLACKPINK",2026,3866248771,"m"],["Champion","BLACKPINK",2026,3866248781,"m"],["LIKE THAT","BABYMONSTER",2024,2724377402,"m"],["SPOT!","ZICO",2024,2764316861,"m"],["Set Me Free Pt.2","Jimin",2023,2192148087,"m"],["Rich Man","aespa",2025,3528439201,"m"],["WANNABE","ITZY",2020,1642054622,"m"],["Supernova Love","IVE",2024,3069037841,"m"],["Be Mine","Jimin",2024,2893833591,"m"],["Igloo","KISS OF LIFE",2024,3046402801,"m"],["I CAN'T STOP ME","TWICE",2020,1114415022,"m"],["Do It Like That","TOMORROW X TOGETHER",2023,2354707725,"m"],["Attention","NewJeans",2022,1843514387,"m"],["Heavy Serenade","NMIXX",2026,4006888161,"m"],["DREAM","BABYMONSTER",2024,2724377432,"m"],["Super","SEVENTEEN",2023,2247330887,"m"],["Girls Will Be Girls","ITZY",2025,3400461701,"m"],["ATTITUDE","IVE",2025,3178649911,"m"],["Stick With You","TOMORROW X TOGETHER",2026,3950788711,"m"],["Hollywood Action","BOYNEXTDOOR",2025,3605170782,"m"],["REBEL HEART","IVE",2025,3153143521,"m"],["Love Language","TOMORROW X TOGETHER",2025,3345776131,"m"],["Russian Roulette","Red Velvet",2016,728092462,"m"],["LO$ER=LO♡ER","TOMORROW X TOGETHER",2021,1463425352,"m"],["TIC TIC","NMIXX",2026,3863349421,"m"],["Who is she","KISS OF LIFE",2026,3910166341,"m"],["Lemon Tang","Hearts2Hearts",2026,4087604431,"m"],["Monster","EXO",2016,728724572,"m"],["Good Thing","(G)I-DLE",2025,3818726511,"m"],["Day 1","Red Velvet",2015,728552752,"m"],["HIP","MAMAMOO",2019,806276532,"m"],["0X1=LOVESONG (I Know I Love You)","TOMORROW X TOGETHER",2021,1385902032,"m"],["TUNNEL VISION","ITZY",2025,3641465642,"m"],["Boogie Woogie","NCT DREAM",2026,4366536281,"m"],["THUNDER","SEVENTEEN",2025,3614510862,"m"],["UNTOUCHABLE","ITZY",2024,2607923062,"m"],["MAESTRO","SEVENTEEN",2024,2752439251,"m"],["Blue Valentine","NMIXX",2025,3593847642,"m"],["BiiiG","BIGBANG",2026,4223081212,"m"],["LOCO","ITZY",2021,1642053592,"m"],["Haru Haru","BIGBANG",2008,1385051612,"m"],["HOT","SEVENTEEN",2022,1767163017,"m"],["FOCUS","Hearts2Hearts",2025,3570464781,"m"],["HOME SWEET HOME","G-Dragon",2024,3100773221,"m"],["Not Shy","ITZY",2020,1642056182,"m"],["Super Lady","(G)I-DLE",2024,3275063201,"m"],["CALL ME BABY","EXO",2015,728553232,"m"],["Bad Boy","Red Velvet",2018,728143922,"m"],["Rock with you","SEVENTEEN",2021,1528273532,"m"],["Genie","Girls' Generation",2009,728254022,"m"],["Ghost","BABYMONSTER",2025,3339397501,"m"],["Imaginary Friend","ITZY",2024,3041140851,"m"],["Love wins all","IU",2024,2633284812,"m"],["POWER","G-Dragon",2024,3064731001,"m"],["Midas Touch","KISS OF LIFE",2024,2735357691,"m"],["STYLE","Hearts2Hearts",2025,3407280351,"m"],["The Eve","EXO",2017,728262532,"m"],["The First Snow","EXO",2013,728235292,"m"],["SOBER","BIGBANG",2016,1385115742,"m"],["SWEAT","KISS OF LIFE",2026,4164951472,"m"],["TOO BAD","G-Dragon",2025,3245615741,"m"],["Surfin' Boy","Red Velvet",2026,4178965332,"m"],["Eyes, Nose, Lips","TAEYANG",2014,1385024682,"m"],["In the morning","ITZY",2021,1642055582,"m"],["MAMA","EXO",2012,728422182,"m"],["The Boys","Girls' Generation",2011,727830582,"m"],["Run For Roses","NMIXX",2024,2616629632,"m"],["Dream After Dream","NCT DREAM",2026,4366536291,"m"],["eight","IU",2020,952261162,"m"],["KNOW ABOUT ME","NMIXX",2025,3276717851,"m"],["The Sun","NCT DREAM",2026,4366536271,"m"],["BEBE","STAYC",2025,3265366061,"m"],["Lucifer","SHINee",2010,728582682,"m"],["O.O","NMIXX",2022,2297164395,"m"],["The Chase","Hearts2Hearts",2025,3234208281,"m"],["Dumb Dumb","Red Velvet",2015,728552672,"m"],["ICONIK","ZEROBASEONE",2025,3528817921,"m"],["DRAMA","G-Dragon",2025,3245615751,"m"],["DASH","NMIXX",2024,2616629602,"m"],["MY BAG","(G)I-DLE",2022,3282147291,"m"],["Sherlock","SHINee",2012,728420572,"m"],["LILAC","IU",2021,1286394242,"m"],["IF YOU","BIGBANG",2015,1385115752,"m"],["View","SHINee",2015,728536382,"m"],["Sorry, Sorry","SUPER JUNIOR",2009,728458082,"m"],["I Am the Best","2NE1",2011,28774851,"m"],["Any song","ZICO",2020,851641862,"m"],["Egotistic","MAMAMOO",2018,2181635297,"m"],["Cherry Bomb","NCT 127",2017,728080312,"h"],["ILLELLA","MAMAMOO",2022,1958747217,"h"],["AYA","MAMAMOO",2020,1130251002,"h"],["RUN2U","STAYC",2022,1662545962,"h"],["gogobebe","MAMAMOO",2019,1869520477,"h"],["Mr. Simple","SUPER JUNIOR",2011,728368142,"h"],["ASAP","STAYC",2021,1330032082,"h"],["Dingga","MAMAMOO",2020,1114774832,"h"],["I GOT A BOY","Girls' Generation",2013,728570742,"h"],["One and Only","BOYNEXTDOOR",2023,2300441615,"h"],["Nobody","Wonder Girls",2008,2382180745,"h"],["BOOM","NCT DREAM",2019,727831632,"h"],["FOREVER 1","Girls' Generation",2022,1848896967,"h"],["Mr.Taxi","Girls' Generation",2011,80630292,"h"],["Dumhdurum","Apink",2020,928870732,"h"],["Limitless","NCT 127",2017,727992702,"h"],["SO BAD","STAYC",2020,1139970142,"h"],["DDD","EXID",2017,424373662,"h"],["Ringa Linga","TAEYANG",2013,1385023082,"h"],["Mamacita","SUPER JUNIOR",2014,728531842,"h"],["Heart Burn","SUNMI",2022,3362741481,"h"],["Replay","SHINee",2008,728384442,"h"],["pporappippam","SUNMI",2020,994611272,"h"],["Simon Says","NCT 127",2018,727834362,"h"],["Mr. Chu","Apink",2014,1875692857,"h"],["Heroine","SUNMI",2018,1277921762,"h"],["NoNoNo","Apink",2013,1887727837,"h"],["Black Suit","SUPER JUNIOR",2017,728064912,"h"],["Lonely","2NE1",2011,28774871,"h"],["Bonamana","SUPER JUNIOR",2010,728383672,"h"],["Ridin'","NCT DREAM",2020,941786602,"h"],["My Youth","NCT DREAM",2021,1361622472,"h"],["Whiplash","aespa",2024,3033987511,"h"],["Run Devil Run","Girls' Generation",2010,80630290,"h"],["Dilemma","Apink",2022,1654915162,"h"],["Countless","SHINee",2018,728231532,"h"],["BFF","TWS",2024,2625258582,"h"],["Amigo","SHINee",2008,728462572,"h"],["Supernova","aespa",2024,2789110362,"h"],["Drama","aespa",2023,2578305302,"h"],["Armageddon","aespa",2024,2790947462,"h"],["Love 119","RIIZE",2024,2584785642,"h"],["Get A Guitar","RIIZE",2023,2410443315,"h"],["Favorite (Vampire)","NCT 127",2021,1519956852,"h"],["Superhuman","NCT 127",2019,727831702,"h"],["Boom Boom Bass","RIIZE",2024,2827155082,"h"],["Fame","RIIZE",2025,3651275442,"h"]]};
+function mkDz(rows,c){ return rows.map(([title,artist,year,id,d])=>({title,artist,jaArtist:"",anime:"",diff:{e:"easy",m:"medium",h:"hard"}[d]||"medium",year:year||null,type:"other",series:"",cat:c,dz:id})); }
+const ALL=SONGS.concat(mkExtra(THAI_RAW,"thai"),mkExtra(INTER_RAW,"inter"),mkExtra(KPOP_RAW,"kpop"),mkDz(DZ.anime,"anime"),mkDz(DZ.thai,"thai"),mkDz(DZ.inter,"inter"),mkDz(DZ.kpop,"kpop"));
+let cat="anime"; try{ const c=JSON.parse(localStorage.getItem("asq_cat")); if(CATS[c]) cat=c; }catch(e){}
+function listFor(c){ if(c==="online") return onState(onlineKey).items; if(c&&c.startsWith("online:")) return onState(c.slice(7)).items; return c==="mix"?ALL:ALL.filter(s=>s.cat===c); }
+function catList(){ return listFor(cat); }
+
+// ================= ONLINE LIBRARY: songs pulled live from Deezer playlists (100,000+ songs) =================
+const ONLINE_CATS=[{"k": "th-hits", "name": "🇹🇭 เพลงไทยฮิต", "q": ["เพลงไทยฮิต", "Thai hits", "T-Pop", "เพลงไทยใหม่"]}, {"k": "th-luktung", "name": "🌾 ลูกทุ่ง", "q": ["ลูกทุ่ง", "Luk Thung", "ลูกทุ่งฮิต"]}, {"k": "th-molam", "name": "🪘 หมอลำ / อีสาน", "q": ["หมอลำ", "เพลงอีสาน", "ลูกทุ่งอีสาน"]}, {"k": "th-90s", "name": "📼 เพลงไทยยุค 90–2000", "q": ["เพลงไทย 90", "Thai 90s", "เพลงไทย 2000", "เพลงเก่าไทย"]}, {"k": "th-indie", "name": "🎸 อินดี้ / ร็อคไทย", "q": ["Thai indie", "Thai rock", "ร็อคไทย"]}, {"k": "th-ost", "name": "📺 เพลงประกอบละคร/ซีรีส์ไทย", "q": ["เพลงประกอบละคร", "GMMTV", "Thai drama OST", "ซีรีส์วาย OST"]}, {"k": "th-love", "name": "💗 เพลงรักไทย", "q": ["เพลงรัก", "เพลงเศร้า", "เพลงอกหัก"]}, {"k": "anime", "name": "🎌 อนิเมะ", "q": ["anime opening", "anisong", "anime ending", "anime hits"]}, {"k": "ghibli", "name": "🏯 Ghibli / Joe Hisaishi", "q": ["Studio Ghibli", "Joe Hisaishi"]}, {"k": "jpop", "name": "🇯🇵 J-Pop", "q": ["J-Pop", "Japanese pop hits", "city pop"]}, {"k": "vocaloid", "name": "🎤 Vocaloid", "q": ["Vocaloid", "Hatsune Miku"]}, {"k": "kpop", "name": "🇰🇷 K-Pop", "q": ["K-Pop", "K-Pop hits", "kpop girl group", "kpop boy group"]}, {"k": "kdrama", "name": "💔 K-Drama OST", "q": ["K-Drama OST", "Korean drama OST"]}, {"k": "cpop", "name": "🇨🇳 C-Pop", "q": ["Mandopop", "C-Pop", "Chinese pop"]}, {"k": "pop", "name": "🌎 Pop สากล", "q": ["Pop hits", "Today's top hits", "pop classics"]}, {"k": "rock", "name": "🤘 Rock", "q": ["Rock classics", "Rock hits", "alternative rock"]}, {"k": "metal", "name": "💀 Metal", "q": ["Metal essentials", "heavy metal"]}, {"k": "hiphop", "name": "🎧 Hip-Hop / Rap", "q": ["Hip hop hits", "Rap hits", "hip hop classics"]}, {"k": "rnb", "name": "💜 R&B / Soul", "q": ["R&B hits", "soul classics"]}, {"k": "edm", "name": "⚡ EDM / Dance", "q": ["EDM hits", "Dance hits", "house music"]}, {"k": "latin", "name": "💃 Latin", "q": ["Reggaeton", "Latin hits"]}, {"k": "country", "name": "🤠 Country", "q": ["Country hits", "country classics"]}, {"k": "jazz", "name": "🎷 Jazz", "q": ["Jazz classics", "jazz standards"]}, {"k": "classical", "name": "🎻 Classical", "q": ["Classical essentials", "classical piano"]}, {"k": "reggae", "name": "🌴 Reggae", "q": ["Reggae", "reggae classics"]}, {"k": "indie", "name": "🌙 Indie", "q": ["Indie hits", "indie pop"]}, {"k": "70s", "name": "🪩 ยุค 70", "q": ["70s hits", "disco"]}, {"k": "80s", "name": "🕺 ยุค 80", "q": ["80s hits"]}, {"k": "90s", "name": "💿 ยุค 90", "q": ["90s hits"]}, {"k": "2000s", "name": "📱 ยุค 2000", "q": ["2000s hits"]}, {"k": "2010s", "name": "🎶 ยุค 2010", "q": ["2010s hits"]}, {"k": "disney", "name": "🏰 Disney", "q": ["Disney songs", "Disney hits"]}, {"k": "movie", "name": "🎬 เพลงจากหนัง", "q": ["Movie soundtracks", "film soundtrack hits"]}, {"k": "game", "name": "🎮 เพลงเกม", "q": ["Video game music", "gaming soundtrack"]}, {"k": "tiktok", "name": "📲 TikTok / ไวรัล", "q": ["TikTok hits", "Viral hits"]}, {"k": "christmas", "name": "🎄 คริสต์มาส", "q": ["Christmas songs"]}, {"k": "kids", "name": "🧸 เพลงเด็ก", "q": ["kids songs", "nursery rhymes"]}];
+const ON={};
+let onlineKey="th-hits"; try{ const k=JSON.parse(localStorage.getItem("asq_onkey")); if(k) onlineKey=k; }catch(e){}
+function onCat(k){ if(k.startsWith("q:")) return {k,name:"🔍 "+k.slice(2),q:[k.slice(2)]}; return ONLINE_CATS.find(c=>c.k===k)||ONLINE_CATS[0]; }
+function onState(k){ return ON[k]||(ON[k]={pls:null,items:[],seen:new Set(),slots:0,busy:null}); }
+let dzOnLast=0;
+async function dzCall(path){
+  for(let a=0;a<4;a++){
+    const wait=dzOnLast+130-Date.now(); if(wait>0) await sleep(wait); dzOnLast=Date.now();
+    const d=await new Promise(res=>{ const n="__on"+(cbN++); const sc=document.createElement("script");
+      const t=setTimeout(()=>{c();res(null)},9000); function c(){clearTimeout(t);delete window[n];sc.remove()}
+      window[n]=x=>{c();res(x)}; sc.onerror=()=>{c();netFail=true;res(null)};
+      sc.src="https://api.deezer.com"+path+(path.includes("?")?"&":"?")+"output=jsonp&callback="+n; document.head.appendChild(sc); });
+    if(d&&!d.error) return d;
+    if(d&&d.error&&d.error.code!==4) return null;
+    await sleep(1500);
+  }
+  return null;
+}
+const GIVEAWAY=/\s*[\(\[（【][^\)\]）】]*(from|theme|opening|ending|主題歌|オープニング|OST|soundtrack|เพลงประกอบ|ost|TV|anime|movie)[^\)\]）】]*[\)\]）】]/gi;
+function onAdd(S,t){
+  if(!t||!t.preview||!t.artist||!t.title||t.readable===false) return false;
+  if(BAD.test(t.title)||JUNK_ARTIST.test(t.artist.name)) return false;
+  const title=t.title.replace(GIVEAWAY,"").replace(/\s*\((feat|with)\.?[^)]*\)/i,"").trim()||t.title;
+  const k=norm(title.replace(/\s*[\(\[].*$/,""))+"|"+norm(t.artist.name).slice(0,6);
+  if(S.seen.has(k)) return false; S.seen.add(k);
+  const artist=t.artist.name.replace(/\s*[\(（][^\)）]*[\)）]\s*$/,"").trim()||t.artist.name;
+  S.items.push({title,artist,jaArtist:"",anime:"",diff:"medium",year:null,type:"other",series:"",cat:"online",dz:t.id});
+  return true;
+}
+async function onInit(k){
+  const S=onState(k); if(S.pls) return S;
+  const c=onCat(k); const ids=new Map();
+  for(const q of c.q){
+    const d=await dzCall("/search/playlist?q="+encodeURIComponent(q)+"&limit=25");
+    for(const p of (d&&d.data)||[]) if(p.nb_tracks>=10&&!ids.has(p.id)) ids.set(p.id,{id:p.id,n:p.nb_tracks});
+  }
+  if(k.startsWith("q:")){   // custom search: also the matching songs themselves (e.g. an artist name)
+    const nq=norm(c.q[0]); let found=[];
+    for(const idx of [0,100]){ const d=await dzCall("/search?q="+encodeURIComponent(c.q[0])+"&limit=100&index="+idx); found=found.concat((d&&d.data)||[]); }
+    const strict=found.filter(t=>t&&t.artist&&(norm(t.artist.name).includes(nq)||nq.includes(norm(t.artist.name))||norm(t.title).includes(nq)));
+    (strict.length>=10?strict:found).forEach(t=>onAdd(S,t));
+  }
+  S.pls=[...ids.values()]; S.slots=S.pls.reduce((a,p)=>a+Math.min(p.n,2000),0)+S.items.length;
+  return S;
+}
+function onGrow(k){
+  const S=onState(k); if(S.busy) return S.busy;
+  S.busy=(async()=>{
+    await onInit(k);
+    if(!S.pls.length) return 0;
+    const p=S.pls[Math.floor(Math.random()*S.pls.length)];
+    const pages=Math.max(1,Math.ceil(Math.min(p.n,2000)/100));
+    const d=await dzCall(`/playlist/${p.id}/tracks?limit=100&index=${100*Math.floor(Math.random()*pages)}`);
+    const before=S.items.length; ((d&&d.data)||[]).forEach(t=>onAdd(S,t));
+    return S.items.length-before;
+  })().finally(()=>{ S.busy=null; updateOnlineInfo(); });
+  return S.busy;
+}
+async function onEnsure(k,min,prog){
+  const S=onState(k); let g=0;
+  while(S.items.length<min && g++<10){ prog&&prog(S); await onGrow(k); if(S.pls&&!S.pls.length&&S.items.length) break; if(S.pls&&!S.pls.length&&!S.items.length) break; }
+  return S;
+}
+function updateOnlineInfo(){
+  const el=$("onInfo"); if(!el) return; const S=onState(onlineKey);
+  el.textContent = S.pls ? `พร้อมเล่น ${S.items.length.toLocaleString()} เพลง (เพิ่มขึ้นทุกรอบ) · คลังของหมวดนี้ประมาณ ${S.slots.toLocaleString()} เพลง` : "กำลังเปิดคลังเพลง…";
+  if(cat==="online") updatePoolCount();
+}
+function setOnlineKey(k){
+  onlineKey=k; try{ localStorage.setItem("asq_onkey",JSON.stringify(k)); }catch(e){}
+  $("onSel").value= k.startsWith("q:") ? "" : k;
+  $("catTitle").textContent=onCat(k).name.replace(/^\S+\s/,"");
+  recent=[]; updateOnlineInfo(); afterSettingsChange();
+}
+
+const CLUES = [0.1,0.5,2,8,15];
+const POINTS = [1200,975,750,525,300];
+
+// ---------------- storage helpers ----------------
+const store = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+let custom = store.get("asq_custom",[]);
+let cache = store.get("asq_cache",{});
+let stats = store.get("asq_stats",{score:0,rounds:0,correct:0,streak:0});
+
+// ---------------- iTunes lookup (JSONP, no CORS issues) ----------------
+let cbN=0, netFail=false;
+function jsonp(url){
+  return new Promise((res,rej)=>{
+    const name="__itcb"+(cbN++);
+    const s=document.createElement("script");
+    const t=setTimeout(()=>{cleanup();rej(new Error("timeout"))},8000);
+    function cleanup(){clearTimeout(t);delete window[name];s.remove()}
+    window[name]=d=>{cleanup();res(d)};
+    s.onerror=()=>{cleanup();netFail=true;rej(new Error("network"))};
+    s.src=url+"&callback="+name;
+    document.head.appendChild(s);
+  });
+}
+const norm = s => (s||"").toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu,"");
+const BAD=/(live|instrumental|inst\.|off ?vocal|karaoke|カラオケ|オルゴール|music ?box|orgel|cover|remix|acoustic|tv ?size|tvサイズ|short|piano|ピアノ|tour|dome|ライブ|歌ってみた|first take|tribute|8-bit|originally performed|emulation)/i;
+// Apple allows ~20 searches/minute per IP; going faster gets you blocked for minutes.
+// So every search goes through ONE queue: 1 request / 3.1s, with wait-and-retry when blocked.
+const Q={last:0,chain:Promise.resolve(),gap:3100,blockedUntil:0,waiting:0};
+try{ const g=localStorage.getItem("asq_gap"); if(g!==null) Q.gap=+g; }catch(e){}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function apiState(blocked){ const el=document.getElementById("apiWait"); if(el) el.style.display=blocked?"block":"none"; }
+function itunes(params){
+  Q.waiting++;
+  const run=async()=>{
+    try{
+      for(let attempt=0;attempt<5;attempt++){
+        const wait=Math.max(Q.last+Q.gap,Q.blockedUntil)-Date.now(); if(wait>0) await sleep(wait);
+        Q.last=Date.now();
+        try{ const d=await jsonp("https://itunes.apple.com/search?"+params); netFail=false; apiState(false); return d; }
+        catch(e){ Q.blockedUntil=Date.now()+12000*(attempt+1); apiState(true); }
+      }
+      netFail=true; throw new Error("blocked");
+    } finally { Q.waiting--; }
+  };
+  const p=Q.chain.then(run,run); Q.chain=p.catch(()=>{}); return p;
+}
+function mkInfo(r){ return {preview:r.previewUrl,art:(r.artworkUrl100||"").replace("100x100","300x300"),link:r.trackViewUrl,track:r.trackName,artistName:r.artistName,year:(r.releaseDate||"").slice(0,4)}; }
+// ---- Deezer (backup source: 30s previews, much higher rate limit; preview links expire after a while, so only kept in memory) ----
+const memCache={};
+let dzLast=0;
+async function deezer(q){
+  const wait=dzLast+250-Date.now(); if(wait>0) await sleep(wait); dzLast=Date.now();
+  return new Promise((res,rej)=>{
+    const n="__dz"+(cbN++); const sc=document.createElement("script");
+    const t=setTimeout(()=>{c();rej(new Error("timeout"))},8000);
+    function c(){clearTimeout(t);delete window[n];sc.remove()}
+    window[n]=d=>{c();res(d)}; sc.onerror=()=>{c();netFail=true;rej(new Error("network"))};
+    sc.src="https://api.deezer.com/search?q="+encodeURIComponent(q)+"&limit=25&output=jsonp&callback="+n;
+    document.head.appendChild(sc);
+  });
+}
+const JUNK_ARTIST=/karaoke|カラオケ|歌っちゃ王|orgel|オルゴール|α波|music box|piano|cover|sing2piano|lullaby|relax|tribute|8-bit|arcade|hot pop/i;
+async function lookupDeezer(song,aOK0,tOK0){
+  for(const q of [song.title+" "+song.artist, (song.jaTitle||song.title)+" "+(song.jaArtist||song.artist)]){
+    let d; try{ d=await deezer(q); }catch(e){ return null; }
+    const list=(d.data||[]).filter(r=>r.preview&&r.artist).map(r=>({trackName:r.title,artistName:r.artist.name,collectionName:(r.album&&r.album.title)||"",previewUrl:r.preview,artworkUrl100:(r.album&&r.album.cover_medium)||"",trackViewUrl:r.link}));
+    const clean=list.filter(r=>!BAD.test(r.trackName+" "+r.collectionName)&&!JUNK_ARTIST.test(r.artistName));
+    const pick=clean.find(r=>aOK0(r)&&tOK0(r));   // title-only matches on Deezer are usually covers
+    if(pick){ const i=mkInfo(pick); i.src="deezer"; return i; }
+    if(!song.jaTitle&&!song.jaArtist) break;
+  }
+  return null;
+}
+async function deezerTrack(id){
+  const wait=dzLast+150-Date.now(); if(wait>0) await sleep(wait); dzLast=Date.now();
+  return new Promise((res)=>{
+    const n="__dt"+(cbN++); const sc=document.createElement("script");
+    const t=setTimeout(()=>{c();res(null)},8000);
+    function c(){clearTimeout(t);delete window[n];sc.remove()}
+    window[n]=d=>{c();res(d&&!d.error?d:null)}; sc.onerror=()=>{c();netFail=true;res(null)};
+    sc.src="https://api.deezer.com/track/"+id+"?output=jsonp&callback="+n; document.head.appendChild(sc);
+  });
+}
+async function lookup(song){
+  const key="v3|"+song.title+"|"+song.artist;
+  if(cache[key]) return cache[key];          // Apple result saved earlier (links don't expire)
+  if(memCache[key]) return memCache[key];
+  if(song.dz){                               // songs collected from Deezer: fetch a fresh clip by track id
+    const d=await deezerTrack(song.dz);
+    if(d&&d.preview&&!song.year){ const ry=+(((d.album&&d.album.release_date)||d.release_date||"").slice(0,4)); if(ry>1900) song.year=ry; }
+    if(d&&d.preview){ const i=mkInfo({trackName:d.title,artistName:d.artist&&d.artist.name,previewUrl:d.preview,artworkUrl100:d.album&&d.album.cover_medium,trackViewUrl:d.link,releaseDate:String(song.year||"")}); i.src="deezer"; memCache[key]=i; return i; }
+  }
+  const an=[song.artist,song.jaArtist].filter(Boolean).map(x=>norm(x).slice(0,4)).filter(Boolean);
+  const tn=[song.title,song.jaTitle].filter(Boolean).map(x=>norm(x).slice(0,4)).filter(Boolean);
+  const aOK=r=>an.some(n=>norm(r.artistName).includes(n));
+  const tOK=r=>tn.some(n=>norm(r.trackName).includes(n));
+  // 1) Deezer first: fast and not easily rate-limited
+  const dz=await lookupDeezer(song,aOK,tOK);
+  if(dz){ memCache[key]=dz; return dz; }
+  // 2) Apple (throttled queue)
+  if(cache[key]===null) return null;
+  const term=(song.jaTitle||song.title)+" "+(song.jaArtist||song.artist);
+  for(const country of ["JP","US"]){
+    let d; try{ d=await itunes(`term=${encodeURIComponent(term)}&entity=song&limit=25&country=${country}`); }catch(e){ return null; }
+    const list=(d.results||[]).filter(r=>r.previewUrl); if(!list.length) continue;
+    const clean=list.filter(r=>!BAD.test(r.trackName+" "+r.collectionName+" "+r.artistName));
+    const pick= clean.find(r=>aOK(r)&&tOK(r)) || list.find(r=>aOK(r)&&tOK(r)) || clean.find(r=>tOK(r)&&!JUNK_ARTIST.test(r.artistName));
+    if(pick){ const info=mkInfo(pick); cache[key]=info; store.set("asq_cache",cache); return info; }
+  }
+  cache[key]=null; store.set("asq_cache",cache);
+  return null;
+}
+
+// ---------------- endless mode: pull thousands of anime songs from Apple ----------------
+const ENDLESS_ARTISTS=["LiSA", "Aimer", "YOASOBI", "FLOW", "Linked Horizon", "MYTH & ROID", "fripSide", "ClariS", "Eir Aoi", "supercell", "ASIAN KUNG-FU GENERATION", "UVERworld", "SPYAIR", "BURNOUT SYNDROMES", "KANA-BOON", "Kenshi Yonezu", "King Gnu", "Eve", "Ado", "Creepy Nuts", "Mrs. GREEN APPLE", "Official HIGE DANdism", "milet", "Vaundy", "Who-ya Extended", "Kessoku Band", "Minori Chihara", "Kana Hanazawa", "Yoko Takahashi", "Hironobu Kageyama", "Hiroshi Kitadani", "MAN WITH A MISSION", "THE ORAL CIGARETTES", "Goose house", "Porno Graffitti", "L'Arc-en-Ciel", "YUI", "ORANGE RANGE", "Kanako Itou", "TK from Ling tosite sigure", "Shoko Nakagawa", "Aya Hirano", "Kouji Wada", "Rica Matsumoto", "nobodyknows+", "NICO Touches the Walls", "Sukima Switch", "Kalafina", "Yuki Kajiura", "Nana Mizuki", "Yui Horie", "May'n", "Megumi Nakajima", "Sphere", "μ's", "Aqours", "Liella!", "Nijigasaki High School Idol Club", "KOTOKO", "GARNiDELiA", "TrySail", "Inori Minase", "Sora Amamiya", "Minami", "ReoNa", "Haruka Tomatsu", "Yoshino Nanjo", "ZAQ", "OxT", "OLDCODEX", "GRANRODEO", "Masayoshi Oishi", "JAM Project", "Ichiro Mizuki", "TRUE", "Mili", "Uru", "Tatsuya Kitani", "Ryokuoushoku Shakai", "BUMP OF CHICKEN", "SawanoHiroyuki[nZk]", "Hiroyuki Sawano", "Konomi Suzuki", "Ayaka Ohashi", "Nagi Yanagi", "Rie Takahashi", "Lia", "angela", "CHiCO with HoneyWorks", "HoneyWorks", "Sajou no Hana", "sumika", "Hitorie", "amazarashi", "ALI", "Coda", "Vickeblanka", "Kankaku Piero", "BLUE ENCOUNT", "Lenny code fiction", "Shinsei Kamattechan", "Ai Higuchi", "SiM", "Galileo Galilei", "Survive Said The Prophet", "QUEEN BEE", "GEMN", "Do As Infinity", "little by little", "HIGH and MIGHTY COLOR", "BEAT CRUSADERS", "SID", "CHEMISTRY", "Crystal King", "Ikimonogakari", "Mai Kuraki", "ZARD", "WANDS", "DEEN", "T.M.Revolution", "See-Saw", "Nami Tamaki", "Hikaru Utada", "Kenichi Suzumura", "Yoko Kanno", "SEATBELTS", "Hiroko Moriguchi", "Akino from bless4", "Yanagi Nagi", "Maaya Sakamoto", "Suara", "Ayumi Hamasaki", "Tommy heavenly6", "Tommy february6", "AKINO", "Shiena Nishizawa", "Asaka", "Kitani Tatsuya", "Hockrockb", "Atarashii Gakko!", "Tani Yuuki", "Kocchi no Kento", "Mosawo", "Yorushika", "ZUTOMAYO", "Nogizaka46", "Hoshimachi Suisei", "Mori Calliope", "Morning Musume", "Fujii Kaze", "Aimyon", "Kana-Boon", "Wednesday Campanella", "Polkadot Stingray", "SixTONES", "Snow Man", "King & Prince", "Da-iCE", "DISH//", "Hump Back", "Kaneko Ayano", "TOOBOE", "Novelbright", "Ziyoou-vachi", "PEOPLE 1", "Yama", "Ryujin Kiyoshi", "Saucy Dog", "Omoinotake", "Kobukuro", "Superfly", "Sayuri", "Rinne", "Kami-sama, I have noticed"];
+let endlessPool=[], endlessSeen=new Set(), endlessDoneArtists=new Set(), endlessBusy=null;
+const endlessDone=false;
+(function(){ const c=store.get("asq_endless2",null); if(c&&Date.now()-c.t<14*864e5){ (c.items||[]).forEach(a=>{const k=norm(a[0])+"|"+norm(a[1]).slice(0,6); if(!endlessSeen.has(k)){endlessSeen.add(k); endlessPool.push(unpackSong(a));}}); (c.done||[]).forEach(a=>endlessDoneArtists.add(a)); } })();
+function packSong(r){return [r.trackName,r.artistName,r.collectionName||"",r.previewUrl,r.artworkUrl100||"",r.trackViewUrl||"",(r.releaseDate||"").slice(0,4)]}
+function unpackSong(a){return {title:a[0],artist:a[1],anime:a[2],diff:"endless",info:{preview:a[3],art:(a[4]||"").replace("100x100","300x300"),link:a[5],track:a[0],artistName:a[1],year:a[6]}}}
+function endlessSave(){ try{ store.set("asq_endless2",{t:Date.now(),items:endlessPool.map(s=>[s.title,s.artist,s.anime,s.info.preview,(s.info.art||"").replace("300x300","100x100"),s.info.link,s.info.year]),done:[...endlessDoneArtists]}); }catch(e){} }
+function endlessFetchOne(){
+  if(endlessBusy) return endlessBusy;
+  const left=ENDLESS_ARTISTS.filter(a=>!endlessDoneArtists.has(a)); if(!left.length) return Promise.resolve(0);
+  const a=left[Math.floor(Math.random()*Math.min(left.length,40))];   // popular artists first
+  endlessBusy=(async()=>{
+    let added=0;
+    try{
+      const d=await itunes(`term=${encodeURIComponent(a)}&entity=song&attribute=artistTerm&limit=200&country=JP&lang=en_us`);
+      for(const r of (d.results||[])){
+        if(!r.previewUrl||!/anime|アニメ/i.test(r.primaryGenreName||"")) continue;
+        if(BAD.test(r.trackName+" "+(r.collectionName||""))) continue;
+        const k=norm(r.trackName)+"|"+norm(r.artistName).slice(0,6);
+        if(endlessSeen.has(k)) continue; endlessSeen.add(k);
+        endlessPool.push(unpackSong(packSong(r))); added++;
+      }
+      endlessDoneArtists.add(a); endlessSave();
+    }catch(e){}
+    endlessBusy=null; updateEndlessChip(); return added;
+  })();
+  return endlessBusy;
+}
+async function endlessEnsure(min,onProgress){
+  let guard=0;
+  while(endlessPool.length<min && endlessDoneArtists.size<ENDLESS_ARTISTS.length && guard++<12){ onProgress&&onProgress(); await endlessFetchOne(); if(netFail) break; }
+}
+function loadEndless(){ return endlessFetchOne(); }
+function updateEndlessChip(){
+  const left=ENDLESS_ARTISTS.length-endlessDoneArtists.size;
+  $("endlessChip").textContent = `♾️ ไม่จำกัด (${endlessPool.length.toLocaleString()} เพลง${left?" · เพิ่มขึ้นทุกรอบ":""})`;
+}
+
+// ---------------- state ----------------
+let diff="all", target="title", fmt="c4", curCorrect=null;
+const F={era:"all",type:"all",series:"all"};
+const MULT={c4:1,c6:1.25,yn:0.5,type:1.5};
+let cur=null, curInfo=null, clueIdx=0, maxUnlocked=0, answered=false, recent=[];
+const audio=new Audio(); audio.preload="auto";
+let stopTimer=null, rafId=null;
+const $=id=>document.getElementById(id);
+
+function filtersOn(){ return F.era!=="all"||F.type!=="all"||F.series!=="all"; }
+function passF(x){
+  if(F.series!=="all" && x.series!==F.series) return false;
+  if(F.type!=="all" && x.type!==F.type) return false;
+  if(F.era!=="all"){ const y=+x.year||0; if(!y) return false;
+    if(F.era==="old"&&y>=2000) return false; if(F.era==="2000"&&(y<2000||y>2009)) return false;
+    if(F.era==="2010"&&(y<2010||y>2019)) return false; if(F.era==="2020"&&y<2020) return false; }
+  return true;
+}
+function pool(){
+  if(cat==="online") return onState(onlineKey).items;
+  if(diff==="endless" && cat==="anime") return endlessPool;
+  if(diff==="custom") return custom.map(c=>({...c,diff:"custom"}));
+  let all=catList().filter(passF);
+  if(diff!=="all") all=all.filter(s=>s.diff===diff);
+  if(diff==="all"&&!filtersOn()) all=all.concat(custom.map(c=>({...c,diff:"custom"})));
+  return all;
+}
+function updatePoolCount(){
+  const el=$("poolCount"); if(!el) return;
+  if(cat==="online"){ el.textContent=""; return; }
+  if(diff==="endless"||diff==="custom"){ el.textContent= filtersOn()?"(ตัวกรองใช้กับเพลงหลัก 100 เพลงเท่านั้น)":""; return; }
+  el.textContent=`→ ${pool().length} เพลง`;
+}
+
+function renderStats(){
+  $("sScore").textContent=stats.score.toLocaleString();
+  $("sRound").textContent=stats.rounds;
+  $("sAcc").textContent=stats.rounds?Math.round(stats.correct/stats.rounds*100)+"%":"–";
+  $("sStreak").textContent=stats.streak;
+  store.set("asq_stats",stats);
+}
+
+function renderClues(){
+  const box=$("clues"); box.innerHTML="";
+  CLUES.forEach((c,i)=>{
+    const b=document.createElement("button");
+    b.className="clue"+(i<=maxUnlocked?" unlocked":"")+(i===clueIdx?" current":"");
+    b.innerHTML=`${c}s<small>${POINTS[i]} คะแนน</small>`;
+    b.disabled=answered?false:(i>maxUnlocked+1);
+    b.onclick=()=>{ if(!answered && i>maxUnlocked) maxUnlocked=i; clueIdx=i; renderClues(); playClip(); };
+    box.appendChild(b);
+  });
+}
+
+function stopAudio(){
+  clearTimeout(stopTimer); cancelAnimationFrame(rafId);
+  audio.pause(); $("prog").style.width="0";
+}
+
+function playClip(){
+  if(!curInfo) return;
+  stopAudio();
+  const dur = answered?30:CLUES[clueIdx];
+  try{ audio.currentTime=0; }catch(e){}
+  audio.muted=false; audio.volume=+$("vol").value;
+  const p=audio.play();
+  if(p&&p.catch) p.catch(err=>{ $("msg").textContent="เล่นเสียงไม่ได้ ("+err.name+") — กด ▶ อีกครั้ง"; });
+  // stop by how much audio has ACTUALLY played (not wall-clock), so 0.1s is never silent
+  const tick=()=>{
+    const t=audio.currentTime;
+    $("prog").style.width=Math.min(100,t/dur*100)+"%";
+    if(t>=dur || audio.ended){ audio.pause(); $("prog").style.width="100%"; return; }
+    rafId=requestAnimationFrame(tick);
+  };
+  rafId=requestAnimationFrame(tick);
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+let roundToken=0;
+async function newRound(){
+  stopAudio();
+  const token=++roundToken;
+  curInfo=null; curCorrect=null; $("guess").value="";
+  if(cat==="online"){
+    $("play").disabled=true; $("answerChoice").innerHTML=""; $("result").style.display="none";
+    const key=onlineKey;
+    await onEnsure(key,12,S=>{ $("msg").textContent=`กำลังเปิดคลังเพลง “${onCat(key).name}” จาก Deezer… ${S.items.length} เพลง`; });
+    if(token!==roundToken) return;
+    if(!onState(key).items.length){ if(netFail) showProblem("blocked"); else $("msg").textContent="ไม่พบเพลงในหมวดนี้ ลองพิมพ์คำอื่น"; $("play").disabled=false; return; }
+    onGrow(key);   // keep growing in the background
+  }
+  else if(diff==="endless"){
+    $("play").disabled=true; $("answerChoice").innerHTML=""; $("result").style.display="none";
+    await endlessEnsure(10,()=>{ $("msg").textContent=`กำลังรวบรวมเพลงจาก Apple… ${endlessPool.length} เพลง (ครั้งแรกใช้เวลาสักครู่)`; });
+    if(token!==roundToken) return;
+    if(!endlessPool.length){ showProblem(netFail?"blocked":"none"); $("play").disabled=false; return; }
+    endlessFetchOne();   // keep growing the pool in the background, one artist per round
+  }
+  const p=pool();
+  if(p.length<1){ $("msg").textContent= diff==="custom"?"ยังไม่มีเพลงของคุณ — เพิ่มได้ด้านล่าง":"ไม่มีเพลงในหมวดนี้"; return; }
+  answered=false; clueIdx=0; maxUnlocked=0;
+  $("result").style.display="none"; $("guess").value="";
+  $("play").disabled=true; $("msg").textContent="กำลังโหลดเพลง…";
+  $("answerChoice").innerHTML="";
+  let tries=0;
+  while(tries<6){
+    let cand=p.filter(s=>!recent.includes(s.title)||p.length<=recent.length+1);
+    const known=cand.filter(x=>x.info||cache["v3|"+x.title+"|"+x.artist]);
+    if(Q.waiting>0 && known.length) cand=known;          // Apple queue busy -> prefer songs already loaded
+    cand=cand.filter(x=>cache["v3|"+x.title+"|"+x.artist]!==null); if(!cand.length) cand=p;
+    cur=cand[Math.floor(Math.random()*cand.length)];
+    $("msg").textContent="กำลังโหลดเพลง…";
+    curInfo= cur.info || await lookup(cur);
+    if(token!==roundToken) return;
+    if(curInfo) break;
+    tries++;
+  }
+  if(!curInfo){ showProblem(netFail?"blocked":"none"); $("play").disabled=false; return; }
+  recent.push(cur.title); if(recent.length>Math.min(15,p.length-1)) recent.shift();
+  hideProblem();
+  audio.src=curInfo.preview; audio.load();
+  $("play").disabled=false;
+  $("msg").textContent="กด ▶ เพื่อฟัง • ฟังซ้ำได้ฟรี • ปลดคลิปยาวขึ้นได้ (คะแนนลดลง)";
+  renderClues(); buildChoices();
+  if(TA.on){ clueIdx=maxUnlocked=CLUES.length-1; $("msg").textContent="🎧 ฟังแล้วตอบเลย!"; playClip(); }
+}
+
+// ----- what are we guessing? -----
+function effTarget(song){
+  if(target==="anime" && !(song.anime && song.diff!=="endless")) return "title";   // no anime name known -> guess the title instead
+  return target;
+}
+function yearOf(s){ return s.year || (s.info&&+s.info.year) || (cur===s&&curInfo&&+curInfo.year) || null; }
+function ansVal(s,t){ if(t==="anime") return s.anime; if(t==="artist") return s.artist; if(t==="year"){ const y=yearOf(s); return y?String(y):null; } return s.title; }
+const TLABEL={title:"ชื่อเพลง",anime:"ชื่ออนิเมะ",artist:"ศิลปิน",year:"ปีที่ออก"};
+// returns {opts:[labels], correct:label, t:target}
+function makeOptions(song,list,t,n,base){
+  base=base||catList();
+  if(t==="year" && !yearOf(song)) t="title";
+  const correct=ansVal(song,t); const opts=[correct]; const used=new Set([norm(correct)]);
+  if(t==="year"){
+    const y=+correct; const pool=[...new Set(list.concat(base).map(yearOf).filter(Boolean))];
+    const near=shuffle(pool.filter(v=>v!==y&&Math.abs(v-y)<=8)); const deltas=shuffle([-1,1,-2,2,-3,3,-4,4,-5,5,-6,6]);
+    for(const v of near.concat(deltas.map(d=>y+d))){ if(opts.length>=n) break; if(v<1960||v>2026||used.has(String(v))) continue; used.add(String(v)); opts.push(String(v)); }
+  } else {
+    const src=list.length>=n*2?list:list.concat(base);
+    for(let k=0;k<800&&opts.length<n;k++){
+      const x=src[Math.floor(Math.random()*src.length)]; if(!x) continue;
+      if(t==="anime" && (!x.anime||x.diff==="endless"||x.series===song.series)) continue;
+      if(t==="title" && song.series && x.diff!=="endless" && song.diff!=="endless" && x.series===song.series && x.title!==song.title && Math.random()<0.5) continue;
+      const v=ansVal(x,t); if(!v||used.has(norm(v))) continue; used.add(norm(v)); opts.push(v);
+    }
+  }
+  return {opts:shuffle(opts),correct,t};
+}
+function subFor(v,t){
+  if(t!=="title") return "";
+  const x=(diff==="endless"?endlessPool:ALL.concat(custom)).find(z=>z.title===v);
+  return x?((x.diff==="endless"?"":(x.anime||""))+(x.artist?(x.anime&&x.diff!=="endless"?" · ":"")+x.artist:"")):"";
+}
+function buildChoices(){
+  const box=$("answerChoice"); box.innerHTML="";
+  const t=effTarget(cur);
+  $("guess").placeholder=`พิมพ์${TLABEL[t]}…`;
+  renderDatalist(t);
+  if(fmt==="type"){ curCorrect=ansVal(cur,t)||cur.title; box.style.display="none"; $("answerType").style.display="block"; return; }
+  box.style.display="grid"; $("answerType").style.display="none";
+  const list=pool();
+  if(fmt==="yn"){
+    const o=makeOptions(cur,list,t,2); curCorrect=o.correct;
+    const shown= Math.random()<0.5 ? o.correct : (o.opts.find(v=>v!==o.correct)||o.correct);
+    const q=document.createElement("div"); q.className="ynq";
+    q.innerHTML=`${TLABEL[o.t]} คือ <b>“${esc(shown)}”</b> ใช่ไหม?`; box.appendChild(q);
+    [["✅ ใช่",true],["❌ ไม่ใช่",false]].forEach(([lbl,yes])=>{
+      const b=document.createElement("button"); b.className="choice"; b.style.textAlign="center"; b.textContent=lbl;
+      const truth=(shown===o.correct); b.dataset.right=String(yes===truth);
+      b.onclick=()=>answer(yes===truth,b); box.appendChild(b);
+    });
+    return;
+  }
+  const o=makeOptions(cur,list,t,fmt==="c6"?6:4); curCorrect=o.correct;
+  o.opts.forEach(v=>{
+    const b=document.createElement("button"); b.className="choice"; b.dataset.right=String(v===o.correct);
+    const sub=subFor(v,o.t);
+    b.innerHTML=`${esc(v)}${sub?`<small>${esc(sub)}</small>`:""}`;
+    b.onclick=()=>answer(v===o.correct,b); box.appendChild(b);
+  });
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function checkTyped(){
+  if(!curInfo||answered||curCorrect===null) return;
+  const g=norm($("guess").value); if(!g) return;
+  const t=effTarget(cur);
+  let acc;
+  if(t==="title") acc=[cur.title,cur.jaTitle,curInfo&&curInfo.track];
+  else if(t==="anime") acc=[cur.anime,cur.series];
+  else if(t==="artist") acc=[cur.artist,cur.jaArtist,curInfo&&curInfo.artistName];
+  else acc=[ansVal(cur,"year")];
+  const ok= t==="year" ? acc.some(x=>x&&norm(x)===g) :
+    acc.filter(Boolean).some(x=>{const n=norm(x);return n&&(n===g||(g.length>=4&&(n.includes(g)||g.includes(n))))});
+  answer(ok);
+}
+
+function markChoices(){ document.querySelectorAll("#answerChoice .choice").forEach(b=>{b.disabled=true;if(b.dataset.right==="true")b.classList.add("right")}); }
+function answer(ok,btn){
+  if(answered||!curInfo) return;
+  if(TA.on){ answered=true; TA.ans++; if(ok) TA.ok++; $("taOk").textContent=TA.ok; $("taAns").textContent=TA.ans;
+    markChoices(); if(btn&&!ok) btn.classList.add("wrong"); stopAudio();
+    $("msg").innerHTML= ok?`<span class="good">✅ ถูก!</span> ${esc(cur.title)}`:`<span class="bad">❌</span> ${esc(cur.title)} — ${esc(cur.artist)}`;
+    setTimeout(()=>{ if(TA.on) newRound(); },650); return; }
+  answered=true;
+  stats.rounds++;
+  const pts=Math.round(POINTS[maxUnlocked]*(MULT[fmt]||1));
+  if(ok){ stats.correct++; stats.streak++; stats.score+=pts; stats.best=Math.max(stats.best||0,stats.streak); }
+  else stats.streak=0;
+  renderStats();
+  markChoices();
+  if(btn&&!ok) btn.classList.add("wrong");
+  const t=effTarget(cur);
+  const ansNote = t!=="title" && curCorrect ? ` <span style="font-size:15px;color:var(--muted)">(${TLABEL[t]}: ${esc(curCorrect)})</span>` : "";
+  reveal((ok?`<span class="good">ถูกต้อง! +${pts}</span>`:`<span class="bad">ผิด 😢</span>`)+ansNote);
+}
+
+function reveal(verdict){
+  answered=true;
+  $("rVerdict").innerHTML=verdict;
+  $("rTitle").textContent=cur.title;
+  const yy=yearOf(cur); $("rInfo").textContent=`${cur.artist}${cur.anime?" · "+cur.anime:""}${yy?" · "+yy:""}`;
+  $("rArt").src=curInfo.art||"";
+  $("rLink").href=curInfo.link||"#";
+  $("result").style.display="flex";
+  $("msg").textContent="กด ▶ เพื่อฟังคลิปเต็ม 30 วินาที";
+  renderClues(); playClip();
+}
+
+// ---------------- events ----------------
+$("play").onclick=()=>{ if(!curInfo) newRound(); else playClip(); };
+$("next").onclick=newRound;
+$("giveup").onclick=()=>{ if(!cur||!curInfo||answered) return; if(TA.on){ answer(false); return; } stats.rounds++; stats.streak=0; renderStats();
+  markChoices();
+  const t=effTarget(cur); reveal(`<span class="bad">เฉลย</span>`+(t!=="title"&&curCorrect?` <span style="font-size:15px;color:var(--muted)">(${TLABEL[t]}: ${esc(curCorrect)})</span>`:"")); };
+$("submit").onclick=checkTyped;
+$("guess").addEventListener("keydown",e=>{if(e.key==="Enter")checkTyped()});
+$("vol").oninput=e=>audio.volume=+e.target.value; audio.volume=0.7;
+
+document.querySelectorAll("[data-diff]").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("[data-diff]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+  diff=b.dataset.diff; recent=[]; updatePoolCount(); afterSettingsChange();
+});
+function chipGroup(attr,fn){ document.querySelectorAll(`[${attr}]`).forEach(b=>b.onclick=()=>{ document.querySelectorAll(`[${attr}]`).forEach(x=>x.classList.remove("on")); b.classList.add("on"); fn(b.getAttribute(attr)); }); }
+chipGroup("data-target",v=>{ target=v; store.set("asq_target",v); if(cur&&!answered) buildChoices(); });
+chipGroup("data-fmt",v=>{ fmt=v; store.set("asq_fmt",v); if(cur&&!answered) buildChoices(); });
+["fEra","fType","fSeries"].forEach((id,i)=>{ $(id).onchange=()=>{ F[["era","type","series"][i]]=$(id).value; updatePoolCount(); recent=[];
+  if(pool().length) afterSettingsChange(); else { $("msg").textContent="ไม่มีเพลงที่ตรงกับตัวกรองนี้ ลองเปลี่ยนตัวกรอง"; $("answerChoice").innerHTML=""; } }; });
+(function(){
+  const cnt={}; SONGS.forEach(s=>cnt[s.series]=(cnt[s.series]||0)+1);
+  const names=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b));
+  $("fSeries").innerHTML='<option value="all">ทุกเรื่อง</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)} (${cnt[n]})</option>`).join("");
+  const t=store.get("asq_target","title"), f=store.get("asq_fmt","c4");
+  const tb=document.querySelector(`[data-target="${t}"]`), fb=document.querySelector(`[data-fmt="${f}"]`);
+  if(tb){ document.querySelectorAll("[data-target]").forEach(x=>x.classList.remove("on")); tb.classList.add("on"); target=t; }
+  if(fb){ document.querySelectorAll("[data-fmt]").forEach(x=>x.classList.remove("on")); fb.classList.add("on"); fmt=f; }
+})();
+document.addEventListener("keydown",e=>{
+  if(e.target.tagName==="INPUT"||!$("mpView").classList.contains("hidden")) return;
+  if(e.code==="Space"){e.preventDefault();$("play").click()}
+  if(e.key==="n"||e.key==="N") newRound();
+});
+
+
+function applyCat(){
+  document.querySelectorAll("[data-cat]").forEach(x=>x.classList.toggle("on",x.dataset.cat===cat));
+  $("catTitle").textContent= cat==="online" ? onCat(onlineKey).name.replace(/^\S+\s/,"") : CAT_TITLE[cat];
+  const isOnline=cat==="online";
+  $("onlineRow").classList.toggle("hidden",!isOnline); $("diffRow").classList.toggle("hidden",isOnline); $("filterRow").classList.toggle("hidden",isOnline); $("fEra").classList.toggle("hidden",isOnline);
+  if(isOnline){ F.era="all"; $("fEra").value="all"; updateOnlineInfo(); }
+  const isAnime=cat==="anime";
+  $("endlessChip").classList.toggle("hidden",!isAnime);
+  $("fType").classList.toggle("hidden",!isAnime); $("fSeries").classList.toggle("hidden",!isAnime);
+  document.querySelector('[data-target="anime"]').classList.toggle("hidden",!(isAnime||cat==="mix"));
+  if(!isAnime){ F.type="all"; F.series="all"; $("fType").value="all"; $("fSeries").value="all"; }
+  if(!isAnime && diff==="endless"){ diff="all"; document.querySelectorAll("[data-diff]").forEach(x=>x.classList.toggle("on",x.dataset.diff==="all")); }
+  if(!(isAnime||cat==="mix") && target==="anime"){ target="title"; document.querySelectorAll("[data-target]").forEach(x=>x.classList.toggle("on",x.dataset.target==="title")); }
+  updatePoolCount();
+}
+document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{ cat=b.dataset.cat; try{localStorage.setItem("asq_cat",JSON.stringify(cat))}catch(e){} recent=[]; applyCat(); afterSettingsChange(); });
+function afterSettingsChange(){ if(gmode==="daily"){ dailyOpen(); return; } if(gmode==="ta"){ taStop(false); stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); $("msg").textContent="กด ▶ เริ่ม 60 วินาที"; return; } newRound(); }
+
+$("onSel").onchange=()=>{ $("onQ").value=""; setOnlineKey($("onSel").value); };
+$("onGo").onclick=()=>{ const q=$("onQ").value.trim(); if(q.length<2){ $("onQ").focus(); return; } setOnlineKey("q:"+q); };
+$("onQ").addEventListener("keydown",e=>{ if(e.key==="Enter") $("onGo").click(); });
+(function(){ if(!onlineKey.startsWith("q:")) $("onSel").value=onlineKey; else { $("onSel").value=""; $("onQ").value=onlineKey.slice(2); } })();
+function renderDatalist(t){
+  t=t||"title";
+  const all=(diff==="endless"?endlessPool.slice(0,3000):[]).concat(catList(),custom);
+  const opts=new Set(); all.forEach(x=>{ const v=ansVal(x,t); if(v) opts.add(v); if(t==="anime"&&x.series) opts.add(x.series); });
+  $("songList").innerHTML=[...opts].sort().map(o=>`<option value="${esc(o)}">`).join("");
+}
+function renderCustom(){
+  const t=$("cTable");
+  if(!custom.length){t.innerHTML="<tr><td style='color:var(--muted)'>ยังไม่มีเพลง — เพิ่มเพลงแล้วเลือกระดับ 'เพลงของฉัน' เพื่อเล่นเฉพาะเพลงที่เพิ่ม</td></tr>";return}
+  t.innerHTML="<tr><th>เพลง</th><th>ศิลปิน</th><th>อนิเมะ</th><th></th></tr>"+custom.map((c,i)=>
+    `<tr><td>${esc(c.title)}</td><td>${esc(c.artist)}</td><td>${esc(c.anime||"")}</td><td><button class="x" data-i="${i}">ลบ</button></td></tr>`).join("");
+  t.querySelectorAll(".x").forEach(b=>b.onclick=()=>{custom.splice(+b.dataset.i,1);store.set("asq_custom",custom);renderCustom();renderDatalist()});
+}
+$("cAdd").onclick=async()=>{
+  const title=$("cTitle").value.trim(), artist=$("cArtist").value.trim(), anime=$("cAnime").value.trim();
+  if(!title||!artist){$("cAdd").textContent="ใส่ชื่อเพลง+ศิลปิน";setTimeout(()=>$("cAdd").textContent="เพิ่ม",1500);return}
+  $("cAdd").textContent="กำลังค้นหา…";
+  const info=await lookup({title,artist});
+  $("cAdd").textContent="เพิ่ม";
+  if(!info){alertBox("ไม่พบเพลงนี้บน Apple Music ลองสะกดชื่ออื่น");return}
+  custom.push({title,artist,anime}); store.set("asq_custom",custom);
+  $("cTitle").value=$("cArtist").value=$("cAnime").value="";
+  renderCustom(); renderDatalist();
+};
+function alertBox(t){$("msg").textContent=t}
+
+// ---------------- problem banner ----------------
+function showProblem(kind){
+  const b=$("problem");
+  b.innerHTML = kind==="blocked"
+   ? "⚠️ <b>เชื่อมต่อ Apple ไม่ได้ เลยไม่มีเสียง</b><br>ถ้าเปิดไฟล์จากหน้าตัวอย่างในแอป Claude ให้กด <b>ดาวน์โหลด</b> ไฟล์ก่อน แล้วดับเบิลคลิกเปิดด้วย Chrome / Edge / Safari (ต้องต่ออินเทอร์เน็ต)"
+   : kind==="audio"
+   ? "⚠️ <b>โหลดไฟล์เสียงไม่ได้</b> — กด 'เพลงถัดไป' แล้วลองใหม่ ถ้ายังเงียบ ให้เช็กว่าไม่ได้ปิดเสียงเครื่อง/แท็บ"
+   : "⚠️ <b>หาเพลงไม่เจอ</b> — กด 'เพลงถัดไป' เพื่อลองเพลงอื่น";
+  b.style.display="block";
+}
+function hideProblem(){ $("problem").style.display="none"; }
+audio.addEventListener("error",()=>{ if(!audio.src||audio.src.startsWith("data:")) return; if(cur){ delete memCache["v3|"+cur.title+"|"+cur.artist]; } showProblem("audio"); });
+
+$("chkRun").onclick=async()=>{
+  const all=catList().concat(cat==="anime"||cat==="mix"?custom:[]); let ok=0,bad=0; const t=$("chkTable");
+  t.innerHTML="<tr><th></th><th>เพลง</th><th>ที่หาเจอใน Apple</th></tr>"; $("chkRun").disabled=true;
+  for(const s of all){
+    const info=await lookup(s); info?ok++:bad++;
+    t.insertAdjacentHTML("beforeend",`<tr><td>${info?"✅":"❌"}</td><td>${esc(s.title)}<br><small style="color:var(--muted)">${esc(s.artist)}</small></td><td>${info?esc(info.track+" — "+info.artistName):"ไม่พบ (จะถูกข้ามตอนเล่น)"}</td></tr>`);
+    $("chkSum").textContent=`มีเสียง ${ok} · ไม่พบ ${bad} · จาก ${all.length}`;
+  }
+  $("chkRun").disabled=false;
+};
+
+// ================= MULTIPLAYER (via public MQTT relay) =================
+const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
+const MP={client:null,code:null,isHost:false,id:Math.random().toString(36).slice(2,10),name:"",players:{},state:"idle",round:null,used:[],timers:[],lastSeen:0,watch:null,set:"all",rounds:10};
+const mpAudio=new Audio(); mpAudio.preload="auto";
+let mpRaf=null, mpT0=0, mpMyPick=null;
+const SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+const SILENT="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+
+function mpShow(id){ ["mpLobby","mpRoom","mpGame","mpEnd"].forEach(x=>$(x).classList.toggle("hidden",x!==id)); }
+function mpTopic(x){ return `asq-anime-quiz/v1/${MP.code}/${x}`; }
+function mpSend(to,msg){ if(MP.client) MP.client.publish(mpTopic(to),JSON.stringify(msg)); }
+function mpClear(){ MP.timers.forEach(clearTimeout); MP.timers=[]; }
+function mpLater(fn,ms){ MP.timers.push(setTimeout(fn,ms)); }
+function loadMqtt(){
+  return window.mqtt?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js";s.onload=res;s.onerror=()=>rej(new Error("lib"));document.head.appendChild(s)});
+}
+async function mpConnect(){
+  try{ await loadMqtt(); }catch(e){ throw new Error("lib"); }
+  let list=BROKERS; try{const o=localStorage.getItem("asq_broker"); if(o) list=[o];}catch(e){}
+  for(const url of list){
+    try{
+      return await new Promise((res,rej)=>{
+        const c=mqtt.connect(url,{clientId:"asq_"+MP.id+"_"+Date.now().toString(36),clean:true,connectTimeout:7000,reconnectPeriod:2000});
+        const t=setTimeout(()=>{c.end(true);rej()},8000);
+        c.once("connect",()=>{clearTimeout(t);res(c)});
+      });
+    }catch(e){}
+  }
+  throw new Error("broker");
+}
+function unlockAudio(){ try{ mpAudio.src=SILENT; const p=mpAudio.play(); if(p&&p.catch)p.catch(()=>{}); }catch(e){} }
+function mpSaveName(){ MP.name=($("mpName").value.trim()||"ผู้เล่น").slice(0,16); store.set("asq_name",MP.name); }
+
+async function mpEnter(code,host){
+  mpSaveName(); unlockAudio();
+  $("mpMsg").textContent="กำลังเชื่อมต่อ…"; $("mpCreate").disabled=$("mpJoin").disabled=true;
+  try{ MP.client=await mpConnect(); }
+  catch(e){ $("mpMsg").innerHTML = e.message==="lib" ? "⚠️ โหลดระบบออนไลน์ไม่ได้ — ต้องเปิดไฟล์ในเบราว์เซอร์ (ไม่ใช่หน้าตัวอย่างในแอป) และต่ออินเทอร์เน็ต" : "⚠️ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง"; $("mpCreate").disabled=$("mpJoin").disabled=false; return; }
+  $("mpCreate").disabled=$("mpJoin").disabled=false; $("mpMsg").textContent="";
+  MP.code=code; MP.isHost=host; MP.players={}; MP.state="lobby"; MP.used=[]; MP.lastSeen=Date.now();
+  MP.client.on("message",(topic,buf)=>{ let m; try{m=JSON.parse(buf.toString())}catch(e){return}
+    if(topic===mpTopic("host")){ if(MP.isHost) hostHandle(m); } else onAll(m); });
+  MP.client.subscribe(mpTopic("all"));
+  if(host){ MP.client.subscribe(mpTopic("host")); MP.players[MP.id]={name:MP.name,score:0}; hostBroadcastLobby(); MP.hb=setInterval(hostBroadcastLobby,3000); }
+  $("mpCode").textContent=code; $("mpHostSet").classList.toggle("hidden",!host);
+  $("mpWait").textContent = host ? "ส่งรหัสหรือลิงก์ให้เพื่อน แล้วกด ▶ เริ่มเกม" : "กำลังเข้าห้อง…";
+  mpShow("mpRoom"); renderPlayers("mpPlayers");
+  if(!host){
+    const join=()=>mpSend("host",{t:"join",id:MP.id,name:MP.name});
+    join(); MP.joinTimer=setInterval(()=>{ if(!MP.players[MP.id]) join(); },2000);
+    MP.watch=setInterval(()=>{ if(Date.now()-MP.lastSeen>15000){ $("mpWait").textContent="⚠️ ไม่พบเจ้าของห้อง — เช็กรหัสห้อง หรือเจ้าของห้องอาจออกไปแล้ว"; $("mpEndMsg").textContent="เจ้าของห้องออกไปแล้ว"; } },3000);
+  }
+  try{ history.replaceState(null,"","#"+code); }catch(e){}
+}
+function mpLeave(){
+  if(MP.client){ if(!MP.isHost) mpSend("host",{t:"leave",id:MP.id}); else mpSend("all",{t:"closed"}); setTimeout(()=>{try{MP.client.end(true)}catch(e){} MP.client=null;},200); }
+  clearInterval(MP.hb); clearInterval(MP.joinTimer); clearInterval(MP.watch); mpClear(); mpStopAudio();
+  MP.state="idle"; mpShow("mpLobby"); try{ history.replaceState(null,"",location.pathname); }catch(e){}
+}
+
+function sortedPlayers(){ return Object.entries(MP.players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score); }
+function renderPlayers(box,res){
+  const L=sortedPlayers();
+  $(box).innerHTML=L.map((p,i)=>{
+    const r=res&&res[p.id];
+    const tag= r ? (r.ok?`<span class="ok">+${r.pts}</span>`:`<span class="no">${r.ans?"ผิด":"ไม่ได้ตอบ"}</span>`) : "";
+    return `<div class="pl${p.id===MP.id?" me":""}"><span>${i+1}. ${esc(p.name)}${p.id===MP.id?" (คุณ)":""} ${tag}</span><b>${p.score.toLocaleString()}</b></div>`;
+  }).join("") || "<div class='label'>ยังไม่มีผู้เล่น</div>";
+}
+
+// ---------- host side ----------
+function hostBroadcastLobby(){ mpSend("all",{t:"lobby",players:MP.players,state:MP.state}); }
+function hostHandle(m){
+  if(m.t==="join"){ if(!MP.players[m.id]) MP.players[m.id]={name:String(m.name||"ผู้เล่น").slice(0,16),score:0}; hostBroadcastLobby(); }
+  else if(m.t==="leave"){ delete MP.players[m.id]; hostBroadcastLobby(); }
+  else if(m.t==="ans"){
+    const R=MP.round; if(!R||R.done||m.n!==R.n||R.answers[m.id]||!MP.players[m.id]) return;
+    R.answers[m.id]={choice:+m.choice,elapsed:Math.max(0,Math.min(20,+m.elapsed||20))};
+    const cnt=Object.keys(R.answers).length, tot=Object.keys(MP.players).length;
+    mpSend("all",{t:"answered",n:R.n,count:cnt,total:tot});
+    if(cnt>=tot) hostEndRound();
+  }
+}
+async function hostStart(){
+  MP.cat=$("mpCat").value; MP.set=$("mpSet").value; if(MP.set==="endless"&&MP.cat!=="anime") MP.set="all"; MP.rounds=+$("mpRounds").value; MP.target=$("mpTarget").value; MP.nopt=+$("mpOpts").value;
+  Object.values(MP.players).forEach(p=>p.score=0);
+  MP.state="game"; MP.used=[]; MP.n=0; $("mpStart").disabled=true;
+  if(MP.set==="endless"){ await endlessEnsure(15,()=>{ $("mpWait").textContent=`กำลังรวบรวมเพลง… ${endlessPool.length} เพลง`; }); }
+  if(MP.cat.startsWith("online:")){ MP.set="all"; await onEnsure(MP.cat.slice(7),20,S=>{ $("mpWait").textContent=`กำลังเปิดคลังเพลงออนไลน์… ${S.items.length} เพลง`; }); }
+  MP.next=null; hostPrepare();
+  $("mpStart").disabled=false;
+  hostNextRound();
+}
+function hostPool(){
+  if(MP.set==="endless") return endlessPool;
+  if((MP.cat||"").startsWith("online:")) return listFor(MP.cat);
+  const base=listFor(MP.cat||"anime");
+  return MP.set==="all"?base:base.filter(s=>s.diff===MP.set);
+}
+function hostPrepare(){
+  // pick + load the next song ahead of time so rounds start instantly
+  MP.next=(async()=>{
+    const P=hostPool(); let song=null, info=null;
+    for(let k=0;k<6&&!info;k++){
+      let cand=P.filter(s=>!MP.used.includes(s.title)&&cache["v3|"+s.title+"|"+s.artist]!==null); if(!cand.length) cand=P;
+      song=cand[Math.floor(Math.random()*cand.length)];
+      info= song.info || await lookup(song);
+    }
+    if(MP.set==="endless") endlessFetchOne();
+    if((MP.cat||"").startsWith("online:")) onGrow(MP.cat.slice(7));
+    return info?{song,info}:null;
+  })();
+}
+async function hostNextRound(){
+  mpClear();
+  if(MP.n>=MP.rounds){ MP.state="end"; mpSend("all",{t:"end",players:MP.players}); return; }
+  if(!MP.next) hostPrepare();
+  const got=await MP.next; MP.next=null;
+  if(!got){ mpSend("all",{t:"error",msg:"โหลดเพลงไม่ได้ (Apple จำกัดการค้นหา) — ลองใหม่อีกครั้ง"}); MP.state="lobby"; return; }
+  const P=hostPool(); const song=got.song, info=got.info;
+  MP.used.push(song.title); MP.n++;
+  let t=MP.target||"title"; if(t==="anime"&&!(song.anime&&song.diff!=="endless")) t="title";
+  const o=makeOptions(song,P,t,MP.nopt||4,listFor(MP.cat||"anime"));
+  const subOf=v=>{ if(o.t!=="title") return ""; const x=P.concat(ALL).find(z=>z.title===v); return x?(MP.set==="endless"?x.artist:(x.anime||x.artist)):""; };
+  MP.round={n:MP.n,song,info,correct:o.opts.indexOf(o.correct),answers:{},done:false,t:o.t,ans:o.correct};
+  mpSend("all",{t:"round",n:MP.n,total:MP.rounds,preview:info.preview,ask:TLABEL[o.t],choices:o.opts.map(v=>({title:v,sub:subOf(v)}))});
+  mpLater(hostEndRound,21500);
+}
+function hostEndRound(){
+  const R=MP.round; if(!R||R.done) return; R.done=true; mpClear();
+  const res={};
+  Object.keys(MP.players).forEach(id=>{
+    const a=R.answers[id]; const ok=!!a&&a.choice===R.correct;
+    const pts= ok ? Math.max(100,Math.round(1000-45*a.elapsed)) : 0;
+    MP.players[id].score+=pts; res[id]={ok,pts,ans:!!a};
+  });
+  mpSend("all",{t:"reveal",n:R.n,correct:R.correct,res,players:MP.players,song:{title:R.song.title,artist:R.song.artist,anime:R.song.anime||"",art:R.info.art,year:yearOf(R.song)||R.info.year}});
+  if(MP.n<MP.rounds) hostPrepare();
+  mpLater(hostNextRound,7000);
+}
+
+// ---------- everyone (incl. host) ----------
+function mpStopAudio(){ cancelAnimationFrame(mpRaf); try{mpAudio.pause()}catch(e){} }
+function mpPlayFor(dur){
+  mpStopAudio(); try{mpAudio.currentTime=0}catch(e){} mpAudio.volume=+$("vol").value;
+  const p=mpAudio.play(); if(p&&p.catch) p.catch(()=>{ $("mpHint").textContent="🔇 เบราว์เซอร์บล็อกเสียง — แตะที่หน้าจอ 1 ครั้ง"; });
+  const tick=()=>{ if(mpAudio.currentTime>=dur||mpAudio.ended){ mpAudio.pause(); return; } mpRaf=requestAnimationFrame(tick); };
+  mpRaf=requestAnimationFrame(tick);
+}
+function onAll(m){
+  MP.lastSeen=Date.now();
+  if(m.t==="lobby"){
+    MP.players=m.players||{};
+    if(!MP.isHost && MP.players[MP.id]) $("mpWait").textContent = m.state==="game" ? "เกมกำลังเล่นอยู่ — จะได้เล่นรอบถัดไป" : "เข้าห้องแล้ว! รอเจ้าของห้องกดเริ่มเกม…";
+    if(MP.state==="lobby") renderPlayers("mpPlayers");
+  }
+  else if(m.t==="round"){
+    MP.state="game"; mpShow("mpGame"); mpMyPick=null;
+    $("mpRoundLbl").textContent=`รอบ ${m.n} / ${m.total}`; $("mpAnswered").textContent="";
+    $("mpResult").style.display="none"; $("mpHint").textContent=`🎧 ทาย${m.ask||"ชื่อเพลง"} — ยิ่งเร็วยิ่งได้คะแนนเยอะ`;
+    const box=$("mpChoices"); box.innerHTML="";
+    m.choices.forEach((c,i)=>{ const b=document.createElement("button"); b.className="choice"; b.innerHTML=`${esc(c.title)}<small>${esc(c.sub||"")}</small>`;
+      b.onclick=()=>{ if(mpMyPick!==null) return; mpMyPick=i; b.classList.add("picked"); [...box.children].forEach(x=>x.disabled=true);
+        mpSend("host",{t:"ans",id:MP.id,n:m.n,choice:i,elapsed:(performance.now()-mpT0)/1000}); $("mpHint").textContent="ส่งคำตอบแล้ว รอคนอื่น…"; };
+      box.appendChild(b); });
+    renderPlayers("mpScores");
+    mpAudio.src=m.preview; mpAudio.load(); mpT0=performance.now();
+    mpPlayFor(1.5);
+    mpLater(()=>mpPlayFor(4),5000);
+    mpLater(()=>mpPlayFor(30),10000);
+    const bar=()=>{ const f=Math.min(1,(performance.now()-mpT0)/20000); $("mpBar").style.width=(100-f*100)+"%"; if(f<1&&MP.state==="game"&&mpMyPick!==-2) MP.barRaf=requestAnimationFrame(bar); };
+    cancelAnimationFrame(MP.barRaf); bar();
+  }
+  else if(m.t==="answered"){ $("mpAnswered").textContent=`ตอบแล้ว ${m.count}/${m.total} คน`; }
+  else if(m.t==="reveal"){
+    if(!MP.isHost) mpClear();
+    MP.players=m.players; mpShow("mpGame"); cancelAnimationFrame(MP.barRaf); $("mpBar").style.width="0";
+    [...$("mpChoices").children].forEach((b,i)=>{ b.disabled=true; if(i===m.correct) b.classList.add("right"); else if(i===mpMyPick) b.classList.add("wrong"); });
+    const r=m.res[MP.id];
+    $("mpVerdict").innerHTML= r ? (r.ok?`<span class="good">ถูก! +${r.pts}</span>`:`<span class="bad">${r.ans?"ผิด 😢":"หมดเวลา ⏰"}</span>`) : "เฉลย";
+    $("mpTitle").textContent=m.song.title; $("mpInfo").textContent=`${m.song.artist}${m.song.anime?" · "+m.song.anime:""}${m.song.year?" · "+m.song.year:""}`;
+    $("mpArt").src=m.song.art||""; $("mpResult").style.display="flex";
+    $("mpHint").textContent="รอบถัดไปใน 7 วินาที…";
+    renderPlayers("mpScores",m.res);
+    if(mpAudio.paused){ mpPlayFor(30); }
+  }
+  else if(m.t==="end"){
+    MP.players=m.players; MP.state="lobby"; mpStopAudio(); mpShow("mpEnd"); renderPlayers("mpFinal");
+    const top=sortedPlayers()[0]; $("mpEndMsg").textContent= top?`ผู้ชนะ: ${top.name} 🎉`:"";
+    $("mpAgain").classList.toggle("hidden",!MP.isHost);
+  }
+  else if(m.t==="closed" && !MP.isHost){ mpStopAudio(); mpClear(); $("mpEndMsg").textContent="เจ้าของห้องปิดห้องแล้ว"; mpShow("mpEnd"); renderPlayers("mpFinal"); }
+  else if(m.t==="error"){ $("mpHint").textContent="⚠️ "+m.msg; }
+}
+
+// ---------- wiring ----------
+function setTab(mp){
+  $("tabSolo").classList.toggle("on",!mp); $("tabMp").classList.toggle("on",mp);
+  $("soloView").classList.toggle("hidden",mp); $("mpView").classList.toggle("hidden",!mp);
+  if(mp) stopAudio();
+  document.querySelector(".stats").style.visibility = mp ? "hidden" : "visible";
+}
+$("tabSolo").onclick=()=>setTab(false);
+$("tabMp").onclick=()=>setTab(true);
+$("mpName").value=store.get("asq_name","");
+$("mpCreate").onclick=()=>{ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c=""; for(let i=0;i<5;i++) c+=A[Math.floor(Math.random()*A.length)]; mpEnter(c,true); };
+$("mpJoin").onclick=()=>{ const c=$("mpCodeIn").value.trim().toUpperCase(); if(!/^[A-Z0-9]{5}$/.test(c)){ $("mpMsg").textContent="ใส่รหัสห้อง 5 ตัว"; return; } mpEnter(c,false); };
+$("mpCodeIn").addEventListener("keydown",e=>{ if(e.key==="Enter") $("mpJoin").click(); });
+$("mpStart").onclick=()=>{ if(MP.isHost) hostStart(); };
+$("mpAgain").onclick=()=>{ if(MP.isHost){ MP.state="lobby"; mpShow("mpRoom"); hostBroadcastLobby(); renderPlayers("mpPlayers"); } };
+$("mpLeave").onclick=mpLeave;
+$("mpCopy").onclick=async()=>{ const link=location.href.split("#")[0]+"#"+MP.code; try{ await navigator.clipboard.writeText(link); $("mpCopy").textContent="✅ คัดลอกแล้ว"; }catch(e){ $("mpCopy").textContent=link; } setTimeout(()=>$("mpCopy").textContent="📋 คัดลอกลิงก์ชวนเพื่อน",2500); };
+window.addEventListener("beforeunload",()=>{ if(MP.client){ if(MP.isHost) mpSend("all",{t:"closed"}); else mpSend("host",{t:"leave",id:MP.id}); } });
+document.addEventListener("click",()=>{ if(MP.state==="game"&&mpAudio.paused&&mpAudio.src&&!mpAudio.src.startsWith("data:")&&mpAudio.currentTime<0.05){ mpAudio.play().catch(()=>{}); } });
+(function(){ const h=(location.hash||"").slice(1).toUpperCase(); if(/^[A-Z0-9]{5}$/.test(h)){ setTab(true); $("mpCodeIn").value=h; $("mpMsg").textContent="ใส่ชื่อแล้วกด 'เข้าห้อง' ได้เลย"; } })();
+
+// ---------------- installable app (works when served from a website, not from a downloaded file) ----------------
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferredInstall=e; if(!store.get("asq_noinstall",false)) $("installBar").style.display="flex"; });
+$("installBtn").onclick=async()=>{ if(deferredInstall){ deferredInstall.prompt(); try{ await deferredInstall.userChoice; }catch(e){} deferredInstall=null; } $("installBar").style.display="none"; };
+$("installX").onclick=()=>{ $("installBar").style.display="none"; store.set("asq_noinstall",true); };
+(function(){ const ios=/iphone|ipad|ipod/i.test(navigator.userAgent), standalone=window.navigator.standalone||matchMedia("(display-mode: standalone)").matches;
+  if(ios&&!standalone&&location.protocol.startsWith("http")&&!store.get("asq_noinstall",false)){ $("installBar").style.display="flex"; $("installBar").querySelector("span").textContent="📲 iPhone: กดปุ่มแชร์ ⬆️ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม” เพื่อเล่นเหมือนแอป"; $("installBtn").style.display="none"; } })();
+
+// ================= GAME MODES: normal / time attack / daily =================
+let gmode="normal";
+const TA={on:false,left:60,ok:0,ans:0,last:0,raf:null};
+function boardKey(){ const k = cat==="online" ? "on-"+onlineKey : cat; return k.replace(/^on-q:/,"q-").toLowerCase().normalize("NFKC").replace(/[^a-z0-9ก-๙\-]+/g,"-").slice(0,40)||"x"; }
+function boardName(k){ k=k||boardKey(); if(k.startsWith("on-")) return onCat(k.slice(3)).name; if(k.startsWith("q-")) return "🔍 "+k.slice(2); return CATS[k]||k; }
+function setGmode(m){
+  gmode=m; document.querySelectorAll("[data-gmode]").forEach(x=>x.classList.toggle("on",x.dataset.gmode===m));
+  const daily=m==="daily";
+  $("playerPanel").classList.toggle("hidden",daily); $("dailyPanel").classList.toggle("hidden",!daily);
+  ["filterRow","diffRow"].forEach(id=>{ const el=$(id); if(el&&daily) el.classList.add("hidden"); });
+  document.querySelector('[data-target="title"]').parentElement.classList.toggle("hidden",daily);
+  document.querySelector('[data-fmt="c4"]').parentElement.classList.toggle("hidden",daily);
+  $("taBar").classList.toggle("hidden",m!=="ta");
+  taStop(false);
+  if(!daily) applyCat();
+  if(daily){ stopAudio(); dailyOpen(); }
+  else { $("clues").classList.toggle("hidden",m==="ta"); $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); if(m==="normal") newRound(); else { stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("msg").textContent="กด ▶ เริ่ม 60 วินาที แล้วเพลงจะเล่นเอง ตอบให้ได้มากที่สุด"; } }
+}
+document.querySelectorAll("[data-gmode]").forEach(b=>b.onclick=()=>setGmode(b.dataset.gmode));
+
+// ----- time attack -----
+function taTick(){
+  if(!TA.on) return;
+  const now=performance.now();
+  if(curInfo&&!answered&&!audio.paused || curInfo&&!answered&&audio.currentTime>0) TA.left-=(now-TA.last)/1000;
+  TA.last=now;
+  $("taTime").textContent=Math.max(0,TA.left).toFixed(1); $("taBarFill").style.width=Math.max(0,TA.left/60*100)+"%";
+  if(TA.left<=0){ taEnd(); return; }
+  TA.raf=requestAnimationFrame(taTick);
+}
+function taStart(){
+  if(fmt==="yn"){ fmt="c4"; document.querySelectorAll("[data-fmt]").forEach(x=>x.classList.toggle("on",x.dataset.fmt==="c4")); }
+  Object.assign(TA,{on:true,left:60,ok:0,ans:0,last:performance.now()});
+  $("taOk").textContent="0"; $("taAns").textContent="0"; $("taResult").classList.add("hidden"); $("taStart").disabled=true;
+  try{ audio.src=SILENT_WAV; audio.play().catch(()=>{}); }catch(e){}       // unlock audio on this tap (iPhone)
+  cancelAnimationFrame(TA.raf); TA.raf=requestAnimationFrame(taTick);
+  newRound();
+}
+function taStop(show){ TA.on=false; cancelAnimationFrame(TA.raf); $("taStart").disabled=false; if(!show) $("taResult").classList.add("hidden"); }
+function taEnd(){
+  taStop(true); stopAudio(); answered=true;
+  document.querySelectorAll("#answerChoice .choice").forEach(b=>b.disabled=true);
+  const k=boardKey(); const best=store.get("asq_tabest",{}); const prev=best[k]||0; const isBest=TA.ok>prev;
+  if(isBest){ best[k]=TA.ok; store.set("asq_tabest",best); }
+  const hist=store.get("asq_tahist",[]); hist.unshift({k,ok:TA.ok,ans:TA.ans,d:Date.now()}); store.set("asq_tahist",hist.slice(0,50));
+  $("taBest").textContent=Math.max(prev,TA.ok);
+  const name=store.get("asq_name","");
+  $("taResult").innerHTML=`<div class="big">⏰ หมดเวลา! ตอบถูก ${TA.ok} ข้อ</div><div class="label">ตอบทั้งหมด ${TA.ans} ข้อ · หมวด ${esc(boardName(k))}${isBest?" · 🎉 สถิติใหม่!":` · สถิติเดิม ${prev}`}</div>
+    <div class="row" style="justify-content:center;margin-top:10px"><input type="text" id="taName" maxlength="16" placeholder="ชื่อในอันดับโลก" value="${esc(name)}" style="width:180px">
+    <button class="btn" id="taSubmit">🌍 ส่งคะแนนขึ้นอันดับโลก</button><button class="btn ghost" id="taAgain">เล่นอีกรอบ</button></div><div class="label" id="taSubMsg" style="margin-top:6px"></div>`;
+  $("taResult").classList.remove("hidden");
+  $("taAgain").onclick=taStart;
+  $("taSubmit").onclick=async()=>{ const n=($("taName").value.trim()||"ผู้เล่น").slice(0,16); store.set("asq_name",n); $("mpName").value=n;
+    $("taSubMsg").textContent="กำลังส่ง…"; const r=await lbSubmit(k,n,Math.max(prev,TA.ok)); $("taSubMsg").textContent= r?"✅ ส่งแล้ว! ดูอันดับได้ที่ปุ่ม 🏆":"⚠️ ส่งไม่สำเร็จ ลองใหม่อีกครั้ง"; };
+}
+$("taStart").onclick=taStart;
+
+// ----- daily song (Heardle-style) -----
+const DSTEPS=[1,2,4,7,11,16];
+let D=null;
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function hashStr(x){ let h=2166136261; for(const ch of x){ h^=ch.codePointAt(0); h=Math.imul(h,16777619)>>>0; } return h; }
+function dailyCat(){ return ["anime","thai","inter","kpop","mix"].includes(cat)?cat:"mix"; }
+function dailyPick(day,c){
+  const L=listFor(c).filter(x=>x.diff!=="hard").sort((a,b)=>(a.title+a.artist).localeCompare(b.title+b.artist));
+  return L[hashStr(day+"|"+c)%L.length];
+}
+async function dailyOpen(){
+  const day=todayStr(), c=dailyCat(); const song=dailyPick(day,c);
+  const saved=store.get("asq_daily",{})[day+"|"+c];
+  D={day,c,song,info:null,step:saved?saved.res.length:0,res:saved?saved.res:[],done:saved?saved.done:false,win:saved?saved.win:false};
+  $("dDate").textContent=`${new Date().toLocaleDateString("th-TH",{dateStyle:"long"})} · หมวด ${CATS[c]}${cat==="online"?" (คลังออนไลน์ใช้หมวดรวม)":""}`;
+  const titles=new Set(); listFor(c).forEach(x=>titles.add(x.title)); $("dList").innerHTML=[...titles].sort().map(t=>`<option value="${esc(t)}">`).join("");
+  $("dResult").style.display="none"; $("dGuess").value=""; dailyRender();
+  $("dMsg").textContent="กำลังโหลดเพลง…"; $("dPlay").disabled=true;
+  D.info=await lookup(song);
+  if(!D||D.song!==song) return;
+  if(!D.info){ $("dMsg").textContent="โหลดเพลงไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วกดโหมดนี้อีกครั้ง"; return; }
+  $("dPlay").disabled=false; $("dMsg").textContent= D.done ? "เล่นวันนี้แล้ว — กด ▶ ฟังเพลงเต็มได้" : `กด ▶ ฟัง ${DSTEPS[D.step]} วินาที`;
+  if(D.done) dailyFinish(false);
+}
+function dailyRender(){
+  $("dSteps").innerHTML=DSTEPS.map((sec,i)=>`<button class="clue${i<=D.step?" unlocked":""}${i===D.step&&!D.done?" current":""}" disabled>${sec}s<small>${D.res[i]?({ok:"🟩",bad:"🟥",skip:"⬜"}[D.res[i].r]):(i+1)+"/6"}</small></button>`).join("");
+  $("dHistory").innerHTML=D.res.map((r,i)=>`<div class="pl"><span>${i+1}. ${r.r==="skip"?"<span class='label'>ข้าม</span>":esc(r.g)}</span><span>${({ok:"🟩",bad:"🟥",skip:"⬜"})[r.r]}</span></div>`).join("");
+  $("dInput").classList.toggle("hidden",D.done);
+}
+function dailyPlay(){
+  if(!D||!D.info) return;
+  stopAudio(); if(audio.src!==D.info.preview){ audio.src=D.info.preview; audio.load(); }
+  try{ audio.currentTime=0; }catch(e){}
+  const dur=D.done?30:DSTEPS[D.step];
+  const p=audio.play(); if(p&&p.catch) p.catch(()=>{ $("dMsg").textContent="เล่นเสียงไม่ได้ — กด ▶ อีกครั้ง"; });
+  const tick=()=>{ const t=audio.currentTime; $("dProg").style.width=Math.min(100,t/dur*100)+"%"; if(t>=dur||audio.ended){ audio.pause(); return; } rafId=requestAnimationFrame(tick); };
+  rafId=requestAnimationFrame(tick);
+}
+function dailyGuess(skip){
+  if(!D||D.done||!D.info) return;
+  const g=$("dGuess").value.trim(); if(!skip&&!g) return;
+  const acc=[D.song.title,D.song.jaTitle,D.info.track].filter(Boolean).map(norm);
+  const ng=norm(g);
+  const ok=!skip && acc.some(a=>a&&(a===ng||(ng.length>=4&&(a.includes(ng)||ng.includes(a)))));
+  D.res.push({r:skip?"skip":(ok?"ok":"bad"),g}); $("dGuess").value="";
+  if(ok){ D.done=true; D.win=true; } else { D.step++; if(D.step>=DSTEPS.length){ D.done=true; D.win=false; D.step=DSTEPS.length-1; } }
+  const all=store.get("asq_daily",{}); all[D.day+"|"+D.c]={res:D.res,done:D.done,win:D.win}; store.set("asq_daily",all);
+  dailyRender();
+  if(D.done) dailyFinish(true); else { $("dMsg").textContent=skip?`ข้ามแล้ว — กด ▶ ฟัง ${DSTEPS[D.step]} วินาที`:`ยังไม่ใช่ — กด ▶ ฟัง ${DSTEPS[D.step]} วินาที`; dailyPlay(); }
+}
+function dailyShareText(){
+  const sq=D.res.map(r=>({ok:"🟩",bad:"🟥",skip:"⬜"})[r.r]).join("")+"⬛".repeat(Math.max(0,6-D.res.length));
+  const link=location.protocol.startsWith("http")?"\n"+location.href.split("#")[0]:"";
+  return `🎵 ทายเพลงประจำวัน ${D.day.split("-").reverse().join("/")}\n${CATS[D.c]} ${D.win?D.res.length:"X"}/6\n🔊${sq}${link}`;
+}
+function dailyFinish(fresh){
+  $("dVerdict").innerHTML=D.win?`<span class="good">ถูกต้อง! ทายได้ในครั้งที่ ${D.res.length} 🎉</span>`:`<span class="bad">วันนี้พลาดไป 😢</span>`;
+  $("dTitle").textContent=D.song.title; const y=yearOf(D.song);
+  $("dInfo").textContent=`${D.song.artist}${D.song.anime?" · "+D.song.anime:""}${y?" · "+y:""}`;
+  $("dArt").src=D.info.art||""; $("dShareText").textContent=dailyShareText(); $("dResult").style.display="flex";
+  $("dMsg").textContent="กด ▶ ฟังเพลงเต็ม 30 วินาที"; dailyRender();
+  if(fresh) dailyPlay();
+}
+$("dPlay").onclick=dailyPlay;
+$("dSubmit").onclick=()=>dailyGuess(false);
+$("dSkip").onclick=()=>dailyGuess(true);
+$("dGuess").addEventListener("keydown",e=>{ if(e.key==="Enter") dailyGuess(false); });
+$("dShare").onclick=async()=>{ const t=dailyShareText(); try{ await navigator.clipboard.writeText(t); $("dShare").textContent="✅ คัดลอกแล้ว"; }catch(e){ const r=document.createRange(); r.selectNodeContents($("dShareText")); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); $("dShare").textContent="เลือกข้อความแล้ว กดคัดลอกเองได้"; } setTimeout(()=>$("dShare").textContent="📋 คัดลอกผลไปแชร์",2500); };
+setInterval(()=>{ if(gmode!=="daily") return; const n=new Date(), m=new Date(n); m.setHours(24,0,0,0); const left=m-n; $("dNext").textContent=`เพลงใหม่ในอีก ${Math.floor(left/3600000)} ชม. ${Math.floor(left/60000)%60} นาที`; if(D&&D.day!==todayStr()) dailyOpen(); },1000);
+
+// ================= STATS & WORLD LEADERBOARD =================
+function dailyStats(){
+  const all=store.get("asq_daily",{}); const days={}; Object.entries(all).forEach(([k,v])=>{ if(!v.done) return; const d=k.split("|")[0]; days[d]=days[d]||v.win; });
+  const played=Object.keys(all).filter(k=>all[k].done).length, wins=Object.values(all).filter(v=>v.done&&v.win).length;
+  const dist=[0,0,0,0,0,0]; Object.values(all).forEach(v=>{ if(v.win) dist[v.res.length-1]++; });
+  let cur=0; const d=new Date(); for(;;){ const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); if(days[k]){ cur++; d.setDate(d.getDate()-1); } else if(cur===0&&k===todayStr()){ d.setDate(d.getDate()-1); } else break; }
+  return {played,wins,dist,cur};
+}
+function renderMyStats(){
+  const ds=dailyStats(), best=store.get("asq_tabest",{}), mx=Math.max(1,...ds.dist);
+  const taRows=Object.entries(best).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="pl"><span>${esc(boardName(k))}</span><b>${v} ข้อ</b></div>`).join("")||"<div class='label'>ยังไม่เคยเล่น</div>";
+  $("myStats").innerHTML=`<div class="stats" style="margin-bottom:10px">
+     <div class="stat"><b>${stats.score.toLocaleString()}</b><small>คะแนนรวม (ปกติ)</small></div><div class="stat"><b>${stats.rounds?Math.round(stats.correct/stats.rounds*100)+"%":"–"}</b><small>ตอบถูก</small></div>
+     <div class="stat"><b>${stats.best||0}</b><small>ถูกติดกันสูงสุด</small></div><div class="stat"><b>${ds.cur}</b><small>วันติดต่อกัน (ประจำวัน)</small></div></div>
+   <h3 style="margin:8px 0 4px">⏱️ สถิติจับเวลา 60 วิ (แยกหมวด)</h3><div class="plist">${taRows}</div>
+   <h3 style="margin:14px 0 4px">📅 เพลงประจำวัน — เล่น ${ds.played} · ชนะ ${ds.wins}</h3>
+   ${ds.dist.map((n,i)=>`<div class="row" style="gap:6px;margin:3px 0"><span style="width:16px">${i+1}</span><div style="flex:1;background:var(--panel2);border-radius:6px"><div style="width:${Math.max(6,n/mx*100)}%;background:var(--accent2);border-radius:6px;padding:2px 8px;font-size:13px">${n}</div></div></div>`).join("")}`;
+  const boards=new Set([boardKey(),...Object.keys(best),"anime","thai","inter","kpop","mix"]);
+  $("lbBoard").innerHTML=[...boards].map(k=>`<option value="${esc(k)}">${esc(boardName(k))}</option>`).join(""); $("lbBoard").value=boardKey();
+}
+const LB_ROOT="asq-anime-quiz/lb/v1/";
+async function lbClient(){   // leaderboard needs a server that keeps (retains) scores: EMQX does, the backup relay does not
+  await loadMqtt(); let url="wss://broker.emqx.io:8084/mqtt"; try{ const o=localStorage.getItem("asq_broker"); if(o) url=o; }catch(e){}
+  return await new Promise((res,rej)=>{ const c=mqtt.connect(url,{clientId:"asqlb_"+MP.id+"_"+Date.now().toString(36),clean:true,connectTimeout:7000,reconnectPeriod:0});
+    const t=setTimeout(()=>{ try{c.end(true)}catch(e){} rej(new Error("timeout")); },8000); c.once("connect",()=>{clearTimeout(t);res(c)}); c.once("error",()=>{}); });
+}
+async function lbSubmit(k,name,score){
+  try{ const c=await lbClient();
+    await new Promise((res,rej)=>c.publish(LB_ROOT+k+"/"+MP.id,JSON.stringify({n:name,s:score,d:Date.now()}),{qos:1,retain:true},e=>e?rej(e):res()));
+    setTimeout(()=>{ try{c.end(true)}catch(e){} },300); return true; }catch(e){ return false; }
+}
+async function lbLoad(){
+  const k=$("lbBoard").value; $("lbList").innerHTML="<div class='label'>กำลังโหลด…</div>";
+  let c; try{ c=await lbClient(); }catch(e){ $("lbList").innerHTML="<div class='label'>⚠️ เชื่อมต่อไม่ได้ (ต้องเปิดเว็บในเบราว์เซอร์และต่ออินเทอร์เน็ต)</div>"; return; }
+  const rows={};
+  c.on("message",(t,b)=>{ try{ const m=JSON.parse(b.toString()); const id=t.split("/").pop(); if(typeof m.s==="number"&&m.s>=0&&m.s<500) rows[id]={n:String(m.n||"?").slice(0,16),s:m.s,d:m.d}; }catch(e){} });
+  c.subscribe(LB_ROOT+k+"/+");
+  await new Promise(r=>setTimeout(r,2500)); try{ c.end(true); }catch(e){}
+  const L=Object.entries(rows).sort((a,b)=>b[1].s-a[1].s||a[1].d-b[1].d).slice(0,20);
+  $("lbList").innerHTML= L.length ? L.map(([id,r],i)=>`<div class="pl${id===MP.id?" me":""}"><span>${["🥇","🥈","🥉"][i]||(i+1)+"."} ${esc(r.n)}${id===MP.id?" (คุณ)":""}</span><b>${r.s} ข้อ</b></div>`).join("") : "<div class='label'>ยังไม่มีใครส่งคะแนนในหมวดนี้ — เป็นคนแรกเลย!</div>";
+}
+$("statsBtn").onclick=()=>{ const p=$("statsPanel"); p.classList.toggle("hidden"); if(!p.classList.contains("hidden")){ renderMyStats(); p.scrollIntoView({behavior:"smooth"}); lbLoad(); } };
+$("statsClose").onclick=()=>$("statsPanel").classList.add("hidden");
+$("lbLoad").onclick=lbLoad; $("lbBoard").onchange=lbLoad;
+
+renderStats(); renderCustom(); renderDatalist(); renderClues(); updateEndlessChip(); applyCat(); newRound();
+try{ if(window.top!==window.self) setTimeout(()=>{ if(!curInfo) showProblem("blocked"); },4000); }catch(e){ setTimeout(()=>{ if(!curInfo) showProblem("blocked"); },4000); }
+</script>
+</body>
+</html>

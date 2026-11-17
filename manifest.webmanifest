@@ -1,0 +1,17 @@
+{
+  "name": "ทายเพลง — Song Quiz",
+  "short_name": "ทายเพลง",
+  "description": "เกมทายเพลงอนิเมะ ไทย สากล K-pop และคลังออนไลน์ 100,000+ เพลง ไม่มีโฆษณา",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0d1a",
+  "theme_color": "#0f0d1a",
+  "lang": "th",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
