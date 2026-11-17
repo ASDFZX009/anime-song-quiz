@@ -103,6 +103,24 @@
     .result{flex-direction:column;text-align:center}
     .code{font-size:34px;letter-spacing:6px}
   }
+  .sgwrap{position:relative}
+  .sgbox{position:absolute;left:0;right:0;top:100%;z-index:30;background:var(--panel2);border:1px solid var(--accent2);border-radius:12px;max-height:330px;overflow:auto;display:none;margin-top:4px;box-shadow:0 12px 30px #0008}
+  .sg{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--line)}
+  .sg:last-child{border-bottom:none}
+  .sg small{display:block;color:var(--muted);font-size:12px}
+  .sg.hi,.sg:hover{background:#2c2350}
+  .sg mark{background:none;color:var(--accent);font-weight:700}
+  .covers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .covers.three{grid-template-columns:1fr 1fr 1fr}
+  .coverbtn{position:relative;padding:0;border:2px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel2);cursor:pointer;aspect-ratio:1/1}
+  .coverbtn img{width:100%;height:100%;object-fit:cover;display:block}
+  .coverbtn .cap{position:absolute;left:0;right:0;bottom:0;background:#000b;color:#fff;font-size:12px;padding:6px;display:none;text-align:left}
+  .coverbtn.right{border-color:var(--good);box-shadow:0 0 0 3px #2bd98a66}
+  .coverbtn.wrong{border-color:var(--bad);opacity:.75}
+  .coverbtn:disabled .cap{display:block}
+  .coverbtn .ph{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px}
+  #coverWrap{width:230px;height:230px;border-radius:18px;overflow:hidden;background:var(--panel2);box-shadow:0 10px 40px #7c5cff44}
+  #coverClue{width:100%;height:100%;object-fit:cover;transition:filter .4s;transform:scale(1.15)}
 </style>
 </head>
 <body>
@@ -124,6 +142,8 @@
     <div class="row"><span class="label">โหมด:</span>
       <button class="chip on" data-gmode="normal">🎯 ปกติ</button>
       <button class="chip" data-gmode="ta">⏱️ จับเวลา 60 วิ</button>
+      <button class="chip" data-gmode="surv">❤️ เอาตัวรอด</button>
+      <button class="chip" data-gmode="cover">🖼️ ทายจากภาพปก</button>
       <button class="chip" data-gmode="daily">📅 เพลงประจำวัน</button>
       <span style="flex:1"></span>
       <button class="chip" id="statsBtn">🏆 สถิติ & อันดับ</button>
@@ -171,10 +191,12 @@
     </div>
     <div class="row">
       <span class="label">แบบตอบ:</span>
+      <button class="chip" data-fmt="c2">1 ใน 2 ×0.6</button>
       <button class="chip on" data-fmt="c4">4 ตัวเลือก</button>
       <button class="chip" data-fmt="c6">6 ตัวเลือก ×1.25</button>
       <button class="chip" data-fmt="yn">ใช่ / ไม่ใช่ ×0.5</button>
-      <button class="chip" data-fmt="type">พิมพ์ตอบ ×1.5</button>
+      <button class="chip" data-fmt="cover" id="fmtCover">🖼️ เลือกจากภาพปก ×1.2</button>
+      <button class="chip" data-fmt="type">⌨️ พิมพ์ (ขึ้นเพลงตามคำ) ×1.5</button>
       <span style="flex:1"></span>
       <span class="label">🔊</span><input type="range" id="vol" min="0" max="1" step="0.05" value="0.7">
     </div>
@@ -192,7 +214,13 @@
       <div class="label" style="margin-top:6px">เวลาเดินเฉพาะตอนเพลงพร้อมให้ตอบ (หยุดระหว่างโหลดเพลง) · ใช่/ไม่ใช่ จะถูกเปลี่ยนเป็น 4 ตัวเลือก</div>
       <div id="taResult" class="hidden" style="margin-top:12px;padding:14px;background:var(--panel2);border-radius:14px;text-align:center"></div>
     </div>
+    <div id="survBar" class="hidden" style="margin-bottom:12px">
+      <div class="row" style="justify-content:space-between"><span class="big" id="survLives">❤️❤️❤️</span><span>✅ ตอบถูก <b id="survOk">0</b> ข้อ</span><span class="label">สถิติหมวดนี้: <b id="survBest">0</b></span></div>
+      <div class="label" style="margin-top:4px">ตอบผิดหรือยอมแพ้ = เสีย 1 ชีวิต · ชีวิตหมด = จบเกม</div>
+      <div id="survResult" class="hidden" style="margin-top:12px;padding:14px;background:var(--panel2);border-radius:14px;text-align:center"></div>
+    </div>
     <div class="player">
+      <div id="coverWrap" class="hidden"><img id="coverClue" alt="ภาพปกเพลง"></div>
       <button class="playbtn" id="play" title="เล่นคลิป">▶</button>
       <div class="bar"><i id="prog"></i></div>
       <div class="clues" id="clues"></div>
@@ -204,7 +232,7 @@
     <div id="answerChoice" class="choices"></div>
     <div id="answerType" style="display:none">
       <div class="row">
-        <input type="text" id="guess" list="songList" placeholder="พิมพ์คำตอบ…" autocomplete="off" style="flex:1">
+        <div class="sgwrap" style="flex:1"><input type="text" id="guess" placeholder="พิมพ์คำตอบ…" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%"><div class="sgbox" id="guessSug"></div></div>
         <button class="btn" id="submit">ตอบ</button>
       </div>
       <datalist id="songList"></datalist>
@@ -240,7 +268,7 @@
       <div class="msg" id="dMsg"></div>
     </div>
     <div id="dInput" class="row">
-      <input type="text" id="dGuess" list="dList" placeholder="พิมพ์ชื่อเพลง… (มีรายชื่อขึ้นให้เลือก)" autocomplete="off" style="flex:1;min-width:180px">
+      <div class="sgwrap" style="flex:1;min-width:180px"><input type="text" id="dGuess" placeholder="พิมพ์ชื่อเพลงหรือศิลปิน… แล้วเลือกจากรายการ" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:100%"><div class="sgbox" id="dSug"></div></div>
       <button class="btn" id="dSubmit">ตอบ</button>
       <button class="btn ghost" id="dSkip">ข้าม ⏭</button>
       <datalist id="dList"></datalist>
@@ -305,7 +333,7 @@
         <select id="mpSet"><option value="all">ทุกระดับ</option><option value="easy">ง่าย</option><option value="medium">กลาง</option><option value="hard">ยาก</option><option value="endless">♾️ ไม่จำกัด (อนิเมะ)</option></select>
         <span class="label">ทาย</span>
         <select id="mpTarget"><option value="title">ชื่อเพลง</option><option value="anime">ชื่ออนิเมะ</option><option value="artist">ศิลปิน</option><option value="year">ปีที่ออก</option></select>
-        <select id="mpOpts"><option value="4">4 ตัวเลือก</option><option value="6">6 ตัวเลือก</option></select>
+        <select id="mpOpts"><option value="2">1 ใน 2</option><option value="4" selected>4 ตัวเลือก</option><option value="6">6 ตัวเลือก</option></select>
         <span class="label">จำนวนรอบ</span>
         <select id="mpRounds"><option>5</option><option selected>10</option><option>15</option><option>20</option></select>
         <button class="btn" id="mpStart">▶ เริ่มเกม</button>
@@ -751,7 +779,7 @@ function updateEndlessChip(){
 // ---------------- state ----------------
 let diff="all", target="title", fmt="c4", curCorrect=null;
 const F={era:"all",type:"all",series:"all"};
-const MULT={c4:1,c6:1.25,yn:0.5,type:1.5};
+const MULT={c2:0.6,c4:1,c6:1.25,yn:0.5,type:1.5,cover:1.2};
 let cur=null, curInfo=null, clueIdx=0, maxUnlocked=0, answered=false, recent=[];
 const audio=new Audio(); audio.preload="auto";
 let stopTimer=null, rafId=null;
@@ -795,7 +823,7 @@ function renderClues(){
   CLUES.forEach((c,i)=>{
     const b=document.createElement("button");
     b.className="clue"+(i<=maxUnlocked?" unlocked":"")+(i===clueIdx?" current":"");
-    b.innerHTML=`${c}s<small>${POINTS[i]} คะแนน</small>`;
+    b.innerHTML= gmode==="cover" ? `${["เบลอมาก","เบลอ","ครึ่งๆ","เกือบชัด","ชัด"][i]}<small>${POINTS[i]} คะแนน</small>` : `${c}s<small>${POINTS[i]} คะแนน</small>`;
     b.disabled=answered?false:(i>maxUnlocked+1);
     b.onclick=()=>{ if(!answered && i>maxUnlocked) maxUnlocked=i; clueIdx=i; renderClues(); playClip(); };
     box.appendChild(b);
@@ -807,8 +835,11 @@ function stopAudio(){
   audio.pause(); $("prog").style.width="0";
 }
 
+const BLUR=[42,26,14,7,0];
+function applyBlur(){ $("coverClue").style.filter= answered?"none":`blur(${BLUR[clueIdx]}px)`; }
 function playClip(){
   if(!curInfo) return;
+  if(gmode==="cover"&&!answered){ applyBlur(); $("msg").textContent="🔒 เสียงจะเปิดหลังตอบ — กดปุ่มด้านล่างเพื่อดูภาพชัดขึ้น (คะแนนลดลง)"; return; }
   stopAudio();
   const dur = answered?30:CLUES[clueIdx];
   try{ audio.currentTime=0; }catch(e){}
@@ -863,6 +894,7 @@ async function newRound(){
     $("msg").textContent="กำลังโหลดเพลง…";
     curInfo= cur.info || await lookup(cur);
     if(token!==roundToken) return;
+    if(curInfo && (gmode==="cover"||fmt==="cover") && !curInfo.art){ curInfo=null; }
     if(curInfo) break;
     tries++;
   }
@@ -872,6 +904,8 @@ async function newRound(){
   audio.src=curInfo.preview; audio.load();
   $("play").disabled=false;
   $("msg").textContent="กด ▶ เพื่อฟัง • ฟังซ้ำได้ฟรี • ปลดคลิปยาวขึ้นได้ (คะแนนลดลง)";
+  if(gmode==="cover"){ $("coverClue").style.filter=`blur(${BLUR[0]}px)`; $("coverClue").src=bigArt(curInfo.art); $("play").textContent="🔒"; $("msg").textContent="🖼️ ดูภาพปกแล้วทายเลย — เสียงจะเปิดหลังตอบ"; }
+  else $("play").textContent="▶";
   renderClues(); buildChoices();
   if(TA.on){ clueIdx=maxUnlocked=CLUES.length-1; $("msg").textContent="🎧 ฟังแล้วตอบเลย!"; playClip(); }
 }
@@ -914,8 +948,9 @@ function buildChoices(){
   const t=effTarget(cur);
   $("guess").placeholder=`พิมพ์${TLABEL[t]}…`;
   renderDatalist(t);
-  if(fmt==="type"){ curCorrect=ansVal(cur,t)||cur.title; box.style.display="none"; $("answerType").style.display="block"; return; }
-  box.style.display="grid"; $("answerType").style.display="none";
+  if(fmt==="type"){ curCorrect=ansVal(cur,t)||cur.title; box.style.display="none"; $("answerType").style.display="block"; box.className="choices"; return; }
+  box.style.display="grid"; $("answerType").style.display="none"; box.className="choices";
+  if(fmt==="cover" && gmode!=="cover"){ buildCoverChoices(); return; }
   const list=pool();
   if(fmt==="yn"){
     const o=makeOptions(cur,list,t,2); curCorrect=o.correct;
@@ -929,7 +964,7 @@ function buildChoices(){
     });
     return;
   }
-  const o=makeOptions(cur,list,t,fmt==="c6"?6:4); curCorrect=o.correct;
+  const o=makeOptions(cur,list,t,fmt==="c6"?6:(fmt==="c2"?2:4)); curCorrect=o.correct;
   o.opts.forEach(v=>{
     const b=document.createElement("button"); b.className="choice"; b.dataset.right=String(v===o.correct);
     const sub=subFor(v,o.t);
@@ -939,6 +974,28 @@ function buildChoices(){
 }
 
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+// ----- answer by picking the album cover -----
+async function buildCoverChoices(){
+  const token=roundToken, me=cur, box=$("answerChoice");
+  box.className="covers"; curCorrect=cur.title;
+  const mk=(song,info)=>{ const b=document.createElement("button"); b.className="coverbtn"; b.dataset.right=String(song===me);
+    b.innerHTML= info ? `<img src="${esc(bigArt(info.art))}" alt=""><div class="cap">${esc(song.title)}<br><span style="opacity:.75">${esc(song.artist)}</span></div>` : `<div class="ph">กำลังโหลด…</div>`;
+    b.onclick=()=>answer(song===me,b); return b; };
+  box.innerHTML=""; const slots=[]; for(let i=0;i<4;i++){ const ph=document.createElement("button"); ph.className="coverbtn"; ph.disabled=true; ph.innerHTML='<div class="ph">กำลังโหลดภาพปก…</div>'; box.appendChild(ph); slots.push(ph); }
+  const P=pool().filter(x=>x!==me&&norm(x.title)!==norm(me.title));
+  const picked=[], arts=new Set([curInfo.art]);
+  for(let k=0;k<12&&picked.length<3&&P.length;k++){
+    const cand=shuffle(P.filter(x=>!picked.some(p=>p.s===x))).slice(0,3-picked.length);
+    const infos=await Promise.all(cand.map(x=>x.info?Promise.resolve(x.info):lookup(x)));
+    if(token!==roundToken) return;
+    cand.forEach((x,i)=>{ const inf=infos[i]; if(inf&&inf.art&&!arts.has(inf.art)&&picked.length<3){ arts.add(inf.art); picked.push({s:x,i:inf}); } });
+  }
+  if(token!==roundToken||answered) return;
+  const all=shuffle([{s:me,i:curInfo},...picked]);
+  box.innerHTML=""; all.forEach(o=>box.appendChild(mk(o.s,o.i)));
+  if(all.length===3) box.classList.add("three");
+}
 
 function checkTyped(){
   if(!curInfo||answered||curCorrect===null) return;
@@ -954,9 +1011,10 @@ function checkTyped(){
   answer(ok);
 }
 
-function markChoices(){ document.querySelectorAll("#answerChoice .choice").forEach(b=>{b.disabled=true;if(b.dataset.right==="true")b.classList.add("right")}); }
+function markChoices(){ document.querySelectorAll("#answerChoice .choice, #answerChoice .coverbtn").forEach(b=>{b.disabled=true;if(b.dataset.right==="true")b.classList.add("right")}); }
 function answer(ok,btn){
   if(answered||!curInfo) return;
+  if(gmode==="surv"&&SV.over) return;
   if(TA.on){ answered=true; TA.ans++; if(ok) TA.ok++; $("taOk").textContent=TA.ok; $("taAns").textContent=TA.ans;
     markChoices(); if(btn&&!ok) btn.classList.add("wrong"); stopAudio();
     $("msg").innerHTML= ok?`<span class="good">✅ ถูก!</span> ${esc(cur.title)}`:`<span class="bad">❌</span> ${esc(cur.title)} — ${esc(cur.artist)}`;
@@ -970,12 +1028,15 @@ function answer(ok,btn){
   markChoices();
   if(btn&&!ok) btn.classList.add("wrong");
   const t=effTarget(cur);
-  const ansNote = t!=="title" && curCorrect ? ` <span style="font-size:15px;color:var(--muted)">(${TLABEL[t]}: ${esc(curCorrect)})</span>` : "";
+  const ansNote = t!=="title" && fmt!=="cover" && curCorrect ? ` <span style="font-size:15px;color:var(--muted)">(${TLABEL[t]}: ${esc(curCorrect)})</span>` : "";
   reveal((ok?`<span class="good">ถูกต้อง! +${pts}</span>`:`<span class="bad">ผิด 😢</span>`)+ansNote);
+  if(gmode==="surv") survAfter(ok);
 }
 
+function bigArt(u){ return (u||"").replace("250x250","500x500").replace("300x300","600x600"); }
 function reveal(verdict){
   answered=true;
+  if(gmode==="cover"){ $("coverClue").style.filter="none"; $("play").textContent="▶"; }
   $("rVerdict").innerHTML=verdict;
   $("rTitle").textContent=cur.title;
   const yy=yearOf(cur); $("rInfo").textContent=`${cur.artist}${cur.anime?" · "+cur.anime:""}${yy?" · "+yy:""}`;
@@ -988,8 +1049,11 @@ function reveal(verdict){
 
 // ---------------- events ----------------
 $("play").onclick=()=>{ if(!curInfo) newRound(); else playClip(); };
-$("next").onclick=newRound;
-$("giveup").onclick=()=>{ if(!cur||!curInfo||answered) return; if(TA.on){ answer(false); return; } stats.rounds++; stats.streak=0; renderStats();
+$("next").onclick=()=>{
+  if(gmode==="surv"){ if(SV.over){ survStart(); return; } if(curInfo&&!answered){ answer(false); return; } }
+  newRound();
+};
+$("giveup").onclick=()=>{ if(!cur||!curInfo||answered) return; if(TA.on||gmode==="surv"){ answer(false); return; } stats.rounds++; stats.streak=0; renderStats();
   markChoices();
   const t=effTarget(cur); reveal(`<span class="bad">เฉลย</span>`+(t!=="title"&&curCorrect?` <span style="font-size:15px;color:var(--muted)">(${TLABEL[t]}: ${esc(curCorrect)})</span>`:"")); };
 $("submit").onclick=checkTyped;
@@ -1037,7 +1101,7 @@ function applyCat(){
   updatePoolCount();
 }
 document.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{ cat=b.dataset.cat; try{localStorage.setItem("asq_cat",JSON.stringify(cat))}catch(e){} recent=[]; applyCat(); afterSettingsChange(); });
-function afterSettingsChange(){ if(gmode==="daily"){ dailyOpen(); return; } if(gmode==="ta"){ taStop(false); stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); $("msg").textContent="กด ▶ เริ่ม 60 วินาที"; return; } newRound(); }
+function afterSettingsChange(){ if(gmode==="daily"){ dailyOpen(); return; } if(gmode==="surv"){ survStart(); return; } if(gmode==="ta"){ taStop(false); stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); $("msg").textContent="กด ▶ เริ่ม 60 วินาที"; return; } newRound(); }
 
 $("onSel").onchange=()=>{ $("onQ").value=""; setOnlineKey($("onSel").value); };
 $("onGo").onclick=()=>{ const q=$("onQ").value.trim(); if(q.length<2){ $("onQ").focus(); return; } setOnlineKey("q:"+q); };
@@ -1331,12 +1395,33 @@ function setGmode(m){
   document.querySelector('[data-target="title"]').parentElement.classList.toggle("hidden",daily);
   document.querySelector('[data-fmt="c4"]').parentElement.classList.toggle("hidden",daily);
   $("taBar").classList.toggle("hidden",m!=="ta");
+  $("survBar").classList.toggle("hidden",m!=="surv");
+  $("coverWrap").classList.toggle("hidden",m!=="cover");
+  $("fmtCover").classList.toggle("hidden",m==="cover");
+  if(m==="cover"&&fmt==="cover"){ fmt="c4"; document.querySelectorAll("[data-fmt]").forEach(x=>x.classList.toggle("on",x.dataset.fmt==="c4")); }
+  if(m!=="cover") $("play").textContent="▶";
   taStop(false);
   if(!daily) applyCat();
   if(daily){ stopAudio(); dailyOpen(); }
-  else { $("clues").classList.toggle("hidden",m==="ta"); $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); if(m==="normal") newRound(); else { stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("msg").textContent="กด ▶ เริ่ม 60 วินาที แล้วเพลงจะเล่นเอง ตอบให้ได้มากที่สุด"; } }
+  else { $("clues").classList.toggle("hidden",m==="ta"); $("taBest").textContent=(store.get("asq_tabest",{})[boardKey()]||0); if(m==="normal"||m==="cover") newRound(); else if(m==="surv") survStart(); else { stopAudio(); $("answerChoice").innerHTML=""; $("result").style.display="none"; $("msg").textContent="กด ▶ เริ่ม 60 วินาที แล้วเพลงจะเล่นเอง ตอบให้ได้มากที่สุด"; } }
 }
 document.querySelectorAll("[data-gmode]").forEach(b=>b.onclick=()=>setGmode(b.dataset.gmode));
+
+// ----- survival: 3 lives -----
+const SV={lives:3,ok:0,over:false};
+function survRender(){ $("survLives").textContent="❤️".repeat(SV.lives)+"🖤".repeat(3-SV.lives); $("survOk").textContent=SV.ok; $("survBest").textContent=(store.get("asq_svbest",{})[boardKey()]||0); }
+function survStart(){ Object.assign(SV,{lives:3,ok:0,over:false}); $("survResult").classList.add("hidden"); survRender(); newRound(); }
+function survAfter(ok){
+  if(ok) SV.ok++; else SV.lives--;
+  survRender();
+  if(SV.lives<=0){
+    SV.over=true; const k=boardKey(), best=store.get("asq_svbest",{}), prev=best[k]||0, isBest=SV.ok>prev;
+    if(isBest){ best[k]=SV.ok; store.set("asq_svbest",best); }
+    survRender();
+    $("survResult").innerHTML=`<div class="big">💀 ชีวิตหมดแล้ว! ตอบถูก ${SV.ok} ข้อ</div><div class="label">หมวด ${esc(boardName(k))}${isBest?" · 🎉 สถิติใหม่!":` · สถิติเดิม ${prev}`}</div><button class="btn" id="survAgain" style="margin-top:10px">❤️ เล่นใหม่</button>`;
+    $("survResult").classList.remove("hidden"); $("survAgain").onclick=survStart;
+  }
+}
 
 // ----- time attack -----
 function taTick(){
@@ -1460,6 +1545,7 @@ function renderMyStats(){
      <div class="stat"><b>${stats.score.toLocaleString()}</b><small>คะแนนรวม (ปกติ)</small></div><div class="stat"><b>${stats.rounds?Math.round(stats.correct/stats.rounds*100)+"%":"–"}</b><small>ตอบถูก</small></div>
      <div class="stat"><b>${stats.best||0}</b><small>ถูกติดกันสูงสุด</small></div><div class="stat"><b>${ds.cur}</b><small>วันติดต่อกัน (ประจำวัน)</small></div></div>
    <h3 style="margin:8px 0 4px">⏱️ สถิติจับเวลา 60 วิ (แยกหมวด)</h3><div class="plist">${taRows}</div>
+   <h3 style="margin:14px 0 4px">❤️ สถิติเอาตัวรอด (แยกหมวด)</h3><div class="plist">${Object.entries(store.get("asq_svbest",{})).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="pl"><span>${esc(boardName(k))}</span><b>${v} ข้อ</b></div>`).join("")||"<div class='label'>ยังไม่เคยเล่น</div>"}</div>
    <h3 style="margin:14px 0 4px">📅 เพลงประจำวัน — เล่น ${ds.played} · ชนะ ${ds.wins}</h3>
    ${ds.dist.map((n,i)=>`<div class="row" style="gap:6px;margin:3px 0"><span style="width:16px">${i+1}</span><div style="flex:1;background:var(--panel2);border-radius:6px"><div style="width:${Math.max(6,n/mx*100)}%;background:var(--accent2);border-radius:6px;padding:2px 8px;font-size:13px">${n}</div></div></div>`).join("")}`;
   const boards=new Set([boardKey(),...Object.keys(best),"anime","thai","inter","kpop","mix"]);
@@ -1489,6 +1575,39 @@ async function lbLoad(){
 $("statsBtn").onclick=()=>{ const p=$("statsPanel"); p.classList.toggle("hidden"); if(!p.classList.contains("hidden")){ renderMyStats(); p.scrollIntoView({behavior:"smooth"}); lbLoad(); } };
 $("statsClose").onclick=()=>$("statsPanel").classList.add("hidden");
 $("lbLoad").onclick=lbLoad; $("lbBoard").onchange=lbLoad;
+
+// ================= TYPE-AHEAD SUGGESTIONS (works on phones too) =================
+function hl(text,q){ const i=text.toLowerCase().indexOf(q.toLowerCase()); if(!q||i<0) return esc(text); return esc(text.slice(0,i))+"<mark>"+esc(text.slice(i,i+q.length))+"</mark>"+esc(text.slice(i+q.length)); }
+function makeSuggest(input,box,getItems,onPick){
+  let items=[],hi=-1,raw="";
+  const render=()=>{ box.innerHTML=items.map((it,i)=>`<div class="sg${i===hi?" hi":""}" data-i="${i}">${hl(it.v,raw)}${it.sub?`<small>${hl(it.sub,raw)}</small>`:""}</div>`).join(""); box.style.display=items.length?"block":"none"; };
+  const close=()=>{ items=[]; hi=-1; render(); };
+  input.addEventListener("input",()=>{ raw=input.value.trim(); const q=norm(raw); if(!q){ close(); return; } items=getItems(q).slice(0,8); hi=items.length?0:-1; render(); });
+  input.addEventListener("keydown",e=>{
+    if(box.style.display!=="block") return;
+    if(e.key==="ArrowDown"){ hi=Math.min(items.length-1,hi+1); render(); e.preventDefault(); }
+    else if(e.key==="ArrowUp"){ hi=Math.max(0,hi-1); render(); e.preventDefault(); }
+    else if(e.key==="Escape"){ close(); }
+    else if(e.key==="Enter"&&hi>=0){ e.preventDefault(); e.stopImmediatePropagation(); pick(items[hi]); }
+  },true);
+  box.addEventListener("pointerdown",e=>{ const el=e.target.closest(".sg"); if(!el) return; e.preventDefault(); pick(items[+el.dataset.i]); });
+  input.addEventListener("blur",()=>setTimeout(()=>{ if(document.activeElement!==input) close(); },180));
+  function pick(it){ input.value=it.v; close(); onPick(it.v); }
+  return {close};
+}
+function rankMatches(cands,q){   // cands: [{v,sub,keys:[...]}] → best matches first
+  const out=[];
+  for(const c of cands){ let best=9; for(const k of c.keys){ const n=norm(k); if(!n) continue; const i=n.indexOf(q); if(i===0){best=Math.min(best,0);} else if(i>0){best=Math.min(best,1);} } if(best<9) out.push([best,c]); }
+  return out.sort((a,b)=>a[0]-b[0]||a[1].v.length-b[1].v.length).map(x=>x[1]);
+}
+function guessCandidates(q){
+  const t=effTarget(cur); const src=pool().concat(cat==="online"?[]:catList()); const seen=new Set(), cands=[];
+  for(const x of src){ const v=ansVal(x,t); if(!v||seen.has(v)) continue; seen.add(v);
+    cands.push(t==="title"?{v,sub:x.artist,keys:[x.title,x.jaTitle,x.artist,x.jaArtist]}:t==="artist"?{v,sub:"",keys:[x.artist,x.jaArtist]}:t==="anime"?{v,sub:x.series&&x.series!==v?x.series:"",keys:[x.anime,x.series]}:{v,sub:"",keys:[v]}); }
+  return rankMatches(cands,q);
+}
+makeSuggest($("guess"),$("guessSug"),guessCandidates,()=>checkTyped());
+makeSuggest($("dGuess"),$("dSug"),q=>{ if(!D) return []; const seen=new Set(), cands=[]; for(const x of listFor(D.c)){ if(seen.has(x.title)) continue; seen.add(x.title); cands.push({v:x.title,sub:x.artist,keys:[x.title,x.jaTitle,x.artist,x.jaArtist]}); } return rankMatches(cands,q); },()=>dailyGuess(false));
 
 renderStats(); renderCustom(); renderDatalist(); renderClues(); updateEndlessChip(); applyCat(); newRound();
 try{ if(window.top!==window.self) setTimeout(()=>{ if(!curInfo) showProblem("blocked"); },4000); }catch(e){ setTimeout(()=>{ if(!curInfo) showProblem("blocked"); },4000); }
