@@ -751,13 +751,14 @@ function mkInfo(r){ return {preview:r.previewUrl,art:(r.artworkUrl100||"").repla
 // ---- Deezer (backup source: 30s previews, much higher rate limit; preview links expire after a while, so only kept in memory) ----
 const memCache={};
 let dzLast=0;
+let dzErrFlag=false;
 async function deezer(q){
   const wait=dzLast+250-Date.now(); if(wait>0) await sleep(wait); dzLast=Date.now();
   return new Promise((res,rej)=>{
     const n="__dz"+(cbN++); const sc=document.createElement("script");
     const t=setTimeout(()=>{c();rej(new Error("timeout"))},8000);
     function c(){clearTimeout(t);delete window[n];sc.remove()}
-    window[n]=d=>{c();res(d)}; sc.onerror=()=>{c();netFail=true;rej(new Error("network"))};
+    window[n]=d=>{c(); if(d&&d.error) dzErrFlag=true; res(d)}; sc.onerror=()=>{c();netFail=true;dzErrFlag=true;rej(new Error("network"))};
     sc.src="https://api.deezer.com/search?q="+encodeURIComponent(q)+"&limit=25&output=jsonp&callback="+n;
     document.head.appendChild(sc);
   });
@@ -798,9 +799,10 @@ async function lookup(song){
   const aOK=r=>an.some(n=>norm(r.artistName).includes(n));
   const tOK=r=>tn.some(n=>norm(r.trackName).includes(n));
   // 1) Deezer first: fast and not easily rate-limited
+  dzErrFlag=false;
   const dz=await lookupDeezer(song,aOK,tOK);
   if(dz){ memCache[key]=dz; return dz; }
-  if(song.noApple){ song.miss=true; return null; }
+  if(song.noApple){ if(!dzErrFlag) song.miss=true; return null; }   // only blacklist when Deezer really said "not found"
   // 2) Apple (throttled queue)
   if(cache[key]===null) return null;
   const term=(song.jaTitle||song.title)+" "+(song.jaArtist||song.artist);
@@ -963,7 +965,8 @@ async function newRound(){
   $("play").disabled=true; $("msg").textContent="กำลังโหลดเพลง…";
   $("answerChoice").innerHTML="";
   let tries=0;
-  while(tries<6){
+  const maxTries = (cat==="online"&&onlineKey.startsWith("as:")) ? 15 : 6;
+  while(tries<maxTries){
     let cand=p.filter(s=>!recent.includes(s.title)||p.length<=recent.length+1);
     if(cat==="online"){ const fresh=cand.filter(s=>!s.played); if(fresh.length) cand=fresh; }
     const known=cand.filter(x=>x.info||cache["v3|"+x.title+"|"+x.artist]);
