@@ -594,7 +594,8 @@ async function asdbSearch(name){
   const d=await jfetch("https://anisongdb.com/api/search_request",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({anime_search_filter:{search:name,partial_match:true},opening_filter:true,ending_filter:true,insert_filter:true})},10000);
   return Array.isArray(d)?d:[];
 }
-const AL_PAGE=`query($p:Int,$yg:Int,$yl:Int){Page(page:$p,perPage:50){media(type:ANIME,sort:POPULARITY_DESC,seasonYear_greater:$yg,seasonYear_lesser:$yl){idMal title{romaji english native}}}}`;
+const AL_PAGE=`query($p:Int,$yg:FuzzyDateInt,$yl:FuzzyDateInt){Page(page:$p,perPage:50){media(type:ANIME,sort:POPULARITY_DESC,startDate_greater:$yg,startDate_lesser:$yl){idMal title{romaji english native}}}}`;
+const AL_PAGE_ALL=`query($p:Int){Page(page:$p,perPage:50){media(type:ANIME,sort:POPULARITY_DESC){idMal title{romaji english native}}}}`;
 const AL_SEARCH=`query($q:String){Page(perPage:12){media(type:ANIME,search:$q,sort:SEARCH_MATCH){idMal title{romaji english native}}}}`;
 async function asSongsFor(m){
   let list=(await asdbSearch(m.title.romaji)).filter(x=>x.linked_ids&&+x.linked_ids.myanimelist===m.idMal);
@@ -616,7 +617,7 @@ async function asInit(k,S){
   S.asDone=new Set(); S.pageCache={}; S.pls=[1];
   if(k.startsWith("as:q:")){
     const d=await anilist(AL_SEARCH,{q:k.slice(5)});
-    S.asQueue=((d&&d.Page.media)||[]).filter(m=>m.idMal); S.slots=S.asQueue.length; if(!S.asQueue.length) S.pls=[];
+    S.asQueue=((d&&d.Page&&d.Page.media)||[]).filter(m=>m.idMal); S.slots=S.asQueue.length; if(!S.asQueue.length) S.pls=[];
   } else { const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1]; S.slots=sc.pages*50; }
   return S;
 }
@@ -628,7 +629,11 @@ async function asGrow(k,S){
     for(let a=0;a<4&&!m;a++){
       const p=1+Math.floor(Math.random()*sc.pages);
       let pg=S.pageCache[p];
-      if(!pg){ const d=await anilist(AL_PAGE,{p,yg:sc.yFrom?sc.yFrom-1:null,yl:sc.yTo?sc.yTo+1:null}); pg=S.pageCache[p]=((d&&d.Page.media)||[]).filter(x=>x.idMal); }
+      if(!pg){
+        // AniList rejects explicit nulls, so only send the date filters a scope actually uses
+        const v={p}; if(sc.yFrom) v.yg=(sc.yFrom-1)*10000+1231; v.yl= sc.yTo ? (sc.yTo+1)*10000+101 : 30000101;
+        const d= (sc.yFrom||sc.yTo) ? await anilist(AL_PAGE,v) : await anilist(AL_PAGE_ALL,{p});
+        pg=S.pageCache[p]=((d&&d.Page&&d.Page.media)||[]).filter(x=>x.idMal); }
       const cand=pg.filter(x=>!S.asDone.has(x.idMal)); if(cand.length) m=cand[Math.floor(Math.random()*cand.length)];
     }
   }
