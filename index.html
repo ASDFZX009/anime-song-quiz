@@ -540,7 +540,7 @@ const GIVEAWAY=/\s*[\(\[（【][^\)\]）】]*(from|theme|opening|ending|主題�
 function onAdd(S,t){
   if(!t||!t.preview||!t.artist||!t.title||t.readable===false) return false;
   if(BAD.test(t.title)||JUNK_ARTIST.test(t.artist.name)) return false;
-  const title=t.title.replace(GIVEAWAY,"").replace(/\s*\((feat|with)\.?[^)]*\)/i,"").trim()||t.title;
+  const title=t.title.replace(GIVEAWAY,"").replace(/\s*\((feat|with)\.?[^)]*\)/i,"").replace(/\s*[\(\[]\d{1,2}[\)\]]\s*$/,"").trim()||t.title;
   const k=norm(title.replace(/\s*[\(\[].*$/,""))+"|"+norm(t.artist.name).slice(0,6);
   if(S.seen.has(k)) return false; S.seen.add(k);
   const artist=t.artist.name.replace(/\s*[\(（][^\)）]*[\)）]\s*$/,"").trim()||t.artist.name;
