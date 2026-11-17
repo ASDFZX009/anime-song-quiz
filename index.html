@@ -675,6 +675,10 @@ function onGrow(k){
   })().finally(()=>{ S.busy=null; updateOnlineInfo(); });
   return S.busy;
 }
+function onBackfill(k,target){   // keep loading more anime in the background so rounds don't repeat
+  const S=onState(k); if(S.backfill) return; S.backfill=true;
+  (async()=>{ let g=0; while(S.items.filter(x=>!x.miss).length<target && g++<40 && S.pls && S.pls.length){ await onGrow(k); } S.backfill=false; })();
+}
 async function onEnsure(k,min,prog){
   const S=onState(k); let g=0;
   while(S.items.length<min && g++<(k.startsWith("as:")?20:10)){ prog&&prog(S); await onGrow(k); if(S.pls&&!S.pls.length&&S.items.length) break; if(S.pls&&!S.pls.length&&!S.items.length) break; }
@@ -943,7 +947,7 @@ async function newRound(){
     await onEnsure(key,key.startsWith("as:")?4:12,S=>{ $("msg").textContent=`กำลังเปิดคลังเพลง “${onCat(key).name}” จาก Deezer… ${S.items.length} เพลง`; });
     if(token!==roundToken) return;
     if(!onState(key).items.length){ if(netFail) showProblem("blocked"); else $("msg").textContent="ไม่พบเพลงในหมวดนี้ ลองพิมพ์คำอื่น"; $("play").disabled=false; return; }
-    onGrow(key);   // keep growing in the background
+    if(key.startsWith("as:")) onBackfill(key,40); else onGrow(key);   // keep growing in the background
   }
   else if(diff==="endless"){
     $("play").disabled=true; $("answerChoice").innerHTML=""; $("result").style.display="none";
@@ -961,6 +965,7 @@ async function newRound(){
   let tries=0;
   while(tries<6){
     let cand=p.filter(s=>!recent.includes(s.title)||p.length<=recent.length+1);
+    if(cat==="online"){ const fresh=cand.filter(s=>!s.played); if(fresh.length) cand=fresh; }
     const known=cand.filter(x=>x.info||cache["v3|"+x.title+"|"+x.artist]);
     if(Q.waiting>0 && known.length) cand=known;          // Apple queue busy -> prefer songs already loaded
     cand=cand.filter(x=>cache["v3|"+x.title+"|"+x.artist]!==null&&!x.miss); if(!cand.length) cand=p.filter(x=>!x.miss); if(!cand.length) cand=p;
@@ -973,7 +978,7 @@ async function newRound(){
     tries++;
   }
   if(!curInfo){ showProblem(netFail?"blocked":"none"); $("play").disabled=false; return; }
-  recent.push(cur.title); if(recent.length>Math.min(15,p.length-1)) recent.shift();
+  recent.push(cur.title); if(recent.length>Math.min(15,p.length-1)) recent.shift(); cur.played=true;
   hideProblem();
   audio.src=curInfo.preview; audio.load();
   $("play").disabled=false;
@@ -1343,7 +1348,7 @@ function hostPrepare(){
       info= song.info || await lookup(song);
     }
     if(MP.set==="endless") endlessFetchOne();
-    if((MP.cat||"").startsWith("online:")) onGrow(MP.cat.slice(7));
+    if((MP.cat||"").startsWith("online:")){ const k=MP.cat.slice(7); if(k.startsWith("as:")) onBackfill(k,40); else onGrow(k); }
     return info?{song,info}:null;
   })();
 }
