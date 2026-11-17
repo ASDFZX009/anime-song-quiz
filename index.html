@@ -584,9 +584,16 @@ const AS_NAMES={"as:top100": "🎌 อนิเมะยอดนิยม 100 �
 let asTypes={op:true,ed:true,ins:false}; try{ const t=JSON.parse(localStorage.getItem("asq_astypes")); if(t) asTypes=t; }catch(e){}
 async function jfetch(u,opt,ms){ const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms||9000); try{ const r=await fetch(u,{...opt,signal:c.signal}); if(r.status===429){ await sleep(2500); return null; } return r.ok?await r.json():null; }catch(e){ return null; } finally{ clearTimeout(t); } }
 let alLast=0, asLast=0;
-async function anilist(query,variables){
-  for(let a=0;a<2;a++){ const w=alLast+700-Date.now(); if(w>0) await sleep(w); alLast=Date.now();
-    const d=await jfetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({query,variables})}); if(d&&d.data) return d.data; }
+async function anilist(query,variables){   // AniList allows ~30 requests/minute: space calls 2.1s apart and honour Retry-After
+  for(let a=0;a<3;a++){
+    const w=alLast+2100-Date.now(); if(w>0) await sleep(w); alLast=Date.now();
+    const c=new AbortController(); const t=setTimeout(()=>c.abort(),10000);
+    try{
+      const r=await fetch("https://graphql.anilist.co",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({query,variables}),signal:c.signal});
+      if(r.status===429){ const ra=+(r.headers.get("retry-after")||10); alLast=Date.now()+Math.min(60,ra)*1000-2100; continue; }
+      const d=await r.json(); if(d&&d.data) return d.data; return null;
+    }catch(e){ } finally{ clearTimeout(t); }
+  }
   return null;
 }
 async function asdbSearch(name){
@@ -626,7 +633,10 @@ async function asGrow(k,S){
   if(S.asQueue){ m=S.asQueue.shift(); if(!S.asQueue.length) S.pls=[]; }
   else {
     const sc=AS_SCOPES.find(x=>x.k===k)||AS_SCOPES[1];
-    for(let a=0;a<4&&!m;a++){
+    // use the anime already fetched (50 per page) before asking AniList for another page
+    const unused=Object.values(S.pageCache).flat().filter(x=>!S.asDone.has(x.idMal));
+    if(unused.length>=25) m=unused[Math.floor(Math.random()*unused.length)];
+    for(let a=0;a<3&&!m;a++){
       const p=1+Math.floor(Math.random()*sc.pages);
       const sort=sc.sorts?sc.sorts[Math.floor(Math.random()*sc.sorts.length)]:"POPULARITY_DESC";
       const ck=sort+"|"+p; let pg=S.pageCache[ck];
@@ -677,7 +687,8 @@ function onGrow(k){
 }
 function onBackfill(k,target){   // keep loading more anime in the background so rounds don't repeat
   const S=onState(k); if(S.backfill) return; S.backfill=true;
-  (async()=>{ let g=0; while(S.items.filter(x=>!x.miss).length<target && g++<40 && S.pls && S.pls.length){ await onGrow(k); } S.backfill=false; })();
+  const active=()=>(cat==="online"&&onlineKey===k)||(MP.state==="game"&&MP.cat==="online:"+k);
+  (async()=>{ let g=0; while(active() && S.items.filter(x=>!x.miss).length<target && g++<40 && S.pls && S.pls.length){ await onGrow(k); } S.backfill=false; })();
 }
 async function onEnsure(k,min,prog){
   const S=onState(k); let g=0;
