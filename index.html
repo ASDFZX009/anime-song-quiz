@@ -121,6 +121,19 @@
   .coverbtn .ph{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px}
   #coverWrap{width:230px;height:230px;border-radius:18px;overflow:hidden;background:var(--panel2);box-shadow:0 10px 40px #7c5cff44}
   #coverClue{width:100%;height:100%;object-fit:cover;transition:filter .4s;transform:scale(1.15)}
+  #homeView .hero{text-align:center;padding:22px 16px}
+  .huge{font-size:22px;padding:18px 40px;border-radius:18px;margin:14px 0 6px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 10px 30px #ff4d8d44}
+  .homegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  @media(max-width:560px){.homegrid{grid-template-columns:1fr 1fr}.huge{width:100%}}
+  .tile{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 10px;cursor:pointer;text-align:center}
+  .tile:hover{border-color:var(--accent2)}
+  .tile .ic{font-size:30px;display:block}
+  .tile b{display:block;margin-top:4px}
+  .tile small{color:var(--muted);font-size:12px}
+  .hcats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:6px}
+  #gameBar{display:flex;align-items:center;gap:8px;margin-top:14px}
+  #gameBar .sum{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #gameBar .sum b{color:var(--text)}
 </style>
 </head>
 <body>
@@ -136,8 +149,36 @@
   </header>
 
   <div id="installBar"><span style="flex:1">📲 ติดตั้งเกมไว้ที่หน้าจอหลัก เปิดได้เหมือนแอป</span><button class="btn" id="installBtn">ติดตั้ง</button><button class="btn ghost" id="installX">✕</button></div>
-  <div class="tabs"><button class="tab on" id="tabSolo">🎧 เล่นคนเดียว</button><button class="tab" id="tabMp">👥 เล่นกับเพื่อน</button></div>
-  <div id="soloView">
+  <div class="tabs hidden"><button class="tab on" id="tabSolo">🎧 เล่นคนเดียว</button><button class="tab" id="tabMp">👥 เล่นกับเพื่อน</button></div>
+
+  <div id="homeView">
+    <div class="panel hero">
+      <div class="label">อนิเมะ · เพลงไทย · สากล · K-pop · คลังออนไลน์ 100,000+ เพลง — ไม่มีโฆษณา</div>
+      <button class="btn huge" id="hPlay">▶ เล่นเลย</button>
+      <div class="label" id="homeSummary"></div>
+      <div class="hcats" id="hCats">
+        <button class="chip" data-hcat="anime">🎌 อนิเมะ</button><button class="chip" data-hcat="thai">🇹🇭 เพลงไทย</button>
+        <button class="chip" data-hcat="inter">🌎 สากล</button><button class="chip" data-hcat="kpop">🇰🇷 K-pop</button>
+        <button class="chip" data-hcat="mix">🎲 รวม</button><button class="chip" data-hcat="online">🌐 ออนไลน์</button>
+      </div>
+    </div>
+    <div class="homegrid">
+      <button class="tile" data-hgo="mp"><span class="ic">👥</span><b>เล่นกับเพื่อน</b><small>สร้างห้อง ชวนเพื่อนแข่ง</small></button>
+      <button class="tile" data-hgo="daily"><span class="ic">📅</span><b>เพลงประจำวัน</b><small id="hDailyNote">ทายให้ได้ใน 6 ครั้ง</small></button>
+      <button class="tile" data-hgo="ta"><span class="ic">⏱️</span><b>จับเวลา 60 วิ</b><small>ตอบให้ได้มากที่สุด</small></button>
+      <button class="tile" data-hgo="surv"><span class="ic">❤️</span><b>เอาตัวรอด</b><small>ผิดได้ 3 ครั้ง</small></button>
+      <button class="tile" data-hgo="cover"><span class="ic">🖼️</span><b>ทายจากภาพปก</b><small>ภาพเบลอ ค่อยๆ ชัด</small></button>
+      <button class="tile" data-hgo="stats"><span class="ic">🏆</span><b>สถิติ & อันดับ</b><small>อันดับโลก</small></button>
+    </div>
+  </div>
+
+  <div id="soloView" class="hidden">
+  <div id="gameBar">
+    <button class="btn ghost" id="homeBtn" title="หน้าแรก">🏠</button>
+    <div class="sum" id="gameSummary"></div>
+    <button class="btn ghost" id="setBtn">⚙️ ตั้งค่า</button>
+  </div>
+  <div id="settingsDrawer" class="hidden">
   <div class="panel" style="padding:10px 14px">
     <div class="row"><span class="label">โหมด:</span>
       <button class="chip on" data-gmode="normal">🎯 ปกติ</button>
@@ -205,6 +246,7 @@
     </div>
   </div>
 
+  </div>
   <div class="panel" id="playerPanel">
     <div id="taBar" class="hidden" style="margin-bottom:12px">
       <div class="row" style="justify-content:space-between">
@@ -314,7 +356,7 @@
   </div>
   <div id="mpView" class="hidden">
     <div class="panel" id="mpLobby">
-      <h3 style="margin:0 0 10px">👥 เล่นกับเพื่อน</h3>
+      <div class="row" style="justify-content:space-between;margin-bottom:10px"><h3 style="margin:0">👥 เล่นกับเพื่อน</h3><button class="btn ghost" id="mpHome">🏠 หน้าแรก</button></div>
       <div class="row"><span class="label">ชื่อของคุณ</span><input type="text" id="mpName" maxlength="16" placeholder="เช่น Ken" style="flex:1;min-width:160px"></div>
       <div class="row" style="margin-top:12px">
         <button class="btn" id="mpCreate">➕ สร้างห้อง</button>
@@ -1463,12 +1505,7 @@ function onAll(m){
 }
 
 // ---------- wiring ----------
-function setTab(mp){
-  $("tabSolo").classList.toggle("on",!mp); $("tabMp").classList.toggle("on",mp);
-  $("soloView").classList.toggle("hidden",mp); $("mpView").classList.toggle("hidden",!mp);
-  if(mp) stopAudio();
-  document.querySelector(".stats").style.visibility = mp ? "hidden" : "visible";
-}
+function setTab(mp){ showView(mp?"mp":"solo"); }
 $("tabSolo").onclick=()=>setTab(false);
 $("tabMp").onclick=()=>setTab(true);
 $("mpName").value=store.get("asq_name","");
@@ -1720,7 +1757,45 @@ function guessCandidates(q){
 makeSuggest($("guess"),$("guessSug"),guessCandidates,()=>checkTyped());
 makeSuggest($("dGuess"),$("dSug"),q=>{ if(!D) return []; const seen=new Set(), cands=[]; for(const x of listFor(D.c)){ if(seen.has(x.title)) continue; seen.add(x.title); cands.push({v:x.title,sub:x.artist,keys:[x.title,x.jaTitle,x.artist,x.jaArtist]}); } return rankMatches(cands,q); },()=>dailyGuess(false));
 
+// ================= HOME SCREEN & SETTINGS DRAWER =================
+const FMT_LABEL={c2:"1 ใน 2",c4:"4 ตัวเลือก",c6:"6 ตัวเลือก",yn:"ใช่/ไม่ใช่",type:"พิมพ์ตอบ",cover:"เลือกจากภาพปก"};
+const MODE_LABEL={normal:"🎯 ปกติ",ta:"⏱️ จับเวลา",surv:"❤️ เอาตัวรอด",cover:"🖼️ ภาพปก",daily:"📅 ประจำวัน"};
+function catLabel(){ return cat==="online" ? onCat(onlineKey).name : (CATS[cat]||cat); }
+function updateSummary(){
+  const t=TLABEL[(cat!=="online"||onlineKey.startsWith("as:")||target!=="anime")?target:"title"]||"ชื่อเพลง";
+  const line = gmode==="daily" ? `<b>${MODE_LABEL.daily}</b> · ${esc(CATS[dailyCat()]||"")}` : `<b>${MODE_LABEL[gmode]||""}</b> · ${esc(catLabel())} · ทาย${t} · ${FMT_LABEL[fmt]||""}`;
+  $("gameSummary").innerHTML=line;
+  $("homeSummary").textContent=`เล่นต่อจากครั้งก่อน: ${catLabel()} · ทาย${t} · ${FMT_LABEL[fmt]||""}`;
+  document.querySelectorAll("[data-hcat]").forEach(b=>b.classList.toggle("on",b.dataset.hcat===cat));
+}
+function showView(v){   // "home" | "solo" | "mp"
+  $("homeView").classList.toggle("hidden",v!=="home"); $("soloView").classList.toggle("hidden",v!=="solo"); $("mpView").classList.toggle("hidden",v!=="mp");
+  document.querySelector(".stats").style.display = v==="solo" ? "" : "none";
+  if(v!=="solo"){ stopAudio(); try{ if(TA.on) taStop(false); }catch(e){} }
+  if(v==="home"){ try{ updateSummary(); }catch(e){} const d=store.get("asq_daily",{})[todayStr()+"|"+dailyCat()]; $("hDailyNote").textContent= d&&d.done ? (d.win?`วันนี้ทายได้ใน ${d.res.length} ครั้ง ✅`:"วันนี้เล่นแล้ว") : "ทายให้ได้ใน 6 ครั้ง"; }
+  try{ if(v==="mp"){ if(MP.code) history.replaceState(null,"","#"+MP.code); } else history.replaceState(null,"",location.pathname+location.search); }catch(e){}
+}
+function startGame(mode){ showView("solo"); store.set("asq_gmode",mode); setGmode(mode); updateSummary(); }
+$("hPlay").onclick=()=>startGame("normal");
+document.querySelectorAll("[data-hcat]").forEach(b=>b.onclick=()=>{ cat=b.dataset.hcat; try{localStorage.setItem("asq_cat",JSON.stringify(cat))}catch(e){} recent=[]; applyCat(); updateSummary(); });
+document.querySelectorAll("[data-hgo]").forEach(b=>b.onclick=()=>{ const g=b.dataset.hgo;
+  if(g==="mp"){ showView("mp"); return; }
+  if(g==="stats"){ startGame("normal"); const p=$("statsPanel"); p.classList.remove("hidden"); renderMyStats(); lbLoad(); setTimeout(()=>p.scrollIntoView({behavior:"smooth"}),50); return; }
+  startGame(g); });
+$("homeBtn").onclick=()=>showView("home");
+window.addEventListener("hashchange",()=>{ const h=(location.hash||"").slice(1).toUpperCase(); if(/^[A-Z0-9]{5}$/.test(h)&&!MP.client){ showView("mp"); $("mpCodeIn").value=h; $("mpMsg").textContent="ใส่ชื่อแล้วกด 'เข้าห้อง' ได้เลย"; } });
+$("mpHome").onclick=()=>{ if(MP.client) mpLeave(); showView("home"); };
+$("setBtn").onclick=()=>{ const d=$("settingsDrawer"); d.classList.toggle("hidden"); $("setBtn").textContent=d.classList.contains("hidden")?"⚙️ ตั้งค่า":"✕ ปิดตั้งค่า"; };
+// keep the summary line in sync with any setting change
+document.addEventListener("click",e=>{ if(e.target.closest("[data-cat],[data-target],[data-fmt],[data-gmode],[data-diff]")) setTimeout(updateSummary,0); });
+["onSel","fEra","fType","fSeries"].forEach(id=>$(id).addEventListener("change",()=>setTimeout(updateSummary,0)));
+$("onGo").addEventListener("click",()=>setTimeout(updateSummary,0)); $("onAnime").addEventListener("click",()=>setTimeout(updateSummary,0));
+
 renderStats(); renderCustom(); renderDatalist(); renderClues(); updateEndlessChip(); applyCat(); newRound();
+(function(){ const g=store.get("asq_gmode","normal"); if(g!=="normal"&&g!=="daily"&&["ta","surv","cover"].includes(g)){ /* remembered for "เล่นเลย"? keep normal as default play */ }
+  if(/^#[A-Z0-9]{5}$/i.test(location.hash||"")) return;            // invite link handled below
+  if(navigator.webdriver || /[?&]play\b/.test(location.search)){ showView("solo"); $("settingsDrawer").classList.remove("hidden"); document.querySelector(".tabs").classList.remove("hidden"); updateSummary(); return; }
+  showView("home"); })();
 try{ if(window.top!==window.self) setTimeout(()=>{ if(!curInfo) showProblem("blocked"); },4000); }catch(e){ setTimeout(()=>{ if(!curInfo) showProblem("blocked"); },4000); }
 </script>
 </body>
