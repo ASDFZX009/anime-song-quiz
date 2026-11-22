@@ -78,6 +78,21 @@
   .pl{display:flex;justify-content:space-between;background:var(--panel2);border-radius:10px;padding:8px 12px}
   .pl.me{outline:1px solid var(--accent2)}
   .pl .ok{color:var(--good)} .pl .no{color:var(--bad)}
+  .pl.away{opacity:.5} .plr{display:flex;align-items:center;gap:8px}
+  .kick{font:inherit;font-size:13px;background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:2px 8px;cursor:pointer;min-height:28px}
+  .kick.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .btn.small{padding:6px 10px;font-size:14px}
+  .netbar{background:#5b3a00;color:#ffd37a;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:14px}
+  #mpToasts{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
+  .mptoast{background:rgba(20,20,30,.92);color:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:14px;animation:toastin .25s ease-out}
+  @keyframes toastin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .emobar{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .emo{font-size:22px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px 10px;cursor:pointer;min-width:44px;min-height:44px}
+  .emo:active{transform:scale(.92)}
+  #emoLayer{position:fixed;inset:0;pointer-events:none;z-index:55;overflow:hidden}
+  .emofly{position:absolute;bottom:-60px;display:flex;flex-direction:column;align-items:center;animation:emofly 2.5s ease-out forwards}
+  .emofly span{font-size:40px;line-height:1} .emofly small{font-size:12px;background:rgba(0,0,0,.55);color:#fff;border-radius:8px;padding:1px 6px;margin-top:2px;white-space:nowrap}
+  @keyframes emofly{0%{transform:translateY(0);opacity:0}10%{opacity:1}100%{transform:translateY(-70vh);opacity:0}}
   select{font:inherit;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px}
   .choice.picked{border-color:var(--accent2);background:#2c2350}
   .hidden{display:none!important}
@@ -137,6 +152,7 @@
 </style>
 </head>
 <body>
+<div id="emoLayer"></div>
 <div class="wrap">
   <header>
     <h1>🎵 ทายเพลง<span id="catTitle">อนิเมะ</span></h1>
@@ -355,6 +371,8 @@
 
   </div>
   <div id="mpView" class="hidden">
+    <div class="netbar hidden" id="mpNet"></div>
+    <div id="mpToasts"></div>
     <div class="panel" id="mpLobby">
       <div class="row" style="justify-content:space-between;margin-bottom:10px"><h3 style="margin:0">👥 เล่นกับเพื่อน</h3><button class="btn ghost" id="mpHome">🏠 หน้าแรก</button></div>
       <div class="row"><span class="label">ชื่อของคุณ</span><input type="text" id="mpName" maxlength="16" placeholder="เช่น Ken" style="flex:1;min-width:160px"></div>
@@ -370,7 +388,7 @@
     <div class="panel hidden" id="mpRoom">
       <div class="row" style="justify-content:space-between">
         <div><span class="label">รหัสห้อง</span><div class="code" id="mpCode"></div></div>
-        <div class="row"><button class="btn ghost" id="mpCopy">📋 คัดลอกลิงก์ชวนเพื่อน</button><button class="btn ghost" id="mpLeave">ออกจากห้อง</button></div>
+        <div class="row"><button class="btn ghost" id="mpCopy">📋 คัดลอกลิงก์ชวนเพื่อน</button><button class="btn ghost mpLeaveBtn" id="mpLeave">ออกจากห้อง</button></div>
       </div>
       <div id="mpHostSet" class="row hidden" style="margin-top:12px">
         <span class="label">ชุดเพลง</span>
@@ -388,7 +406,7 @@
     </div>
 
     <div class="panel hidden" id="mpGame">
-      <div class="row" style="justify-content:space-between"><b id="mpRoundLbl"></b><span class="label" id="mpAnswered"></span></div>
+      <div class="row" style="justify-content:space-between"><b id="mpRoundLbl"></b><span class="row" style="gap:8px"><span class="label" id="mpAnswered"></span><button class="btn ghost small mpLeaveBtn" title="ออกจากห้อง">🚪 ออก</button></span></div>
       <div class="bar" style="max-width:none;margin:12px 0"><i id="mpBar"></i></div>
       <div class="msg" id="mpHint">ฟังแล้วเลือกคำตอบ — ยิ่งตอบเร็วยิ่งได้คะแนนเยอะ</div>
       <div class="choices" id="mpChoices"></div>
@@ -399,8 +417,10 @@
     <div class="panel hidden" id="mpEnd">
       <h2 style="margin:0 0 6px">🏆 จบเกม!</h2>
       <div class="plist" id="mpFinal"></div>
-      <div class="row" style="margin-top:14px"><button class="btn hidden" id="mpAgain">เล่นอีกรอบ</button><span class="label" id="mpEndMsg"></span></div>
+      <div class="msg" id="mpEndMsg" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:10px"><button class="btn hidden" id="mpRematch">🔁 เล่นอีกรอบ (ตั้งค่าเดิม)</button><button class="btn ghost hidden" id="mpAgain">⚙️ เปลี่ยนการตั้งค่า</button><span class="label hidden" id="mpEndWait">รอเจ้าของห้องเริ่มรอบใหม่…</span><button class="btn ghost mpLeaveBtn">ออกจากห้อง</button></div>
     </div>
+    <div class="emobar hidden" id="mpEmoBar"></div>
   </div>
 
   <footer>
@@ -837,6 +857,8 @@ function itunes(params){
   };
   const p=Q.chain.then(run,run); Q.chain=p.catch(()=>{}); return p;
 }
+// Deezer clip links carry an expiry time (…hdnea=exp=1732280000~…); refetch shortly before it passes
+function infoStale(i){ const m=/exp=(\d{9,11})/.exec((i&&i.preview)||""); return !!m && (+m[1])*1000 < Date.now()+120000; }
 function mkInfo(r){ return {preview:r.previewUrl,art:(r.artworkUrl100||"").replace("100x100","300x300"),link:r.trackViewUrl,track:r.trackName,artistName:r.artistName,year:(r.releaseDate||"").slice(0,4)}; }
 // ---- Deezer (backup source: 30s previews, much higher rate limit; preview links expire after a while, so only kept in memory) ----
 const memCache={};
@@ -878,7 +900,7 @@ async function deezerTrack(id){
 async function lookup(song){
   const key="v3|"+song.title+"|"+song.artist;
   if(cache[key]) return cache[key];          // Apple result saved earlier (links don't expire)
-  if(memCache[key]) return memCache[key];
+  if(memCache[key]){ if(!infoStale(memCache[key])) return memCache[key]; delete memCache[key]; }
   if(song.dz){                               // songs collected from Deezer: fetch a fresh clip by track id
     const d=await deezerTrack(song.dz);
     if(d&&d.preview&&!song.year){ const ry=+(((d.album&&d.album.release_date)||d.release_date||"").slice(0,4)); if(ry>1900) song.year=ry; }
@@ -1054,6 +1076,7 @@ async function newRound(){
   $("result").style.display="none"; $("guess").value="";
   $("play").disabled=true; $("msg").textContent="กำลังโหลดเพลง…";
   $("answerChoice").innerHTML="";
+  setTimeout(()=>{ if(token===roundToken&&!curInfo&&/กำลังโหลดเพลง/.test($("msg").textContent)) $("msg").textContent="⏳ เน็ตช้าหรือแหล่งเพลงตอบช้า กำลังลองเพลงอื่นให้… (กด 'เพลงถัดไป' เพื่อเริ่มใหม่ได้)"; },12000);
   let tries=0;
   const maxTries = (cat==="online"&&onlineKey.startsWith("as:")) ? 15 : 6;
   while(tries<maxTries){
@@ -1064,8 +1087,8 @@ async function newRound(){
     if(Q.waiting>0 && known.length) cand=known;          // Apple queue busy -> prefer songs already loaded
     cand=cand.filter(x=>cache["v3|"+x.title+"|"+x.artist]!==null&&!x.miss); if(!cand.length) cand=p.filter(x=>!x.miss); if(!cand.length) cand=p;
     cur=cand[Math.floor(Math.random()*cand.length)];
-    $("msg").textContent="กำลังโหลดเพลง…";
-    curInfo= cur.info || await lookup(cur);
+    if(!/เน็ตช้า/.test($("msg").textContent)) $("msg").textContent="กำลังโหลดเพลง…";
+    curInfo= (cur.info&&!infoStale(cur.info)) ? cur.info : await lookup(cur);
     if(token!==roundToken) return;
     if(curInfo && (gmode==="cover"||fmt==="cover") && !curInfo.art){ curInfo=null; }
     if(curInfo) break;
@@ -1326,7 +1349,21 @@ function showProblem(kind){
   b.style.display="block";
 }
 function hideProblem(){ $("problem").style.display="none"; }
-audio.addEventListener("error",()=>{ if(!audio.src||audio.src.startsWith("data:")) return; if(cur){ delete memCache["v3|"+cur.title+"|"+cur.artist]; } showProblem("audio"); });
+window.addEventListener("offline",()=>{ const b=$("problem"); b.innerHTML="📶 <b>ออฟไลน์อยู่</b> — ต่ออินเทอร์เน็ตแล้วกด 'เพลงถัดไป' เพื่อเล่นต่อ"; b.style.display="block"; });
+window.addEventListener("online",()=>{ hideProblem(); netFail=false; });
+let audioFixTok=-1;
+audio.addEventListener("error",async()=>{
+  if(!audio.src||audio.src.startsWith("data:")) return;
+  const daily=gmode==="daily"&&D, s=daily?D.song:cur; if(!s) return;
+  delete memCache["v3|"+s.title+"|"+s.artist]; if(s.info&&s.info.src==="deezer") s.info=null;
+  const tok=daily?"d"+D.day:roundToken;
+  if(audioFixTok!==tok){ audioFixTok=tok;            // first failure this round: the clip link probably expired, get a fresh one
+    let info=null; try{ info=await lookup(s); }catch(e){}
+    if(info&&(daily?D&&D.song===s:(cur===s&&roundToken===tok))){
+      if(daily){ D.info=info; } else { curInfo.preview=info.preview; }
+      audio.src=info.preview; audio.load(); hideProblem(); return; }
+  }
+  showProblem("audio"); });
 
 $("chkRun").onclick=async()=>{
   const all=catList().concat(cat==="anime"||cat==="mix"?custom:[]); let ok=0,bad=0; const t=$("chkTable");
@@ -1340,29 +1377,89 @@ $("chkRun").onclick=async()=>{
 };
 
 // ================= MULTIPLAYER (via public MQTT relay) =================
+// One player (the "host") runs the game; everyone talks through a public MQTT relay.
+// - every player says "hi" every 3 s (join + heartbeat). The host marks silent players as away and stops waiting for them.
+// - the host announces the room every 3 s. If it goes quiet, the earliest-joined active player takes over (scores are kept).
+// - every message is signed with a per-player key, so nobody can answer, leave, kick or end the game in someone else's name.
+// - a refreshed tab gets its seat (and score) back.
 const BROKERS=["wss://broker.emqx.io:8084/mqtt","wss://broker.hivemq.com:8884/mqtt"];
-const MP={client:null,code:null,isHost:false,id:Math.random().toString(36).slice(2,10),name:"",players:{},state:"idle",round:null,used:[],timers:[],lastSeen:0,watch:null,set:"all",rounds:10};
+const HB_MS=3000, AWAY_MS=9500, HOST_TIMEOUT=10000, ROUND_MS=20000;
+const EMOS=["👏","😂","😮","🔥","😭","💯","🤯","🫶"];
+const MP={client:null,code:null,isHost:false,id:"",name:"",players:{},state:"idle",round:null,used:[],timers:[],htimers:[],lastHost:0,
+  set:"all",rounds:10,cat:"anime",target:"title",nopt:4,n:0,hostId:null,ep:0,seen:{},gone:{},banned:new Set(),pubs:{},jseq:1,keys:null,q:Promise.resolve(),sq:Promise.resolve(),netDown:false};
+const UID=(()=>{ let u=store.get("asq_uid",""); if(!u){ u=Math.random().toString(36).slice(2,10); store.set("asq_uid",u); } return u; })();   // stable id for the world leaderboard
 const mpAudio=new Audio(); mpAudio.preload="auto";
-let mpRaf=null, mpT0=0, mpMyPick=null;
+let mpRaf=null, mpT0=0, mpMyPick=null, mpRoundN=0;
 const SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
 const SILENT="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
+const SUB=(window.crypto&&crypto.subtle&&window.isSecureContext!==false)?crypto.subtle:null;
+const b64=buf=>{ let s=""; new Uint8Array(buf).forEach(c=>s+=String.fromCharCode(c)); return btoa(s); };
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const rid=()=>Math.random().toString(36).slice(2,10);
 
-function mpShow(id){ ["mpLobby","mpRoom","mpGame","mpEnd"].forEach(x=>$(x).classList.toggle("hidden",x!==id)); }
+function mpShow(id){ ["mpLobby","mpRoom","mpGame","mpEnd"].forEach(x=>$(x).classList.toggle("hidden",x!==id)); $("mpEmoBar").classList.toggle("hidden",id==="mpLobby"); }
 function mpTopic(x){ return `asq-anime-quiz/v1/${MP.code}/${x}`; }
-function mpSend(to,msg){ if(MP.client) MP.client.publish(mpTopic(to),JSON.stringify(msg)); }
-function mpClear(){ MP.timers.forEach(clearTimeout); MP.timers=[]; }
+function mpClear(){ MP.timers.forEach(clearTimeout); MP.timers=[]; }          // this device's own round timers (audio snippets)
 function mpLater(fn,ms){ MP.timers.push(setTimeout(fn,ms)); }
-function loadMqtt(){
-  return window.mqtt?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js";s.onload=res;s.onerror=()=>rej(new Error("lib"));document.head.appendChild(s)});
+function hostClear(){ MP.htimers.forEach(clearTimeout); MP.htimers=[]; }      // the host's game timers
+function hostLater(fn,ms){ MP.htimers.push(setTimeout(fn,ms)); }
+
+// ---------- keys & signatures ----------
+async function mpKeys(code){
+  const sk="asq_mp_"+code; let s=null; try{ s=JSON.parse(sessionStorage.getItem(sk)); }catch(e){}
+  MP.keys=null;
+  if(s&&s.id&&Date.now()-s.t<6*3600e3){
+    if(!SUB||!s.jwk){ MP.id=s.id; }
+    else try{ MP.keys={priv:await SUB.importKey("jwk",s.jwk,{name:"ECDSA",namedCurve:"P-256"},false,["sign"]),pub:s.pub}; MP.id=s.id; }catch(e){ s=null; }
+  } else s=null;
+  if(!s){
+    MP.id=rid(); s={id:MP.id};
+    if(SUB) try{ const kp=await SUB.generateKey({name:"ECDSA",namedCurve:"P-256"},true,["sign","verify"]);
+      s.pub=b64(await SUB.exportKey("raw",kp.publicKey)); s.jwk=await SUB.exportKey("jwk",kp.privateKey); MP.keys={priv:kp.privateKey,pub:s.pub}; }catch(e){ MP.keys=null; }
+  }
+  s.t=Date.now(); try{ sessionStorage.setItem(sk,JSON.stringify(s)); }catch(e){}
+}
+async function mpSign(m){
+  if(!MP.keys) return m;
+  try{ m.sig=b64(await SUB.sign({name:"ECDSA",hash:"SHA-256"},MP.keys.priv,new TextEncoder().encode(MP.code+"|"+JSON.stringify(m)))); }catch(e){}
+  return m;
+}
+const pubKeyCache={};
+async function mpVerify(m,pub){
+  if(!pub||!SUB) return true;                 // that device can't sign (or we can't check) — accept, nothing better to do
+  if(typeof m.sig!=="string") return false;
+  try{
+    const k=await (pubKeyCache[pub]||(pubKeyCache[pub]=SUB.importKey("raw",unb64(pub),{name:"ECDSA",namedCurve:"P-256"},false,["verify"])));
+    const c=Object.assign({},m); delete c.sig;
+    return await SUB.verify({name:"ECDSA",hash:"SHA-256"},k,unb64(m.sig),new TextEncoder().encode(MP.code+"|"+JSON.stringify(c)));
+  }catch(e){ return false; }
+}
+// sends go through a queue so messages leave in the order they were made
+function mpPub(to,m,sign){
+  const c=MP.client; if(!c) return;
+  MP.sq=MP.sq.then(async()=>{ if(sign) await mpSign(m); try{ c.publish(mpTopic(to),JSON.stringify(m)); }catch(e){} }).catch(()=>{});
+}
+function mpSendHost(m){ m.id=MP.id; mpPub("host",m,true); }
+function mpSendAll(m){ m.from=MP.id; m.ep=MP.ep; mpPub("all",m,true); }   // host -> everyone
+
+// ---------- connection ----------
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>{ s.remove(); rej(new Error("lib")); }; document.head.appendChild(s); }); }
+async function loadMqtt(){
+  if(window.mqtt) return;
+  for(const src of ["mqtt.min.js","https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js","https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"]){
+    try{ await loadScript(src); if(window.mqtt) return; }catch(e){}
+  }
+  throw new Error("lib");
 }
 async function mpConnect(){
   try{ await loadMqtt(); }catch(e){ throw new Error("lib"); }
   let list=BROKERS; try{const o=localStorage.getItem("asq_broker"); if(o) list=[o];}catch(e){}
-  for(const url of list){
+  for(let round=0;round<2;round++) for(const url of list){
     try{
       return await new Promise((res,rej)=>{
-        const c=mqtt.connect(url,{clientId:"asq_"+MP.id+"_"+Date.now().toString(36),clean:true,connectTimeout:7000,reconnectPeriod:2000});
-        const t=setTimeout(()=>{c.end(true);rej()},8000);
+        const c=mqtt.connect(url,{clientId:"asq_"+MP.id+"_"+Date.now().toString(36),clean:true,connectTimeout:7000,reconnectPeriod:2000,keepalive:20});
+        c.on("error",()=>{});
+        const t=setTimeout(()=>{ try{c.end(true)}catch(e){} rej(); },8000);
         c.once("connect",()=>{clearTimeout(t);res(c)});
       });
     }catch(e){}
@@ -1372,65 +1469,182 @@ async function mpConnect(){
 function unlockAudio(){ try{ mpAudio.src=SILENT; const p=mpAudio.play(); if(p&&p.catch)p.catch(()=>{}); }catch(e){} }
 function mpSaveName(){ MP.name=($("mpName").value.trim()||"ผู้เล่น").slice(0,16); store.set("asq_name",MP.name); }
 
-async function mpEnter(code,host){
-  mpSaveName(); unlockAudio();
+async function mpEnter(code,host,opts){
+  opts=opts||{};
+  mpSaveName(); unlockAudio(); mpRoundN=0;
   $("mpMsg").textContent="กำลังเชื่อมต่อ…"; $("mpCreate").disabled=$("mpJoin").disabled=true;
-  try{ MP.client=await mpConnect(); }
-  catch(e){ $("mpMsg").innerHTML = e.message==="lib" ? "⚠️ โหลดระบบออนไลน์ไม่ได้ — ต้องเปิดไฟล์ในเบราว์เซอร์ (ไม่ใช่หน้าตัวอย่างในแอป) และต่ออินเทอร์เน็ต" : "⚠️ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง"; $("mpCreate").disabled=$("mpJoin").disabled=false; return; }
+  try{ await mpKeys(code); MP.code=code; MP.client=await mpConnect(); }
+  catch(e){ $("mpMsg").innerHTML = e.message==="lib" ? "⚠️ โหลดระบบออนไลน์ไม่ได้ — ต้องเปิดเว็บในเบราว์เซอร์ (ไม่ใช่หน้าตัวอย่างในแอป) และต่ออินเทอร์เน็ต" : "⚠️ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่อีกครั้ง"; $("mpCreate").disabled=$("mpJoin").disabled=false; return; }
   $("mpCreate").disabled=$("mpJoin").disabled=false; $("mpMsg").textContent="";
-  MP.code=code; MP.isHost=host; MP.players={}; MP.state="lobby"; MP.used=[]; MP.lastSeen=Date.now();
-  MP.client.on("message",(topic,buf)=>{ let m; try{m=JSON.parse(buf.toString())}catch(e){return}
-    if(topic===mpTopic("host")){ if(MP.isHost) hostHandle(m); } else onAll(m); });
-  MP.client.subscribe(mpTopic("all"));
-  if(host){ MP.client.subscribe(mpTopic("host")); MP.players[MP.id]={name:MP.name,score:0}; hostBroadcastLobby(); MP.hb=setInterval(hostBroadcastLobby,3000); }
-  $("mpCode").textContent=code; $("mpHostSet").classList.toggle("hidden",!host);
+  Object.assign(MP,{isHost:false,hostId:null,ep:0,players:{},pubs:{},seen:{},gone:{},banned:new Set(),state:"lobby",used:[],n:0,round:null,lastHost:Date.now(),
+    q:Promise.resolve(),sq:Promise.resolve(),netDown:false,wasHost:!!opts.wasHost,lastHi:0,emoAt:{}});
+  const c=MP.client;
+  c.on("message",(topic,buf)=>{ if(c!==MP.client) return; let m; try{m=JSON.parse(buf.toString())}catch(e){return} if(!m||typeof m!=="object"||Array.isArray(m)) return;
+    MP.q=MP.q.then(()=> topic===mpTopic("host") ? (MP.isHost?hostHandle(m):null) : onAll(m)).catch(e=>{ try{console.warn("mp",e)}catch(_){} }); });
+  c.on("offline",()=>{ MP.netDown=true; mpNetUI(); });
+  c.on("close",()=>{ if(MP.client===c){ MP.netDown=true; mpNetUI(); } });
+  c.on("connect",()=>{ if(MP.client!==c) return; const was=MP.netDown; MP.netDown=false; mpNetUI(); if(was){ if(MP.isHost){ hostGrace(); hostBroadcastLobby(); } else { MP.lastHost=Date.now(); mpHi(true); } } });
+  c.subscribe(mpTopic("all"));
+  if(host){ MP.isHost=true; MP.hostId=MP.id; MP.ep=1; c.subscribe(mpTopic("host")); MP.players[MP.id]={name:MP.name,score:0,j:0,pub:MP.keys?MP.keys.pub:""}; MP.pubs[MP.id]=MP.players[MP.id].pub; MP.jseq=1; startHostLoop(); hostBroadcastLobby(); }
+  clearInterval(MP.tick); MP.tick=setInterval(mpTick,1000);
+  $("mpCode").textContent=code;
   $("mpWait").textContent = host ? "ส่งรหัสหรือลิงก์ให้เพื่อน แล้วกด ▶ เริ่มเกม" : "กำลังเข้าห้อง…";
-  mpShow("mpRoom"); renderPlayers("mpPlayers");
-  if(!host){
-    const join=()=>mpSend("host",{t:"join",id:MP.id,name:MP.name});
-    join(); MP.joinTimer=setInterval(()=>{ if(!MP.players[MP.id]) join(); },2000);
-    MP.watch=setInterval(()=>{ if(Date.now()-MP.lastSeen>15000){ $("mpWait").textContent="⚠️ ไม่พบเจ้าของห้อง — เช็กรหัสห้อง หรือเจ้าของห้องอาจออกไปแล้ว"; $("mpEndMsg").textContent="เจ้าของห้องออกไปแล้ว"; } },3000);
-  }
+  mpShow("mpRoom"); mpRoleUI(); renderPlayers("mpPlayers");
+  if(!host) mpHi(true);
+  try{ sessionStorage.setItem("asq_mp_active",JSON.stringify({code,host,t:Date.now()})); }catch(e){}
   try{ history.replaceState(null,"","#"+code); }catch(e){}
 }
-function mpLeave(){
-  if(MP.client){ if(!MP.isHost) mpSend("host",{t:"leave",id:MP.id}); else mpSend("all",{t:"closed"}); setTimeout(()=>{try{MP.client.end(true)}catch(e){} MP.client=null;},200); }
-  clearInterval(MP.hb); clearInterval(MP.joinTimer); clearInterval(MP.watch); mpClear(); mpStopAudio();
-  MP.state="idle"; mpShow("mpLobby"); try{ history.replaceState(null,"",location.pathname); }catch(e){}
+function mpHi(force){ if(MP.isHost||!MP.client) return; const now=Date.now(); if(!force&&now-MP.lastHi<HB_MS-200) return; MP.lastHi=now; mpSendHost({t:"hi",name:MP.name,pub:MP.keys?MP.keys.pub:""}); }
+function successor(){   // earliest-joined player who is still here
+  return Object.entries(MP.players).filter(([id,p])=>id!==MP.hostId&&id!==MP.id&&!p.away).sort((a,b)=>a[1].j-b[1].j).map(x=>x[0])[0]||null;
+}
+function mpLeave(note){
+  if(MP.client){
+    if(MP.isHost){ const s=successor(); if(s) mpSendAll({t:"handover",to:s}); else mpSendAll({t:"closed"}); }
+    else mpSendHost({t:"leave"});
+    const c=MP.client; MP.client=null; setTimeout(()=>{ try{c.end(true)}catch(e){} },700);
+  }
+  clearInterval(MP.tick); clearInterval(MP.hloop); hostClear(); mpClear(); mpStopAudio(); cancelAnimationFrame(MP.barRaf);
+  MP.isHost=false; MP.state="idle"; MP.netDown=false; mpNetUI(); mpShow("mpLobby"); $("mpMsg").textContent=note||"";
+  try{ sessionStorage.removeItem("asq_mp_active"); }catch(e){}
+  try{ history.replaceState(null,"",location.pathname+location.search); }catch(e){}
 }
 
-function sortedPlayers(){ return Object.entries(MP.players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score); }
+// ---------- periodic checks ----------
+function hostGrace(){ const now=Date.now(); Object.keys(MP.seen).forEach(id=>{ if(MP.players[id]&&!MP.players[id].away) MP.seen[id]=Math.max(MP.seen[id],now-3000); }); }
+function mpTick(){
+  if(!MP.client) return;
+  const now=Date.now();
+  if(MP.lastTickAt&&now-MP.lastTickAt>5000){ if(MP.isHost) hostGrace(); else MP.lastHost=now; }   // this tab was asleep: don't blame the others
+  MP.lastTickAt=now;
+  if(!MP.isHost){
+    mpHi(false);
+    const silence=now-MP.lastHost;
+    if(MP.hostId){
+      const cands=Object.entries(MP.players).filter(([id,p])=>id!==MP.hostId&&!p.away).sort((a,b)=>a[1].j-b[1].j).map(x=>x[0]);
+      const k=cands.indexOf(MP.id);
+      if(k>=0 && !MP.netDown && silence>HOST_TIMEOUT+k*5000) takeOver(false);
+    } else if(MP.wasHost && silence>7000 && !MP.netDown){ takeOverFresh(); }
+    else if(silence>15000){ $("mpWait").textContent="⚠️ ไม่พบห้องนี้ — เช็กรหัสห้อง หรือเจ้าของห้องอาจปิดห้องไปแล้ว"; }
+  }
+  mpNetUI();
+}
+function mpNetUI(){
+  const b=$("mpNet"); if(!b) return; let t="";
+  if(MP.state!=="idle"&&MP.client){
+    if(MP.netDown) t="📶 อินเทอร์เน็ตหลุด — กำลังเชื่อมต่อใหม่อัตโนมัติ… (คะแนนยังอยู่)";
+    else if(!MP.isHost&&MP.hostId&&Date.now()-MP.lastHost>5000) t="⏳ ไม่ได้รับสัญญาณจากเจ้าของห้อง — ถ้ายังเงียบ จะมีคนในห้องรับเป็นเจ้าของห้องแทนอัตโนมัติ";
+  }
+  b.textContent=t; b.classList.toggle("hidden",!t);
+}
+function mpToast(text){
+  const el=document.createElement("div"); el.className="mptoast"; el.textContent=text; $("mpToasts").appendChild(el);
+  setTimeout(()=>el.remove(),3500); while($("mpToasts").children.length>3) $("mpToasts").firstChild.remove();
+}
+function mpRoleUI(){
+  $("mpHostSet").classList.toggle("hidden",!MP.isHost);
+  $("mpAgain").classList.toggle("hidden",!MP.isHost); $("mpRematch").classList.toggle("hidden",!MP.isHost);
+  $("mpEndWait").classList.toggle("hidden",MP.isHost);
+}
+
+// ---------- players list ----------
+function sortedPlayers(){ return Object.entries(MP.players).map(([id,p])=>({id,...p})).sort((a,b)=>b.score-a.score||a.j-b.j); }
 function renderPlayers(box,res){
   const L=sortedPlayers();
   $(box).innerHTML=L.map((p,i)=>{
     const r=res&&res[p.id];
     const tag= r ? (r.ok?`<span class="ok">+${r.pts}</span>`:`<span class="no">${r.ans?"ผิด":"ไม่ได้ตอบ"}</span>`) : "";
-    return `<div class="pl${p.id===MP.id?" me":""}"><span>${i+1}. ${esc(p.name)}${p.id===MP.id?" (คุณ)":""} ${tag}</span><b>${p.score.toLocaleString()}</b></div>`;
+    const armed=MP.armed&&MP.armed.id===p.id&&Date.now()<MP.armed.until;
+    const kick= MP.isHost&&p.id!==MP.id ? `<button class="kick${armed?" armed":""}" data-kick="${esc(p.id)}" title="เชิญออกจากห้อง">${armed?"เชิญออก?":"✕"}</button>` : "";
+    return `<div class="pl${p.id===MP.id?" me":""}${p.away?" away":""}"><span>${i+1}. ${p.id===MP.hostId?"👑 ":""}${esc(p.name)}${p.id===MP.id?" (คุณ)":""}${p.away?" 📴":""} ${tag}</span><span class="plr"><b>${(+p.score||0).toLocaleString()}</b>${kick}</span></div>`;
   }).join("") || "<div class='label'>ยังไม่มีผู้เล่น</div>";
+}
+function mpRenderAll(){ if(MP.state==="lobby") renderPlayers("mpPlayers"); else if(MP.state==="game") renderPlayers("mpScores",MP.lastRes); else if(MP.state==="end") renderPlayers("mpFinal"); }
+function cleanPlayers(P){
+  const out={}; if(!P||typeof P!=="object") return out;
+  Object.entries(P).slice(0,200).forEach(([id,p])=>{ if(!p||typeof p!=="object") return;
+    out[String(id).slice(0,24)]={name:String(p.name||"ผู้เล่น").slice(0,20),score:Math.max(0,+p.score||0),j:+p.j||0,pub:typeof p.pub==="string"?p.pub.slice(0,200):"",away:!!p.away}; });
+  return out;
+}
+function uniqName(name,id){
+  const taken=new Set(Object.entries(MP.players).filter(([k])=>k!==id).map(([,p])=>p.name.toLowerCase()));
+  if(!taken.has(name.toLowerCase())) return name;
+  const base=name.slice(0,13); for(let i=2;i<100;i++){ const n=base+" "+i; if(!taken.has(n.toLowerCase())) return n; }
+  return base+" "+rid().slice(0,2);
 }
 
 // ---------- host side ----------
-function hostBroadcastLobby(){ mpSend("all",{t:"lobby",players:MP.players,state:MP.state}); }
-function hostHandle(m){
-  if(m.t==="join"){ if(!MP.players[m.id]) MP.players[m.id]={name:String(m.name||"ผู้เล่น").slice(0,16),score:0}; hostBroadcastLobby(); }
-  else if(m.t==="leave"){ delete MP.players[m.id]; hostBroadcastLobby(); }
+function startHostLoop(){ clearInterval(MP.hloop); MP.hloop=setInterval(hostTick,2500); }
+function hostCfg(){ return {cat:MP.cat,set:MP.set,rounds:MP.rounds,target:MP.target,nopt:MP.nopt}; }
+function hostBroadcastLobby(){ if(!MP.isHost) return; mpSendAll({t:"lobby",players:MP.players,state:MP.state,cfg:hostCfg(),n:MP.n,ban:[...MP.banned].slice(-50)}); }
+function hostTick(){
+  if(!MP.isHost||!MP.client) return;
+  const now=Date.now();
+  for(const [id,p] of Object.entries(MP.players)){
+    if(id===MP.id){ p.away=false; continue; }
+    const seen=MP.seen[id]||0, away=now-seen>AWAY_MS;
+    if(away!==!!p.away){ p.away=away; if(away) mpToast(`📴 ${p.name} หลุดการเชื่อมต่อ`); }
+    if(away && MP.state!=="game" && now-seen>45000){ MP.gone[id]={score:p.score,pub:p.pub}; delete MP.players[id]; }
+  }
+  hostCheckDone(); hostBroadcastLobby();
+}
+function hostWaitingFor(R){ return Object.keys(MP.players).filter(id=>!MP.players[id].away&&(R.elig.includes(id)||R.answers[id])); }
+function hostCheckDone(){
+  const R=MP.round; if(!R||R.done) return;
+  const active=hostWaitingFor(R);
+  if(!active.length || active.every(id=>R.answers[id])) hostEndRound();
+}
+async function hostHandle(m){
+  const id=typeof m.id==="string"?m.id.slice(0,24):""; if(!id) return;
+  if(m.t==="hi"){
+    if(MP.banned.has(id)) return;
+    const pub=typeof m.pub==="string"?m.pub.slice(0,200):"";
+    const p=MP.players[id], g=MP.gone[id], known=p?p.pub:(g?g.pub:(MP.pubs[id]!==undefined?MP.pubs[id]:undefined));
+    if(known!==undefined && known!==pub) return;              // that id belongs to someone else's key
+    if(!await mpVerify(m,pub)) return;
+    MP.seen[id]=Date.now();
+    if(!p){ delete MP.gone[id]; MP.players[id]={name:uniqName(String(m.name||"ผู้เล่น").trim().slice(0,16)||"ผู้เล่น",id),score:g?g.score:0,j:MP.jseq++,pub,away:false}; MP.pubs[id]=pub;
+      mpToast(`👋 ${MP.players[id].name} เข้าห้อง`); hostBroadcastLobby(); mpRenderAll(); }
+    else if(p.away){ p.away=false; hostBroadcastLobby(); mpRenderAll(); }
+    return;
+  }
+  const p=MP.players[id]; if(!p) return;
+  if(!await mpVerify(m,p.pub)) return;
+  MP.seen[id]=Date.now(); if(p.away){ p.away=false; }
+  if(m.t==="leave"){ if(id===MP.id) return; MP.gone[id]={score:p.score,pub:p.pub}; delete MP.players[id]; mpToast(`🚪 ${p.name} ออกจากห้อง`); hostBroadcastLobby(); hostCheckDone(); mpRenderAll(); }
   else if(m.t==="ans"){
-    const R=MP.round; if(!R||R.done||m.n!==R.n||R.answers[m.id]||!MP.players[m.id]) return;
-    R.answers[m.id]={choice:+m.choice,elapsed:Math.max(0,Math.min(20,+m.elapsed||20))};
-    const cnt=Object.keys(R.answers).length, tot=Object.keys(MP.players).length;
-    mpSend("all",{t:"answered",n:R.n,count:cnt,total:tot});
-    if(cnt>=tot) hostEndRound();
+    const R=MP.round; if(!R||R.done||m.n!==R.n||R.answers[id]) return;
+    const choice=Math.floor(+m.choice); if(!(choice>=0&&choice<R.nopts)) return;
+    const hostEl=(Date.now()-R.t0)/1000; if(hostEl>ROUND_MS/1000+3) return;
+    const el=Math.max(0,Math.min(ROUND_MS/1000, Math.max(+m.elapsed||0, hostEl-1.5)));   // can't claim to be faster than the relay allows
+    R.answers[id]={choice,elapsed:el};
+    const active=hostWaitingFor(R);
+    mpSendAll({t:"answered",n:R.n,count:active.filter(k=>R.answers[k]).length,total:active.length});
+    hostCheckDone();
   }
 }
+function hostKick(id){
+  if(!MP.isHost||id===MP.id||!MP.players[id]) return;
+  const p=MP.players[id]; MP.banned.add(id); delete MP.players[id]; delete MP.gone[id];
+  mpSendAll({t:"kick",id,name:p.name}); hostBroadcastLobby(); hostCheckDone(); mpRenderAll();
+}
+async function hostEnsurePool(note){
+  if(MP.set==="endless") await endlessEnsure(15,()=>{ if(note) note(`กำลังรวบรวมเพลง… ${endlessPool.length} เพลง`); });
+  if((MP.cat||"").startsWith("online:")){ const k=MP.cat.slice(7); await onEnsure(k,k.startsWith("as:")?8:20,S=>{ if(note) note(`กำลังเปิดคลังเพลงออนไลน์… ${S.items.length} เพลง`); }); }
+}
 async function hostStart(){
-  MP.cat=$("mpCat").value; MP.set=$("mpSet").value; if(MP.set==="endless"&&MP.cat!=="anime") MP.set="all"; MP.rounds=+$("mpRounds").value; MP.target=$("mpTarget").value; MP.nopt=+$("mpOpts").value;
-  Object.values(MP.players).forEach(p=>p.score=0);
-  MP.state="game"; MP.used=[]; MP.n=0; $("mpStart").disabled=true;
-  if(MP.set==="endless"){ await endlessEnsure(15,()=>{ $("mpWait").textContent=`กำลังรวบรวมเพลง… ${endlessPool.length} เพลง`; }); }
-  if(MP.cat.startsWith("online:")){ MP.set="all"; await onEnsure(MP.cat.slice(7),MP.cat.slice(7).startsWith("as:")?8:20,S=>{ $("mpWait").textContent=`กำลังเปิดคลังเพลงออนไลน์… ${S.items.length} เพลง`; }); }
-  MP.next=null; hostPrepare();
-  $("mpStart").disabled=false;
-  hostNextRound();
+  if(!MP.isHost||MP.starting) return;
+  MP.starting=true; $("mpStart").disabled=$("mpRematch").disabled=true;
+  try{
+    MP.cat=$("mpCat").value; MP.set=$("mpSet").value; if(MP.set==="endless"&&MP.cat!=="anime") MP.set="all"; if(MP.cat.startsWith("online:")) MP.set="all";
+    MP.rounds=+$("mpRounds").value; MP.target=$("mpTarget").value; MP.nopt=+$("mpOpts").value;
+    for(const [id,p] of Object.entries(MP.players)){ if(p.away&&id!==MP.id){ MP.gone[id]={score:0,pub:p.pub}; delete MP.players[id]; } else p.score=0; }
+    MP.used=[]; MP.n=0; MP.round=null; hostClear();
+    MP.state="game"; hostBroadcastLobby();
+    mpSendAll({t:"info",msg:"🎵 กำลังเตรียมเพลงแรก…"});
+    MP.next=null; hostPrepare();
+    await hostNextRound();
+  } finally { MP.starting=false; $("mpStart").disabled=$("mpRematch").disabled=false; }
 }
 function hostPool(){
   if(MP.set==="endless") return endlessPool;
@@ -1441,11 +1655,13 @@ function hostPool(){
 function hostPrepare(){
   // pick + load the next song ahead of time so rounds start instantly
   MP.next=(async()=>{
-    const P=hostPool(); let song=null, info=null;
-    for(let k=0;k<6&&!info;k++){
-      let cand=P.filter(s=>!MP.used.includes(s.title)&&cache["v3|"+s.title+"|"+s.artist]!==null); if(!cand.length) cand=P;
+    try{ await hostEnsurePool(t=>{ if(MP.state==="game"&&!MP.round) mpSendAll({t:"info",msg:t}); }); }catch(e){}
+    const P=hostPool(); if(!P.length) return null;
+    let song=null, info=null;
+    for(let k=0;k<8&&!info;k++){
+      let cand=P.filter(s=>!MP.used.includes(s.title)&&cache["v3|"+s.title+"|"+s.artist]!==null&&!s.miss); if(!cand.length) cand=P;
       song=cand[Math.floor(Math.random()*cand.length)];
-      info= song.info || await lookup(song);
+      try{ info= (song.info&&!infoStale(song.info)) ? song.info : await lookup(song); }catch(e){ info=null; }
     }
     if(MP.set==="endless") endlessFetchOne();
     if((MP.cat||"").startsWith("online:")){ const k=MP.cat.slice(7); if(k.startsWith("as:")) onBackfill(k,20); else onGrow(k); }
@@ -1453,31 +1669,74 @@ function hostPrepare(){
   })();
 }
 async function hostNextRound(){
-  mpClear();
-  if(MP.n>=MP.rounds){ MP.state="end"; mpSend("all",{t:"end",players:MP.players}); return; }
+  try{ await hostNextRound0(); }
+  catch(e){ try{console.warn(e)}catch(_){} if(MP.isHost){ MP.state="lobby"; MP.round=null; mpSendAll({t:"toroom",msg:"⚠️ เกิดข้อผิดพลาดระหว่างเตรียมเพลง — กดเริ่มเกมใหม่ได้เลย"}); hostBroadcastLobby(); } }
+}
+async function hostNextRound0(){
+  if(!MP.isHost) return;
+  hostClear();
+  if(MP.n>=MP.rounds){ MP.state="end"; MP.round=null; mpSendAll({t:"end",players:MP.players}); hostBroadcastLobby(); return; }
   if(!MP.next) hostPrepare();
-  const got=await MP.next; MP.next=null;
-  if(!got){ mpSend("all",{t:"error",msg:"โหลดเพลงไม่ได้ (Apple จำกัดการค้นหา) — ลองใหม่อีกครั้ง"}); MP.state="lobby"; return; }
+  let got=await MP.next; MP.next=null;
+  if(!MP.isHost||MP.state!=="game") return;
+  if(got&&infoStale(got.info)){ try{ const fresh=await lookup(got.song); got= fresh?{song:got.song,info:fresh}:null; }catch(e){ got=null; } }
+  if(!got){ hostPrepare(); got=await MP.next; MP.next=null; if(!MP.isHost||MP.state!=="game") return; }   // one more try before giving up
+  if(!got){ MP.state="lobby"; MP.round=null; mpSendAll({t:"toroom",msg:"⚠️ โหลดเพลงไม่ได้ (เน็ตช้าหรือแหล่งเพลงไม่ตอบ) — ลองกดเริ่มเกมใหม่อีกครั้ง"}); hostBroadcastLobby(); return; }
   const P=hostPool(); const song=got.song, info=got.info;
   MP.used.push(song.title); MP.n++;
   let t=MP.target||"title"; if(t==="anime"&&!(song.anime&&song.diff!=="endless")) t="title";
   const o=makeOptions(song,P,t,MP.nopt||4,listFor(MP.cat||"anime"));
   const subOf=v=>{ if(o.t!=="title") return ""; const x=P.concat(ALL).find(z=>z.title===v); return x?(MP.set==="endless"?x.artist:(x.anime||x.artist)):""; };
-  MP.round={n:MP.n,song,info,correct:o.opts.indexOf(o.correct),answers:{},done:false,t:o.t,ans:o.correct};
-  mpSend("all",{t:"round",n:MP.n,total:MP.rounds,preview:info.preview,ask:TLABEL[o.t],choices:o.opts.map(v=>({title:v,sub:subOf(v)}))});
-  mpLater(hostEndRound,21500);
+  MP.round={n:MP.n,song,info,correct:o.opts.indexOf(o.correct),nopts:o.opts.length,answers:{},done:false,t:o.t,ans:o.correct,t0:Date.now(),elig:Object.keys(MP.players).filter(id=>!MP.players[id].away)};
+  mpSendAll({t:"round",n:MP.n,total:MP.rounds,preview:info.preview,ask:TLABEL[o.t],choices:o.opts.map(v=>({title:v,sub:subOf(v)}))});
+  hostLater(hostEndRound,ROUND_MS+1500);
 }
 function hostEndRound(){
-  const R=MP.round; if(!R||R.done) return; R.done=true; mpClear();
+  const R=MP.round; if(!MP.isHost||!R||R.done) return; R.done=true; hostClear();
   const res={};
   Object.keys(MP.players).forEach(id=>{
     const a=R.answers[id]; const ok=!!a&&a.choice===R.correct;
     const pts= ok ? Math.max(100,Math.round(1000-45*a.elapsed)) : 0;
     MP.players[id].score+=pts; res[id]={ok,pts,ans:!!a};
   });
-  mpSend("all",{t:"reveal",n:R.n,correct:R.correct,res,players:MP.players,song:{title:R.song.title,artist:R.song.artist,anime:R.song.anime||"",art:R.info.art,year:yearOf(R.song)||R.info.year}});
+  mpSendAll({t:"reveal",n:R.n,total:MP.rounds,correct:R.correct,res,players:MP.players,song:{title:R.song.title,artist:R.song.artist,anime:R.song.anime||"",art:R.info.art,year:yearOf(R.song)||R.info.year}});
   if(MP.n<MP.rounds) hostPrepare();
-  mpLater(hostNextRound,7000);
+  hostLater(hostNextRound,7000);
+}
+// someone else takes over when the host goes quiet
+function applyCfgToSelects(){
+  const set=(id,v)=>{ const el=$(id); if(v!=null&&[...el.options].some(o=>o.value===String(v))) el.value=String(v); };
+  set("mpCat",MP.cat); set("mpSet",MP.set); set("mpRounds",MP.rounds); set("mpTarget",MP.target); set("mpOpts",MP.nopt);
+}
+function takeOver(oldLeft){
+  if(MP.isHost||!MP.client) return;
+  const old=MP.hostId, now=Date.now();
+  MP.isHost=true; MP.hostId=MP.id; MP.ep=(MP.ep||0)+1; MP.lastHost=now; MP.wasHost=false;
+  MP.client.subscribe(mpTopic("host"));
+  Object.keys(MP.players).forEach(id=>{ MP.seen[id]=now; MP.players[id].away=false; });   // give everyone a fresh chance to check in
+  if(old&&old!==MP.id&&MP.players[old]){ const p=MP.players[old]; if(oldLeft){ MP.gone[old]={score:p.score,pub:p.pub}; delete MP.players[old]; } else { p.away=true; MP.seen[old]=0; } }
+  if(!MP.players[MP.id]) MP.players[MP.id]={name:MP.name,score:0,j:0,pub:MP.keys?MP.keys.pub:""};
+  MP.jseq=Math.max(0,...Object.values(MP.players).map(p=>p.j||0))+1;
+  applyCfgToSelects(); startHostLoop(); mpRoleUI();
+  mpSendAll({t:"newhost",name:MP.name}); hostBroadcastLobby();
+  mpToast("👑 คุณเป็นเจ้าของห้องแทนแล้ว");
+  if(MP.state==="game"){
+    MP.round=null; MP.next=null;
+    if(MP.n>=MP.rounds){ MP.state="end"; mpSendAll({t:"end",players:MP.players}); }
+    else { mpSendAll({t:"info",msg:"🔁 เจ้าของห้องหลุด — เล่นต่อจากรอบถัดไป…"}); hostPrepare(); hostLater(hostNextRound,2500); }
+  }
+  mpRenderAll(); mpNetUI();
+}
+function takeOverFresh(){   // the host refreshed their tab and nobody else is around: reopen the room
+  if(MP.isHost||!MP.client) return;
+  MP.isHost=true; MP.hostId=MP.id; MP.ep=1; MP.wasHost=false; MP.client.subscribe(mpTopic("host"));
+  MP.players={}; MP.players[MP.id]={name:MP.name,score:0,j:0,pub:MP.keys?MP.keys.pub:""}; MP.jseq=1; MP.state="lobby";
+  startHostLoop(); mpRoleUI(); hostBroadcastLobby(); $("mpWait").textContent="ส่งรหัสหรือลิงก์ให้เพื่อน แล้วกด ▶ เริ่มเกม"; mpShow("mpRoom"); mpRenderAll();
+}
+function hostStepDown(){   // another (newer) host is running the room
+  MP.isHost=false; clearInterval(MP.hloop); hostClear(); MP.round=null; MP.next=null;
+  try{ MP.client.unsubscribe(mpTopic("host")); }catch(e){}
+  mpRoleUI(); mpHi(true);
 }
 
 // ---------- everyone (incl. host) ----------
@@ -1488,50 +1747,108 @@ function mpPlayFor(dur){
   const tick=()=>{ if(mpAudio.currentTime>=dur||mpAudio.ended){ mpAudio.pause(); return; } mpRaf=requestAnimationFrame(tick); };
   mpRaf=requestAnimationFrame(tick);
 }
-function onAll(m){
-  MP.lastSeen=Date.now();
+mpAudio.addEventListener("error",()=>{
+  if(!mpAudio.src||mpAudio.src.startsWith("data:")||MP.state!=="game") return;
+  if(!mpAudio._retry){ mpAudio._retry=true; setTimeout(()=>{ try{ mpAudio.load(); }catch(e){} },800); return; }
+  $("mpHint").textContent="⚠️ โหลดเสียงเพลงนี้ไม่ได้ — ยังเลือกคำตอบได้ (ลองเช็กอินเทอร์เน็ต)";
+});
+function rankOf(id){ const p=MP.players[id]; return p?(+p.j||0):1e9; }
+async function onAll(m){
+  if(m.t==="emo"){ onEmo(m); return; }
+  const from=typeof m.from==="string"?m.from.slice(0,24):""; if(!from) return;
+  const ep=+m.ep||0;
+  const isNew = from!==MP.hostId;
+  if(isNew){ if(MP.hostId && !(ep>MP.ep || (ep===MP.ep && rankOf(from)<rankOf(MP.hostId)))) return; }   // a stale or losing host
+  else if(ep<MP.ep) return;
+  const pub = MP.pubs[from]!==undefined ? MP.pubs[from] : (m.t==="lobby"&&m.players&&m.players[from]&&typeof m.players[from].pub==="string" ? m.players[from].pub : "");
+  if(!await mpVerify(m,pub)) return;
+  if(MP.pubs[from]===undefined) MP.pubs[from]=pub;
+  if(isNew){
+    const hadHost=!!MP.hostId;
+    if(MP.isHost&&from!==MP.id) hostStepDown();
+    MP.hostId=from; MP.wasHost=false;
+    if(hadHost&&from!==MP.id){ const nm=(MP.players[from]&&MP.players[from].name)||(m.name)||"ผู้เล่น"; mpToast(`👑 ${nm} เป็นเจ้าของห้องแทนแล้ว`); }
+  }
+  MP.ep=ep; MP.lastHost=Date.now();
+  const mine = MP.isHost && from===MP.id;   // my own host messages: game state is already up to date, just draw it
   if(m.t==="lobby"){
-    MP.players=m.players||{};
-    if(!MP.isHost && MP.players[MP.id]) $("mpWait").textContent = m.state==="game" ? "เกมกำลังเล่นอยู่ — จะได้เล่นรอบถัดไป" : "เข้าห้องแล้ว! รอเจ้าของห้องกดเริ่มเกม…";
-    if(MP.state==="lobby") renderPlayers("mpPlayers");
+    if(!mine){
+      MP.players=cleanPlayers(m.players);
+      Object.entries(MP.players).forEach(([id,p])=>{ if(MP.pubs[id]===undefined) MP.pubs[id]=p.pub; });
+      if(m.cfg&&typeof m.cfg==="object"){ MP.cat=String(m.cfg.cat||"anime"); MP.set=String(m.cfg.set||"all"); MP.rounds=+m.cfg.rounds||10; MP.target=String(m.cfg.target||"title"); MP.nopt=+m.cfg.nopt||4; }
+      if(+m.n>=0) MP.n=+m.n;
+      if(Array.isArray(m.ban)&&m.ban.includes(MP.id)){ mpLeave("คุณถูกเจ้าของห้องเชิญออกจากห้อง"); return; }
+      if(!MP.players[MP.id]) mpHi(false);   // not on the list (yet): say hi
+    }
+    if(!MP.isHost && MP.players[MP.id] && MP.state==="lobby") $("mpWait").textContent = m.state==="game" ? "เกมกำลังเล่นอยู่ — จะได้เล่นตั้งแต่รอบถัดไป" : "เข้าห้องแล้ว! รอเจ้าของห้องกดเริ่มเกม…";
+    mpRenderAll();
   }
   else if(m.t==="round"){
+    const n=+m.n||0; if(n===mpRoundN&&MP.state==="game") return;   // same round again (duplicate delivery)
+    mpRoundN=n; if(!mine){ MP.n=n; MP.rounds=+m.total||MP.rounds; } mpClear(); MP.lastRes=null;
     MP.state="game"; mpShow("mpGame"); mpMyPick=null;
-    $("mpRoundLbl").textContent=`รอบ ${m.n} / ${m.total}`; $("mpAnswered").textContent="";
-    $("mpResult").style.display="none"; $("mpHint").textContent=`🎧 ทาย${m.ask||"ชื่อเพลง"} — ยิ่งเร็วยิ่งได้คะแนนเยอะ`;
+    $("mpRoundLbl").textContent=`รอบ ${n} / ${MP.rounds}`; $("mpAnswered").textContent="";
+    $("mpResult").style.display="none"; $("mpHint").textContent=`🎧 ทาย${String(m.ask||"ชื่อเพลง").slice(0,30)} — ยิ่งเร็วยิ่งได้คะแนนเยอะ`;
     const box=$("mpChoices"); box.innerHTML="";
-    m.choices.forEach((c,i)=>{ const b=document.createElement("button"); b.className="choice"; b.innerHTML=`${esc(c.title)}<small>${esc(c.sub||"")}</small>`;
-      b.onclick=()=>{ if(mpMyPick!==null) return; mpMyPick=i; b.classList.add("picked"); [...box.children].forEach(x=>x.disabled=true);
-        mpSend("host",{t:"ans",id:MP.id,n:m.n,choice:i,elapsed:(performance.now()-mpT0)/1000}); $("mpHint").textContent="ส่งคำตอบแล้ว รอคนอื่น…"; };
+    (Array.isArray(m.choices)?m.choices:[]).slice(0,8).forEach((c,i)=>{ const b=document.createElement("button"); b.className="choice"; b.innerHTML=`${esc(String(c&&c.title||""))}<small>${esc(String(c&&c.sub||""))}</small>`;
+      b.onclick=()=>{ if(mpMyPick!==null||MP.state!=="game") return; mpMyPick=i; b.classList.add("picked"); [...box.children].forEach(x=>x.disabled=true);
+        mpSendHost({t:"ans",n,choice:i,elapsed:(performance.now()-mpT0)/1000}); $("mpHint").textContent="ส่งคำตอบแล้ว รอคนอื่น…"; };
       box.appendChild(b); });
     renderPlayers("mpScores");
-    mpAudio.src=m.preview; mpAudio.load(); mpT0=performance.now();
+    const src=String(m.preview||""); mpAudio._retry=false;
+    if(/^https:\/\//.test(src)){ mpAudio.src=src; mpAudio.load(); }
+    mpT0=performance.now();
     mpPlayFor(1.5);
     mpLater(()=>mpPlayFor(4),5000);
     mpLater(()=>mpPlayFor(30),10000);
-    const bar=()=>{ const f=Math.min(1,(performance.now()-mpT0)/20000); $("mpBar").style.width=(100-f*100)+"%"; if(f<1&&MP.state==="game"&&mpMyPick!==-2) MP.barRaf=requestAnimationFrame(bar); };
+    const bar=()=>{ const f=Math.min(1,(performance.now()-mpT0)/ROUND_MS); $("mpBar").style.width=(100-f*100)+"%"; if(f<1&&MP.state==="game") MP.barRaf=requestAnimationFrame(bar); };
     cancelAnimationFrame(MP.barRaf); bar();
   }
-  else if(m.t==="answered"){ $("mpAnswered").textContent=`ตอบแล้ว ${m.count}/${m.total} คน`; }
+  else if(m.t==="answered"){ if(+m.n===mpRoundN) $("mpAnswered").textContent=`ตอบแล้ว ${+m.count||0}/${+m.total||0} คน`; }
   else if(m.t==="reveal"){
-    if(!MP.isHost) mpClear();
-    MP.players=m.players; mpShow("mpGame"); cancelAnimationFrame(MP.barRaf); $("mpBar").style.width="0";
+    if(!mine){ MP.players=cleanPlayers(m.players); }
+    if(!mine){ MP.n=+m.n||MP.n; MP.rounds=+m.total||MP.rounds; } const s=m.song||{}; if(s.title&&!MP.used.includes(String(s.title))) MP.used.push(String(s.title));
+    if(+m.n!==mpRoundN){ return; }   // we didn't see this round's question (joined late) — wait for the next one
+    MP.state="game"; mpShow("mpGame"); cancelAnimationFrame(MP.barRaf); $("mpBar").style.width="0";
     [...$("mpChoices").children].forEach((b,i)=>{ b.disabled=true; if(i===m.correct) b.classList.add("right"); else if(i===mpMyPick) b.classList.add("wrong"); });
-    const r=m.res[MP.id];
-    $("mpVerdict").innerHTML= r ? (r.ok?`<span class="good">ถูก! +${r.pts}</span>`:`<span class="bad">${r.ans?"ผิด 😢":"หมดเวลา ⏰"}</span>`) : "เฉลย";
-    $("mpTitle").textContent=m.song.title; $("mpInfo").textContent=`${m.song.artist}${m.song.anime?" · "+m.song.anime:""}${m.song.year?" · "+m.song.year:""}`;
-    $("mpArt").src=m.song.art||""; $("mpResult").style.display="flex";
-    $("mpHint").textContent="รอบถัดไปใน 7 วินาที…";
-    renderPlayers("mpScores",m.res);
+    const res=(m.res&&typeof m.res==="object")?m.res:{}; MP.lastRes=res; const r=res[MP.id];
+    $("mpVerdict").innerHTML= r ? (r.ok?`<span class="good">ถูก! +${+r.pts||0}</span>`:`<span class="bad">${r.ans?"ผิด 😢":"หมดเวลา ⏰"}</span>`) : "เฉลย";
+    $("mpTitle").textContent=String(s.title||""); $("mpInfo").textContent=`${s.artist||""}${s.anime?" · "+s.anime:""}${s.year?" · "+s.year:""}`;
+    $("mpArt").src=/^https:\/\//.test(String(s.art||""))?s.art:""; $("mpResult").style.display="flex";
+    $("mpHint").textContent= MP.n>=MP.rounds ? "รอบสุดท้ายแล้ว — กำลังสรุปผล…" : "รอบถัดไปใน 7 วินาที…";
+    renderPlayers("mpScores",res);
     if(mpAudio.paused){ mpPlayFor(30); }
   }
   else if(m.t==="end"){
-    MP.players=m.players; MP.state="lobby"; mpStopAudio(); mpShow("mpEnd"); renderPlayers("mpFinal");
+    if(!mine) MP.players=cleanPlayers(m.players);
+    MP.state="end"; mpClear(); mpStopAudio(); cancelAnimationFrame(MP.barRaf); mpShow("mpEnd"); mpRoleUI(); renderPlayers("mpFinal");
     const top=sortedPlayers()[0]; $("mpEndMsg").textContent= top?`ผู้ชนะ: ${top.name} 🎉`:"";
-    $("mpAgain").classList.toggle("hidden",!MP.isHost);
   }
-  else if(m.t==="closed" && !MP.isHost){ mpStopAudio(); mpClear(); $("mpEndMsg").textContent="เจ้าของห้องปิดห้องแล้ว"; mpShow("mpEnd"); renderPlayers("mpFinal"); }
-  else if(m.t==="error"){ $("mpHint").textContent="⚠️ "+m.msg; }
+  else if(m.t==="toroom"){
+    MP.state="lobby"; mpClear(); mpStopAudio(); cancelAnimationFrame(MP.barRaf); mpShow("mpRoom"); mpRoleUI(); renderPlayers("mpPlayers");
+    $("mpWait").textContent= m.msg ? String(m.msg).slice(0,200) : (MP.isHost?"เปลี่ยนการตั้งค่าแล้วกด ▶ เริ่มเกม":"รอเจ้าของห้องเริ่มเกมใหม่…");
+  }
+  else if(m.t==="kick"){
+    if(m.id===MP.id){ mpLeave("คุณถูกเจ้าของห้องเชิญออกจากห้อง"); return; }
+    if(!mine){ delete MP.players[m.id]; mpToast(`🚫 ${String(m.name||"ผู้เล่น").slice(0,20)} ถูกเชิญออกจากห้อง`); mpRenderAll(); }
+  }
+  else if(m.t==="handover"){ if(m.to===MP.id&&!MP.isHost) takeOver(true); }
+  else if(m.t==="closed" && !mine){ mpStopAudio(); mpClear(); clearInterval(MP.tick); MP.state="end"; $("mpEndMsg").textContent="เจ้าของห้องปิดห้องแล้ว"; mpShow("mpEnd"); $("mpEndWait").classList.add("hidden"); renderPlayers("mpFinal"); const c=MP.client; MP.client=null; setTimeout(()=>{ try{c.end(true)}catch(e){} },300); try{ sessionStorage.removeItem("asq_mp_active"); }catch(e){} mpNetUI(); }
+  else if(m.t==="info"||m.t==="error"){ const t=String(m.msg||"").slice(0,200); if(MP.state==="game"&&!$("mpGame").classList.contains("hidden")) $("mpHint").textContent=t; else $("mpWait").textContent=t; }
+}
+
+// ---------- emoji reactions ----------
+function sendEmo(e){
+  if(!MP.client||!EMOS.includes(e)) return; const now=Date.now(); if(now-(MP.myEmoAt||0)<700) return; MP.myEmoAt=now;
+  const m={t:"emo",id:MP.id,e}; mpPub("all",m,true);
+}
+async function onEmo(m){
+  const id=typeof m.id==="string"?m.id:""; const p=MP.players[id]; if(!p||!EMOS.includes(m.e)) return;
+  const now=Date.now(); if(now-(MP.emoAt[id]||0)<500) return; MP.emoAt[id]=now;
+  if(!await mpVerify(m,p.pub)) return;
+  const layer=$("emoLayer"); if(layer.children.length>30) return;
+  const el=document.createElement("div"); el.className="emofly"; el.style.left=(8+Math.random()*80)+"%";
+  el.innerHTML=`<span>${m.e}</span><small>${esc(p.name)}</small>`; layer.appendChild(el); setTimeout(()=>el.remove(),2600);
 }
 
 // ---------- wiring ----------
@@ -1543,12 +1860,22 @@ $("mpCreate").onclick=()=>{ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let c=""
 $("mpJoin").onclick=()=>{ const c=$("mpCodeIn").value.trim().toUpperCase(); if(!/^[A-Z0-9]{5}$/.test(c)){ $("mpMsg").textContent="ใส่รหัสห้อง 5 ตัว"; return; } mpEnter(c,false); };
 $("mpCodeIn").addEventListener("keydown",e=>{ if(e.key==="Enter") $("mpJoin").click(); });
 $("mpStart").onclick=()=>{ if(MP.isHost) hostStart(); };
-$("mpAgain").onclick=()=>{ if(MP.isHost){ MP.state="lobby"; mpShow("mpRoom"); hostBroadcastLobby(); renderPlayers("mpPlayers"); } };
-$("mpLeave").onclick=mpLeave;
+$("mpRematch").onclick=()=>{ if(MP.isHost) hostStart(); };
+$("mpAgain").onclick=()=>{ if(MP.isHost){ hostClear(); MP.state="lobby"; MP.round=null; mpSendAll({t:"toroom"}); hostBroadcastLobby(); } };
+document.querySelectorAll(".mpLeaveBtn").forEach(b=>b.onclick=()=>mpLeave());
+$("mpEmoBar").innerHTML=EMOS.map(e=>`<button class="emo" data-emo="${e}">${e}</button>`).join("");
+$("mpEmoBar").addEventListener("click",e=>{ const b=e.target.closest("[data-emo]"); if(b) sendEmo(b.dataset.emo); });
+$("mpView").addEventListener("click",e=>{ const b=e.target.closest("[data-kick]"); if(!b||!MP.isHost) return; const id=b.dataset.kick;
+  if(MP.armed&&MP.armed.id===id&&Date.now()<MP.armed.until){ MP.armed=null; hostKick(id); return; }   // second tap confirms
+  MP.armed={id,until:Date.now()+3000}; mpRenderAll(); setTimeout(()=>{ if(MP.armed&&MP.armed.id===id&&Date.now()>=MP.armed.until){ MP.armed=null; mpRenderAll(); } },3100); });
 $("mpCopy").onclick=async()=>{ const link=location.href.split("#")[0]+"#"+MP.code; try{ await navigator.clipboard.writeText(link); $("mpCopy").textContent="✅ คัดลอกแล้ว"; }catch(e){ $("mpCopy").textContent=link; } setTimeout(()=>$("mpCopy").textContent="📋 คัดลอกลิงก์ชวนเพื่อน",2500); };
-window.addEventListener("beforeunload",()=>{ if(MP.client){ if(MP.isHost) mpSend("all",{t:"closed"}); else mpSend("host",{t:"leave",id:MP.id}); } });
 document.addEventListener("click",()=>{ if(MP.state==="game"&&mpAudio.paused&&mpAudio.src&&!mpAudio.src.startsWith("data:")&&mpAudio.currentTime<0.05){ mpAudio.play().catch(()=>{}); } });
-(function(){ const h=(location.hash||"").slice(1).toUpperCase(); if(/^[A-Z0-9]{5}$/.test(h)){ setTab(true); $("mpCodeIn").value=h; $("mpMsg").textContent="ใส่ชื่อแล้วกด 'เข้าห้อง' ได้เลย"; } })();
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&MP.client){ if(MP.isHost){ hostGrace(); hostTick(); } else { MP.lastHost=Math.max(MP.lastHost,Date.now()-3000); mpHi(true); } mpNetUI(); } });
+(function(){ const h=(location.hash||"").slice(1).toUpperCase(); if(!/^[A-Z0-9]{5}$/.test(h)) return;
+  setTab(true); $("mpCodeIn").value=h;
+  let a=null; try{ a=JSON.parse(sessionStorage.getItem("asq_mp_active")); }catch(e){}
+  if(a&&a.code===h&&Date.now()-a.t<6*3600e3&&store.get("asq_name","")){ $("mpMsg").textContent="กำลังกลับเข้าห้องเดิม…"; mpEnter(h,false,{wasHost:!!a.host}); }   // refreshed tab: take the same seat back
+  else $("mpMsg").textContent="ใส่ชื่อแล้วกด 'เข้าห้อง' ได้เลย"; })();
 
 // ---------------- installable app (works when served from a website, not from a downloaded file) ----------------
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
@@ -1732,12 +2059,12 @@ function renderMyStats(){
 const LB_ROOT="asq-anime-quiz/lb/v1/";
 async function lbClient(){   // leaderboard needs a server that keeps (retains) scores: EMQX does, the backup relay does not
   await loadMqtt(); let url="wss://broker.emqx.io:8084/mqtt"; try{ const o=localStorage.getItem("asq_broker"); if(o) url=o; }catch(e){}
-  return await new Promise((res,rej)=>{ const c=mqtt.connect(url,{clientId:"asqlb_"+MP.id+"_"+Date.now().toString(36),clean:true,connectTimeout:7000,reconnectPeriod:0});
-    const t=setTimeout(()=>{ try{c.end(true)}catch(e){} rej(new Error("timeout")); },8000); c.once("connect",()=>{clearTimeout(t);res(c)}); c.once("error",()=>{}); });
+  return await new Promise((res,rej)=>{ const c=mqtt.connect(url,{clientId:"asqlb_"+UID+"_"+Date.now().toString(36),clean:true,connectTimeout:7000,reconnectPeriod:0});
+    const t=setTimeout(()=>{ try{c.end(true)}catch(e){} rej(new Error("timeout")); },8000); c.once("connect",()=>{clearTimeout(t);res(c)}); c.on("error",()=>{}); });
 }
 async function lbSubmit(k,name,score){
   try{ const c=await lbClient();
-    await new Promise((res,rej)=>c.publish(LB_ROOT+k+"/"+MP.id,JSON.stringify({n:name,s:score,d:Date.now()}),{qos:1,retain:true},e=>e?rej(e):res()));
+    await new Promise((res,rej)=>c.publish(LB_ROOT+k+"/"+UID,JSON.stringify({n:name,s:score,d:Date.now()}),{qos:1,retain:true},e=>e?rej(e):res()));
     setTimeout(()=>{ try{c.end(true)}catch(e){} },300); return true; }catch(e){ return false; }
 }
 async function lbLoad(){
@@ -1748,7 +2075,7 @@ async function lbLoad(){
   c.subscribe(LB_ROOT+k+"/+");
   await new Promise(r=>setTimeout(r,2500)); try{ c.end(true); }catch(e){}
   const L=Object.entries(rows).sort((a,b)=>b[1].s-a[1].s||a[1].d-b[1].d).slice(0,20);
-  $("lbList").innerHTML= L.length ? L.map(([id,r],i)=>`<div class="pl${id===MP.id?" me":""}"><span>${["🥇","🥈","🥉"][i]||(i+1)+"."} ${esc(r.n)}${id===MP.id?" (คุณ)":""}</span><b>${r.s} ข้อ</b></div>`).join("") : "<div class='label'>ยังไม่มีใครส่งคะแนนในหมวดนี้ — เป็นคนแรกเลย!</div>";
+  $("lbList").innerHTML= L.length ? L.map(([id,r],i)=>`<div class="pl${id===UID?" me":""}"><span>${["🥇","🥈","🥉"][i]||(i+1)+"."} ${esc(r.n)}${id===UID?" (คุณ)":""}</span><b>${r.s} ข้อ</b></div>`).join("") : "<div class='label'>ยังไม่มีใครส่งคะแนนในหมวดนี้ — เป็นคนแรกเลย!</div>";
 }
 $("statsBtn").onclick=()=>{ const p=$("statsPanel"); p.classList.toggle("hidden"); if(!p.classList.contains("hidden")){ renderMyStats(); p.scrollIntoView({behavior:"smooth"}); lbLoad(); } };
 $("statsClose").onclick=()=>$("statsPanel").classList.add("hidden");
