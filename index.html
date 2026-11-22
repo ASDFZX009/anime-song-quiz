@@ -35,6 +35,20 @@
   .chip.on{background:var(--accent2);border-color:var(--accent2)}
   .label{color:var(--muted);font-size:13px;margin-right:4px}
   .player{display:flex;flex-direction:column;align-items:center;gap:16px;padding:10px 0}
+  .stage{position:relative;width:100%;max-width:640px;height:220px;border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#ffffff0d,transparent 70%)}
+  .stage canvas{position:absolute;inset:0;width:100%;height:100%}
+  .stagebg{position:absolute;inset:-24px;background-size:cover;background-position:center;filter:blur(22px) brightness(.4) saturate(1.2);opacity:0;transition:opacity .7s}
+  .stage.hasbg .stagebg{opacity:1} .stage.animebg .stagebg{filter:brightness(.5) saturate(1.1);inset:0}
+  .stagecap{position:absolute;left:12px;bottom:8px;z-index:2;font-size:13px;color:#fff;text-shadow:0 1px 4px #000;max-width:75%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stage .playbtn{position:relative;z-index:2}
+  .playbtn.art{background-size:cover;background-position:center;text-shadow:0 2px 8px #000}
+  .disc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:50%;object-fit:cover;opacity:0;transition:opacity .5s;box-shadow:0 0 30px #000a;z-index:1}
+  .disc.show{opacity:1;animation:discspin 14s linear infinite}
+  @keyframes discspin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .mpstage{height:170px;max-width:none;margin-bottom:10px}
+  .stage.off{height:auto;background:none;overflow:visible} .stage.off canvas,.stage.off .stagebg,.stage.off .stagecap,.stage.off .disc{display:none}
+  .mpstage.off{display:none}
+  @media (prefers-reduced-motion: reduce){ .disc.show{animation:none} }
   .playbtn{width:110px;height:110px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:42px;box-shadow:0 10px 40px #ff4d8d55;transition:transform .1s}
   .playbtn:active{transform:scale(.95)}
   .playbtn:disabled{opacity:.4;cursor:wait}
@@ -114,6 +128,7 @@
     .btn{padding:13px 18px;font-size:16px}
     select,input[type=text]{font-size:16px;padding:12px}
     .playbtn{width:120px;height:120px}
+    .stage{height:200px} .mpstage{height:140px}
     .tab{padding:14px 8px;font-size:15px}
     .result{flex-direction:column;text-align:center}
     .code{font-size:34px;letter-spacing:6px}
@@ -260,6 +275,7 @@
       <span style="flex:1"></span>
       <span class="label">🔊</span><input type="range" id="vol" min="0" max="1" step="0.05" value="0.7">
     </div>
+    <div class="row"><button class="chip on" id="vizToggle">✨ ภาพเคลื่อนไหว: เปิด</button><span class="label">ภาพขยับตามเพลง และโชว์ภาพปก/ภาพอนิเมะตอนเฉลย</span></div>
   </div>
 
   </div>
@@ -282,7 +298,7 @@
     </div>
     <div class="player">
       <div id="coverWrap" class="hidden"><img id="coverClue" alt="ภาพปกเพลง"></div>
-      <button class="playbtn" id="play" title="เล่นคลิป">▶</button>
+      <div class="stage" id="stage"><div class="stagebg"></div><canvas aria-hidden="true"></canvas><div class="stagecap"></div><button class="playbtn" id="play" title="เล่นคลิป">▶</button></div>
       <div class="bar"><i id="prog"></i></div>
       <div class="clues" id="clues"></div>
       <div id="apiWait" style="display:none;color:var(--muted);font-size:13px">⏳ Apple ให้ค้นหาเพลงได้จำกัด กำลังรอสักครู่แล้วจะลองใหม่เอง…</div>
@@ -408,6 +424,7 @@
     <div class="panel hidden" id="mpGame">
       <div class="row" style="justify-content:space-between"><b id="mpRoundLbl"></b><span class="row" style="gap:8px"><span class="label" id="mpAnswered"></span><button class="btn ghost small mpLeaveBtn" title="ออกจากห้อง">🚪 ออก</button></span></div>
       <div class="bar" style="max-width:none;margin:12px 0"><i id="mpBar"></i></div>
+      <div class="stage mpstage" id="mpStage"><div class="stagebg"></div><canvas aria-hidden="true"></canvas><img class="disc" alt=""><div class="stagecap"></div></div>
       <div class="msg" id="mpHint">ฟังแล้วเลือกคำตอบ — ยิ่งตอบเร็วยิ่งได้คะแนนเยอะ</div>
       <div class="choices" id="mpChoices"></div>
       <div class="result" id="mpResult"><img id="mpArt" alt=""><div style="flex:1"><div id="mpVerdict" class="big"></div><h3 id="mpTitle"></h3><p id="mpInfo"></p></div></div>
@@ -679,7 +696,7 @@ function asAdd(S,x){
   const main=x.songArtist.replace(/\s*\([^)]*\)/g,"").split(/,|&| x | feat\.?| featuring | with /i)[0].trim();
   const y=+((x.animeVintage||"").match(/\d{4}/)||[0])[0]||null;
   const anime=x.animeENName||x.animeJPName;
-  S.items.push({title:x.songName,artist:x.songArtist,jaArtist:main,anime,series:anime,diff:(x.songDifficulty>=55?"easy":x.songDifficulty>=30?"medium":"hard"),year:y,type:ty,cat:"online",asType:x.songType,noApple:true});
+  S.items.push({title:x.songName,artist:x.songArtist,jaArtist:main,anime,series:anime,diff:(x.songDifficulty>=55?"easy":x.songDifficulty>=30?"medium":"hard"),year:y,type:ty,cat:"online",asType:x.songType,noApple:true,mal:+(x.linked_ids&&x.linked_ids.myanimelist)||0});
   return true;
 }
 async function asInit(k,S){
@@ -1052,7 +1069,7 @@ function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random
 
 let roundToken=0;
 async function newRound(){
-  stopAudio();
+  stopAudio(); try{ stageReset("solo"); }catch(e){}
   const token=++roundToken;
   curInfo=null; curCorrect=null; $("guess").value="";
   if(cat==="online"){
@@ -1103,6 +1120,7 @@ async function newRound(){
   recent.push(cur.title); if(recent.length>Math.min(15,p.length-1)) recent.shift(); cur.played=true;
   hideProblem();
   audio.src=curInfo.preview; audio.load();
+  try{ if(VIZ.on&&(cur.anime||cur.mal)) animeImage(cur.anime,cur.mal).catch(()=>{}); }catch(e){}   // fetch the anime picture now so the answer screen is instant
   $("play").disabled=false;
   $("msg").textContent="กด ▶ เพื่อฟัง • ฟังซ้ำได้ฟรี • ปลดคลิปยาวขึ้นได้ (คะแนนลดลง)";
   if(gmode==="cover"){ $("coverClue").style.filter=`blur(${BLUR[0]}px)`; $("coverClue").src=bigArt(curInfo.art); $("play").textContent="🔒"; $("msg").textContent="🖼️ ดูภาพปกแล้วทายเลย — เสียงจะเปิดหลังตอบ"; }
@@ -1243,6 +1261,7 @@ function reveal(verdict){
   const yy=yearOf(cur); $("rInfo").textContent=`${cur.artist}${cur.anime?" · "+cur.anime:""}${yy?" · "+yy:""}`;
   $("rArt").src=curInfo.art||"";
   $("rLink").href=curInfo.link||"#";
+  try{ stageReveal("solo",{art:curInfo.art,anime:cur.anime,mal:cur.mal}); }catch(e){}
   $("result").style.display="flex";
   $("msg").textContent="กด ▶ เพื่อฟังคลิปเต็ม 30 วินาที";
   renderClues(); playClip();
@@ -1699,7 +1718,7 @@ function hostEndRound(){
     const pts= ok ? Math.max(100,Math.round(1000-45*a.elapsed)) : 0;
     MP.players[id].score+=pts; res[id]={ok,pts,ans:!!a};
   });
-  mpSendAll({t:"reveal",n:R.n,total:MP.rounds,correct:R.correct,res,players:MP.players,song:{title:R.song.title,artist:R.song.artist,anime:R.song.anime||"",art:R.info.art,year:yearOf(R.song)||R.info.year}});
+  mpSendAll({t:"reveal",n:R.n,total:MP.rounds,correct:R.correct,res,players:MP.players,song:{title:R.song.title,artist:R.song.artist,anime:R.song.anime||"",mal:R.song.mal||0,art:R.info.art,year:yearOf(R.song)||R.info.year}});
   if(MP.n<MP.rounds) hostPrepare();
   hostLater(hostNextRound,7000);
 }
@@ -1794,7 +1813,7 @@ async function onAll(m){
       b.onclick=()=>{ if(mpMyPick!==null||MP.state!=="game") return; mpMyPick=i; b.classList.add("picked"); [...box.children].forEach(x=>x.disabled=true);
         mpSendHost({t:"ans",n,choice:i,elapsed:(performance.now()-mpT0)/1000}); $("mpHint").textContent="ส่งคำตอบแล้ว รอคนอื่น…"; };
       box.appendChild(b); });
-    renderPlayers("mpScores");
+    renderPlayers("mpScores"); try{ stageReset("mp"); }catch(e){}
     const src=String(m.preview||""); mpAudio._retry=false;
     if(/^https:\/\//.test(src)){ mpAudio.src=src; mpAudio.load(); }
     mpT0=performance.now();
@@ -1817,6 +1836,7 @@ async function onAll(m){
     $("mpArt").src=/^https:\/\//.test(String(s.art||""))?s.art:""; $("mpResult").style.display="flex";
     $("mpHint").textContent= MP.n>=MP.rounds ? "รอบสุดท้ายแล้ว — กำลังสรุปผล…" : "รอบถัดไปใน 7 วินาที…";
     renderPlayers("mpScores",res);
+    try{ stageReveal("mp",{art:String(s.art||""),anime:String(s.anime||"").slice(0,120),mal:+s.mal||0}); }catch(e){}
     if(mpAudio.paused){ mpPlayFor(30); }
   }
   else if(m.t==="end"){
@@ -1876,6 +1896,126 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&MP.clien
   let a=null; try{ a=JSON.parse(sessionStorage.getItem("asq_mp_active")); }catch(e){}
   if(a&&a.code===h&&Date.now()-a.t<6*3600e3&&store.get("asq_name","")){ $("mpMsg").textContent="กำลังกลับเข้าห้องเดิม…"; mpEnter(h,false,{wasHost:!!a.host}); }   // refreshed tab: take the same seat back
   else $("mpMsg").textContent="ใส่ชื่อแล้วกด 'เข้าห้อง' ได้เลย"; })();
+
+// ================= VISUALS: a stage that moves with the music, then big artwork once the answer is out =================
+// The bars read the real sound (Deezer and Apple both allow it). Audio is only routed through the analyser once the
+// browser's audio engine is confirmed running, so the music can never be silenced by the visuals.
+const VIZ={on:store.get("asq_viz",true), ctx:null, an:new Map(), lv:new Float32Array(40), buf:null, img:{}, col:null,
+  reduce:!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)};
+[audio,mpAudio].forEach(a=>{ try{ a.crossOrigin="anonymous"; }catch(e){}
+  a.addEventListener("play",()=>{ if(VIZ.ctx&&VIZ.ctx.state!=="running") VIZ.ctx.resume().catch(()=>{}); });
+  // safety net: if a clip host ever refuses to share its sound, play it the plain way (no moving bars) instead of failing
+  a.addEventListener("error",()=>{ if(a.crossOrigin&&!VIZ.an.has(a)&&a.src&&!a.src.startsWith("data:")){ a.removeAttribute("crossorigin"); const u=a.src; a.src=u; try{a.load()}catch(e){} } }); });
+function vizWake(){
+  if(!VIZ.on) return;
+  try{
+    if(!VIZ.ctx){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; VIZ.ctx=new AC(); VIZ.ctx.onstatechange=vizRouteAll; }
+    if(VIZ.ctx.state!=="running") VIZ.ctx.resume().then(vizRouteAll).catch(()=>{}); else vizRouteAll();
+  }catch(e){}
+}
+function vizRoute(el){
+  if(!VIZ.on||!VIZ.ctx||VIZ.ctx.state!=="running"||VIZ.an.has(el)||!el.crossOrigin) return;
+  try{ const src=VIZ.ctx.createMediaElementSource(el), an=VIZ.ctx.createAnalyser(); an.fftSize=256; an.smoothingTimeConstant=0.75;
+    src.connect(an); an.connect(VIZ.ctx.destination); VIZ.an.set(el,an); }catch(e){}
+}
+function vizRouteAll(){ [audio,mpAudio].forEach(vizRoute); }
+document.addEventListener("pointerdown",vizWake,true); document.addEventListener("keydown",vizWake,true);
+
+function vizColors(){ if(VIZ.col) return VIZ.col; const cs=getComputedStyle(document.documentElement); return VIZ.col={a:cs.getPropertyValue("--accent").trim()||"#ff4d8d",b:cs.getPropertyValue("--accent2").trim()||"#7c5cff"}; }
+function vizActive(){
+  const mp=!$("mpView").classList.contains("hidden");
+  return mp ? {st:$("mpStage"),el:mpAudio,show:!$("mpGame").classList.contains("hidden")}
+            : {st:$("stage"),el:audio,show:!$("soloView").classList.contains("hidden")};
+}
+function vizLoop(){
+  requestAnimationFrame(vizLoop);
+  if(document.hidden) return;
+  const solo=$("stage"), mps=$("mpStage"), soloOff=!VIZ.on||gmode==="cover";   // cover mode already has its own picture
+  if(solo.classList.contains("off")!==soloOff) solo.classList.toggle("off",soloOff);
+  if(mps.classList.contains("off")===VIZ.on) mps.classList.toggle("off",!VIZ.on);
+  const {st,el,show}=vizActive();
+  if(!VIZ.on||!show||st.classList.contains("off")||!st.offsetParent) return;
+  const c=st.querySelector("canvas"), dpr=Math.min(2,window.devicePixelRatio||1), w=c.clientWidth, h=c.clientHeight; if(!w||!h) return;
+  if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){ c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+  const g=c.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  const playing=!el.paused&&!el.ended&&el.currentTime>0&&!(el.src||"").startsWith("data:");
+  const N=VIZ.lv.length, an=VIZ.an.get(el), t=performance.now()/1000;
+  let real=false;
+  if(an&&playing&&VIZ.ctx&&VIZ.ctx.state==="running"){
+    const d=VIZ.buf||(VIZ.buf=new Uint8Array(an.frequencyBinCount)); an.getByteFrequencyData(d);
+    let sum=0; for(let i=0;i<N;i++){ const a=Math.floor(Math.pow(i/N,1.6)*d.length*0.72), b=Math.max(a+1,Math.floor(Math.pow((i+1)/N,1.6)*d.length*0.72)); let m=0; for(let k=a;k<b;k++) m=Math.max(m,d[k]); const v=m/255; sum+=v; VIZ.lv[i]=Math.max(v,VIZ.lv[i]*0.86); }
+    real=sum>0.01;
+  }
+  if(!real) for(let i=0;i<N;i++){   // no readable sound (yet): a calm idle wave, livelier while a clip plays
+    const v= playing ? 0.25+0.35*Math.abs(Math.sin(t*4.1+i*0.9))*(0.6+0.4*Math.sin(t*1.7+i)) : 0.05+0.04*(1+Math.sin(t*1.4+i*0.45));
+    VIZ.lv[i]=Math.max(v,VIZ.lv[i]*0.9);
+  }
+  const bass=(VIZ.lv[0]+VIZ.lv[1]+VIZ.lv[2]+VIZ.lv[3])/4;
+  const btn=st.querySelector(".playbtn");
+  const col=vizColors(), cx=w/2, cy=h/2, r0=(btn?btn.offsetWidth/2+6:Math.min(h*0.3,w*0.22))*(1+(VIZ.reduce?0:bass*0.08)), room=Math.max(10,Math.min(h,w)/2-r0-8);
+  // soft glow
+  const gl=g.createRadialGradient(cx,cy,r0*0.6,cx,cy,r0*2.6); gl.addColorStop(0,col.b+"55"); gl.addColorStop(1,col.b+"00"); g.fillStyle=gl; g.fillRect(0,0,w,h);
+  // radial bars, mirrored left/right
+  const grad=g.createLinearGradient(0,cy-h/2,0,cy+h/2); grad.addColorStop(0,col.a); grad.addColorStop(1,col.b);
+  g.strokeStyle=grad; g.lineCap="round"; g.lineWidth=Math.max(2,r0*0.07);
+  const rot=VIZ.reduce?0:t*0.15;
+  for(let s=0;s<2;s++) for(let i=0;i<N;i++){
+    const ang=-Math.PI/2+rot+(s?-1:1)*(i+0.5)/N*Math.PI, len=3+VIZ.lv[i]*room;
+    g.beginPath(); g.moveTo(cx+Math.cos(ang)*(r0+4),cy+Math.sin(ang)*(r0+4)); g.lineTo(cx+Math.cos(ang)*(r0+4+len),cy+Math.sin(ang)*(r0+4+len)); g.stroke();
+  }
+  // floor line spectrum (flat bars along the bottom, wide screens only)
+  if(w>500){ g.globalAlpha=0.35; g.fillStyle=grad; const bw=w/(N*2); for(let i=0;i<N*2;i++){ const v=VIZ.lv[Math.abs(N-1-i)%N]||0; const bh=v*h*0.22; g.fillRect(i*bw+1,h-bh,bw-2,bh); } g.globalAlpha=1; }
+  const disc=st.querySelector(".disc"); if(disc){ const sz=Math.round(r0*2-8)+"px"; if(disc.style.width!==sz) disc.style.width=disc.style.height=sz; }
+}
+requestAnimationFrame(vizLoop);
+
+// ---- artwork after the answer ----
+const cssUrl=u=>/^https:\/\//.test(u||"")?`url(${JSON.stringify(u)})`:"";
+async function animeImage(name,mal){
+  if(!name&&!mal) return null;
+  const key=mal?("m"+mal):("n"+norm(name)); const C=store.get("asq_aimg",{});
+  if(key in C) return C[key];
+  if(VIZ.img[key]) return VIZ.img[key];
+  return VIZ.img[key]=(async()=>{
+    let d=null, m=null;
+    if(mal){ d=await anilist(`query($m:Int){Media(idMal:$m,type:ANIME){coverImage{extraLarge color} bannerImage}}`,{m:+mal}); m=d&&d.Media; }
+    else {
+      d=await anilist(`query($s:String){Page(perPage:8){media(search:$s,type:ANIME,sort:SEARCH_MATCH){popularity title{romaji english native} synonyms coverImage{extraLarge color} bannerImage}}}`,{s:String(name).slice(0,80)});
+      const q=norm(name);   // AniList's first hit can be a different show ("Demon Slayer" -> "Onigiri"): only keep real title matches, then the most popular
+      const L=((d&&d.Page&&d.Page.media)||[]).filter(x=>[x.title.english,x.title.romaji,x.title.native,...(x.synonyms||[])].some(t=>{ const n=norm(t); return n&&q&&(n===q||n.startsWith(q)||(q.startsWith(n)&&n.length>=5)); }));
+      L.sort((a,b)=>(b.popularity||0)-(a.popularity||0)); m=L[0]||null;
+    }
+    if(!d){ delete VIZ.img[key]; return null; }   // network trouble: try again another time
+    const r= m ? {cover:(m.coverImage&&m.coverImage.extraLarge)||"",banner:m.bannerImage||"",color:(m.coverImage&&m.coverImage.color)||""} : null;
+    const C2=store.get("asq_aimg",{}); const ks=Object.keys(C2); if(ks.length>400) ks.slice(0,100).forEach(k=>delete C2[k]); C2[key]=r; store.set("asq_aimg",C2);
+    return r;
+  })();
+}
+function stageReset(which){
+  const st=$(which==="mp"?"mpStage":"stage"); if(!st) return;
+  st._tok=(st._tok||0)+1; st.classList.remove("revealed","hasbg","animebg");
+  const disc=st.querySelector(".disc"); if(disc) disc.classList.remove("show");
+  const btn=st.querySelector(".playbtn"); if(btn){ btn.style.backgroundImage=""; btn.classList.remove("art"); }
+  st.querySelector(".stagebg").style.backgroundImage=""; st.querySelector(".stagecap").textContent="";
+}
+async function stageReveal(which,s){
+  const st=$(which==="mp"?"mpStage":"stage"); if(!st||!s) return;
+  const tok=st._tok=(st._tok||0)+1, disc=st.querySelector(".disc"), bg=st.querySelector(".stagebg");
+  const art=bigArt(s.art||"");
+  const btn=st.querySelector(".playbtn");
+  if(/^https:\/\//.test(art)){
+    if(btn){ if(VIZ.on&&gmode!=="cover"){ btn.style.backgroundImage=`linear-gradient(#0004,#0004),${cssUrl(art)}`; btn.classList.add("art"); } }
+    else if(disc){ disc.onload=()=>{ if(st._tok===tok) disc.classList.add("show"); }; disc.src=art; }
+    bg.style.backgroundImage=cssUrl(art); st.classList.add("hasbg"); }
+  st.classList.add("revealed");
+  if(!VIZ.on||!(s.anime||s.mal)) return;
+  let img=null; try{ img=await animeImage(s.anime,s.mal); }catch(e){}
+  if(!img||st._tok!==tok) return;
+  const pic=img.banner||img.cover; if(!/^https:\/\//.test(pic)) return;
+  const pre=new Image(); pre.onload=()=>{ if(st._tok!==tok) return; bg.style.backgroundImage=cssUrl(pic); st.classList.add("hasbg","animebg"); st.querySelector(".stagecap").textContent="🎌 "+(s.anime||""); }; pre.src=pic;
+}
+$("vizToggle").onclick=()=>{ VIZ.on=!VIZ.on; store.set("asq_viz",VIZ.on); $("vizToggle").classList.toggle("on",VIZ.on); $("vizToggle").textContent=VIZ.on?"✨ ภาพเคลื่อนไหว: เปิด":"✨ ภาพเคลื่อนไหว: ปิด"; if(VIZ.on) vizWake(); };
+$("vizToggle").classList.toggle("on",VIZ.on); $("vizToggle").textContent=VIZ.on?"✨ ภาพเคลื่อนไหว: เปิด":"✨ ภาพเคลื่อนไหว: ปิด";
 
 // ---------------- installable app (works when served from a website, not from a downloaded file) ----------------
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
