@@ -1904,6 +1904,7 @@ const VIZ={on:store.get("asq_viz",true), ctx:null, an:new Map(), lv:new Float32A
   reduce:!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)};
 [audio,mpAudio].forEach(a=>{ try{ a.crossOrigin="anonymous"; }catch(e){}
   a.addEventListener("play",()=>{ if(VIZ.ctx&&VIZ.ctx.state!=="running") VIZ.ctx.resume().catch(()=>{}); });
+  a.addEventListener("playing",()=>{ if(a.crossOrigin&&!(a.src||"").startsWith("data:")){ a._ok=true; vizRoute(a); } });   // only connect sound that has really loaded
   // safety net: if a clip host ever refuses to share its sound, play it the plain way (no moving bars) instead of failing
   a.addEventListener("error",()=>{ if(a.crossOrigin&&!VIZ.an.has(a)&&a.src&&!a.src.startsWith("data:")){ a.removeAttribute("crossorigin"); const u=a.src; a.src=u; try{a.load()}catch(e){} } }); });
 function vizWake(){
@@ -1914,7 +1915,7 @@ function vizWake(){
   }catch(e){}
 }
 function vizRoute(el){
-  if(!VIZ.on||!VIZ.ctx||VIZ.ctx.state!=="running"||VIZ.an.has(el)||!el.crossOrigin) return;
+  if(!VIZ.on||!VIZ.ctx||VIZ.ctx.state!=="running"||VIZ.an.has(el)||!el.crossOrigin||!el._ok) return;
   try{ const src=VIZ.ctx.createMediaElementSource(el), an=VIZ.ctx.createAnalyser(); an.fftSize=256; an.smoothingTimeConstant=0.75;
     src.connect(an); an.connect(VIZ.ctx.destination); VIZ.an.set(el,an); }catch(e){}
 }
