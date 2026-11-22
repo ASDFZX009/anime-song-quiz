@@ -1148,6 +1148,8 @@ function makeOptions(song,list,t,n,base){
   base=base||catList();
   if(t==="year" && !yearOf(song)) t="title";
   const correct=ansVal(song,t); const opts=[correct]; const used=new Set([norm(correct)]);
+  const showKey=x=>norm(String(x).split(/:| - | – |\(|season|movie|the movie/i)[0]);
+  const nc=norm(correct), kc=showKey(correct), tooClose=v=>{ if(t!=="anime") return false; const nv=norm(v); return (nv.length>=4&&nc.length>=4&&(nv.includes(nc)||nc.includes(nv))) || (kc.length>=4&&showKey(v)===kc); };   // "Demon Slayer" vs "Demon Slayer: Mugen Train" would be two right answers
   if(t==="year"){
     const y=+correct; const pool=[...new Set(list.concat(base).map(yearOf).filter(Boolean))];
     const near=shuffle(pool.filter(v=>v!==y&&Math.abs(v-y)<=8)); const deltas=shuffle([-1,1,-2,2,-3,3,-4,4,-5,5,-6,6]);
@@ -1158,7 +1160,13 @@ function makeOptions(song,list,t,n,base){
       const x=src[Math.floor(Math.random()*src.length)]; if(!x) continue;
       if(t==="anime" && (!x.anime||x.diff==="endless"||x.series===song.series)) continue;
       if(t==="title" && song.series && x.diff!=="endless" && song.diff!=="endless" && x.series===song.series && x.title!==song.title && Math.random()<0.5) continue;
-      const v=ansVal(x,t); if(!v||used.has(norm(v))) continue; used.add(norm(v)); opts.push(v);
+      const v=ansVal(x,t); if(!v||used.has(norm(v))||tooClose(v)) continue; used.add(norm(v)); opts.push(v);
+    }
+    if(opts.length<n){   // small library (e.g. an online category that has only loaded a few shows so far): borrow wrong answers from the built-in songs
+      const wide=(song.anime||t==="anime"?shuffle(ALL.filter(x=>x.anime)):[]).concat(shuffle(ALL.slice()));
+      for(const x of wide){ if(opts.length>=n) break;
+        if(t==="anime"&&(!x.anime||x.series===song.series)) continue;
+        const v=ansVal(x,t); if(!v||used.has(norm(v))||tooClose(v)) continue; used.add(norm(v)); opts.push(v); }
     }
   }
   return {opts:shuffle(opts),correct,t};
