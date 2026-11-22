@@ -150,6 +150,7 @@
   .coverbtn:disabled .cap{display:block}
   .coverbtn .ph{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px}
   #coverWrap{width:230px;height:230px;border-radius:18px;overflow:hidden;background:var(--panel2);box-shadow:0 10px 40px #7c5cff44}
+  #coverWrap.poster{width:220px;height:310px}
   #coverClue{width:100%;height:100%;object-fit:cover;transition:filter .4s;transform:scale(1.15)}
   #homeView .hero{text-align:center;padding:22px 16px}
   .huge{font-size:22px;padding:18px 40px;border-radius:18px;margin:14px 0 6px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 10px 30px #ff4d8d44}
@@ -198,7 +199,7 @@
       <button class="tile" data-hgo="daily"><span class="ic">📅</span><b>เพลงประจำวัน</b><small id="hDailyNote">ทายให้ได้ใน 6 ครั้ง</small></button>
       <button class="tile" data-hgo="ta"><span class="ic">⏱️</span><b>จับเวลา 60 วิ</b><small>ตอบให้ได้มากที่สุด</small></button>
       <button class="tile" data-hgo="surv"><span class="ic">❤️</span><b>เอาตัวรอด</b><small>ผิดได้ 3 ครั้ง</small></button>
-      <button class="tile" data-hgo="cover"><span class="ic">🖼️</span><b>ทายจากภาพปก</b><small>ภาพเบลอ ค่อยๆ ชัด</small></button>
+      <button class="tile" data-hgo="cover"><span class="ic">🖼️</span><b>ทายจากภาพ</b><small>ภาพอนิเมะเบลอ ค่อยๆ ชัด</small></button>
       <button class="tile" data-hgo="stats"><span class="ic">🏆</span><b>สถิติ & อันดับ</b><small>อันดับโลก</small></button>
     </div>
   </div>
@@ -215,7 +216,7 @@
       <button class="chip on" data-gmode="normal">🎯 ปกติ</button>
       <button class="chip" data-gmode="ta">⏱️ จับเวลา 60 วิ</button>
       <button class="chip" data-gmode="surv">❤️ เอาตัวรอด</button>
-      <button class="chip" data-gmode="cover">🖼️ ทายจากภาพปก</button>
+      <button class="chip" data-gmode="cover">🖼️ ทายจากภาพ</button>
       <button class="chip" data-gmode="daily">📅 เพลงประจำวัน</button>
       <span style="flex:1"></span>
       <button class="chip" id="statsBtn">🏆 สถิติ & อันดับ</button>
@@ -297,7 +298,7 @@
       <div id="survResult" class="hidden" style="margin-top:12px;padding:14px;background:var(--panel2);border-radius:14px;text-align:center"></div>
     </div>
     <div class="player">
-      <div id="coverWrap" class="hidden"><img id="coverClue" alt="ภาพปกเพลง"></div>
+      <div id="coverWrap" class="hidden"><img id="coverClue" alt="ภาพใบ้"></div>
       <div class="stage" id="stage"><div class="stagebg"></div><canvas aria-hidden="true"></canvas><div class="stagecap"></div><button class="playbtn" id="play" title="เล่นคลิป">▶</button></div>
       <div class="bar"><i id="prog"></i></div>
       <div class="clues" id="clues"></div>
@@ -1098,6 +1099,7 @@ async function newRound(){
   const maxTries = (cat==="online"&&onlineKey.startsWith("as:")) ? 15 : 6;
   while(tries<maxTries){
     let cand=p.filter(s=>!recent.includes(s.title)||p.length<=recent.length+1);
+    if(gmode==="cover"){ const an=cand.filter(x=>x.anime||x.mal); if(an.length>=4) cand=an; }   // picture mode: songs whose anime we know
     if(cat==="online"){ const fresh=cand.filter(s=>!s.played); if(fresh.length) cand=fresh;
       const ok=cand.filter(x=>memCache["v3|"+x.title+"|"+x.artist]); if(ok.length) cand=ok; }   // prefer songs already confirmed to have audio
     const known=cand.filter(x=>x.info||cache["v3|"+x.title+"|"+x.artist]);
@@ -1108,6 +1110,10 @@ async function newRound(){
     curInfo= (cur.info&&!infoStale(cur.info)) ? cur.info : await lookup(cur);
     if(token!==roundToken) return;
     if(curInfo && (gmode==="cover"||fmt==="cover") && !curInfo.art){ curInfo=null; }
+    if(curInfo && gmode==="cover"){   // picture mode: show the anime's own artwork when there is one — far easier to recognise than a single's cover
+      cur._pic="";
+      if(cur.anime||cur.mal){ $("msg").textContent="กำลังโหลดภาพอนิเมะ…"; let im=null; try{ im=await animeImage(cur.anime,cur.mal); }catch(e){} if(token!==roundToken) return; if(im&&(im.cover||im.banner)) cur._pic=im.cover||im.banner; }
+    }
     if(curInfo) break;
     tries++;
   }
@@ -1123,7 +1129,7 @@ async function newRound(){
   try{ if(VIZ.on&&(cur.anime||cur.mal)) animeImage(cur.anime,cur.mal).catch(()=>{}); }catch(e){}   // fetch the anime picture now so the answer screen is instant
   $("play").disabled=false;
   $("msg").textContent="กด ▶ เพื่อฟัง • ฟังซ้ำได้ฟรี • ปลดคลิปยาวขึ้นได้ (คะแนนลดลง)";
-  if(gmode==="cover"){ $("coverClue").style.filter=`blur(${BLUR[0]}px)`; $("coverClue").src=bigArt(curInfo.art); $("play").textContent="🔒"; $("msg").textContent="🖼️ ดูภาพปกแล้วทายเลย — เสียงจะเปิดหลังตอบ"; }
+  if(gmode==="cover"){ $("coverClue").style.filter=`blur(${BLUR[0]}px)`; $("coverClue").src=cur._pic||bigArt(curInfo.art); $("coverWrap").classList.toggle("poster",!!cur._pic); $("play").textContent="🔒"; $("msg").textContent= cur._pic ? "🎌 ดูภาพอนิเมะแล้วทายว่าเป็นเพลงไหน — เสียงจะเปิดหลังตอบ" : "🖼️ ดูภาพปกแล้วทายเลย — เสียงจะเปิดหลังตอบ"; }
   else $("play").textContent="▶";
   renderClues(); buildChoices();
   if(TA.on){ clueIdx=maxUnlocked=CLUES.length-1; $("msg").textContent="🎧 ฟังแล้วตอบเลย!"; playClip(); }
@@ -2257,7 +2263,7 @@ makeSuggest($("dGuess"),$("dSug"),q=>{ if(!D) return []; const seen=new Set(), c
 
 // ================= HOME SCREEN & SETTINGS DRAWER =================
 const FMT_LABEL={c2:"1 ใน 2",c4:"4 ตัวเลือก",c6:"6 ตัวเลือก",yn:"ใช่/ไม่ใช่",type:"พิมพ์ตอบ",cover:"เลือกจากภาพปก"};
-const MODE_LABEL={normal:"🎯 ปกติ",ta:"⏱️ จับเวลา",surv:"❤️ เอาตัวรอด",cover:"🖼️ ภาพปก",daily:"📅 ประจำวัน"};
+const MODE_LABEL={normal:"🎯 ปกติ",ta:"⏱️ จับเวลา",surv:"❤️ เอาตัวรอด",cover:"🖼️ ทายจากภาพ",daily:"📅 ประจำวัน"};
 function catLabel(){ return cat==="online" ? onCat(onlineKey).name : (CATS[cat]||cat); }
 function updateSummary(){
   const t=TLABEL[(cat!=="online"||onlineKey.startsWith("as:")||target!=="anime")?target:"title"]||"ชื่อเพลง";
