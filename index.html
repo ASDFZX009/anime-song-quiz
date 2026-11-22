@@ -20,7 +20,13 @@
     --accent:#ff4d8d; --accent2:#7c5cff; --good:#2bd98a; --bad:#ff5d5d; --line:#2f2a52;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:Prompt,system-ui,sans-serif;background:radial-gradient(1200px 600px at 80% -10%,#3a1d5c 0,transparent 60%),var(--bg);color:var(--text);min-height:100vh}
+  .volbtn{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:58;width:50px;height:50px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);font-size:22px;cursor:pointer;box-shadow:0 6px 20px #0008;display:flex;align-items:center;justify-content:center}
+  .volbtn.muted{border-color:var(--bad)} .volbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .volpop{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 60px);z-index:58;width:min(300px,calc(100vw - 28px));background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 12px 40px #000a;display:flex;flex-direction:column;gap:10px}
+  .volpop.hidden{display:none}
+  #volRange{width:100%;accent-color:var(--accent);height:28px}
+  .volquick{display:flex;gap:6px} .volquick .chip{flex:1;justify-content:center}
+  body{padding-bottom:76px;margin:0;font-family:Prompt,system-ui,sans-serif;background:radial-gradient(1200px 600px at 80% -10%,#3a1d5c 0,transparent 60%),var(--bg);color:var(--text);min-height:100vh}
   .wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px}
   header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
   h1{font-size:28px;margin:0;font-weight:800;letter-spacing:.5px}
@@ -169,6 +175,15 @@
 </head>
 <body>
 <div id="emoLayer"></div>
+<button id="volBtn" class="volbtn" aria-label="ปรับระดับเสียงเพลง" aria-expanded="false" title="ปรับเสียง (กด M เพื่อปิด/เปิดเสียง)">🔊</button>
+<div id="volPop" class="volpop hidden" role="dialog" aria-label="ระดับเสียงเพลง">
+  <div class="row" style="justify-content:space-between;margin:0"><b>🎵 เสียงเพลง</b><span class="label" id="volPct">80%</span></div>
+  <input type="range" id="volRange" min="0" max="100" step="1" value="80" aria-label="ระดับเสียงเพลง">
+  <div class="volquick"><button class="chip" data-vol="20">เบา</button><button class="chip" data-vol="50">กลาง</button><button class="chip" data-vol="80">ดัง</button><button class="chip" data-vol="100">สุด</button></div>
+  <button class="btn ghost small" id="volMute">🔇 ปิดเสียง</button>
+  <div class="label hidden" id="volNote">📱 บน iPhone/iPad: แตะปุ่ม ▶ เล่นเพลงก่อน 1 ครั้ง แถบนี้ถึงจะปรับเสียงได้ (หรือใช้ปุ่มเสียงข้างเครื่อง)</div>
+  <div class="label">กด M บนคีย์บอร์ดเพื่อปิด/เปิดเสียง</div>
+</div>
 <div class="wrap">
   <header>
     <h1>🎵 ทายเพลง<span id="catTitle">อนิเมะ</span></h1>
@@ -274,7 +289,7 @@
       <button class="chip" data-fmt="cover" id="fmtCover">🖼️ เลือกจากภาพปก ×1.2</button>
       <button class="chip" data-fmt="type">⌨️ พิมพ์ (ขึ้นเพลงตามคำ) ×1.5</button>
       <span style="flex:1"></span>
-      <span class="label">🔊</span><input type="range" id="vol" min="0" max="1" step="0.05" value="0.7">
+      <span class="label">🔊</span><input type="range" id="vol" min="0" max="100" step="1" value="80" aria-label="ระดับเสียงเพลง">
     </div>
     <div class="row"><button class="chip on" id="vizToggle">✨ ภาพเคลื่อนไหว: เปิด</button><span class="label">ภาพขยับตามเพลง และโชว์ภาพปก/ภาพอนิเมะตอนเฉลย</span></div>
   </div>
@@ -1053,7 +1068,7 @@ function playClip(){
   stopAudio();
   const dur = answered?30:CLUES[clueIdx];
   try{ audio.currentTime=0; }catch(e){}
-  audio.muted=false; audio.volume=+$("vol").value;
+  applyVolume();
   const p=audio.play();
   if(p&&p.catch) p.catch(err=>{ $("msg").textContent="เล่นเสียงไม่ได้ ("+err.name+") — กด ▶ อีกครั้ง"; });
   // stop by how much audio has ACTUALLY played (not wall-clock), so 0.1s is never silent
@@ -1293,7 +1308,7 @@ $("giveup").onclick=()=>{ if(!cur||!curInfo||answered) return; if(TA.on||gmode==
   const t=effTarget(cur); reveal(`<span class="bad">เฉลย</span>`+(t!=="title"&&curCorrect?` <span style="font-size:15px;color:var(--muted)">(${TLABEL[t]}: ${esc(curCorrect)})</span>`:"")); };
 $("submit").onclick=checkTyped;
 $("guess").addEventListener("keydown",e=>{if(e.key==="Enter")checkTyped()});
-$("vol").oninput=e=>audio.volume=+e.target.value; audio.volume=0.7;
+
 
 document.querySelectorAll("[data-diff]").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("[data-diff]").forEach(x=>x.classList.remove("on")); b.classList.add("on");
@@ -1775,7 +1790,7 @@ function hostStepDown(){   // another (newer) host is running the room
 // ---------- everyone (incl. host) ----------
 function mpStopAudio(){ cancelAnimationFrame(mpRaf); try{mpAudio.pause()}catch(e){} }
 function mpPlayFor(dur){
-  mpStopAudio(); try{mpAudio.currentTime=0}catch(e){} mpAudio.volume=+$("vol").value;
+  mpStopAudio(); try{mpAudio.currentTime=0}catch(e){} applyVolume();
   const p=mpAudio.play(); if(p&&p.catch) p.catch(()=>{ $("mpHint").textContent="🔇 เบราว์เซอร์บล็อกเสียง — แตะที่หน้าจอ 1 ครั้ง"; });
   const tick=()=>{ if(mpAudio.currentTime>=dur||mpAudio.ended){ mpAudio.pause(); return; } mpRaf=requestAnimationFrame(tick); };
   mpRaf=requestAnimationFrame(tick);
@@ -1911,6 +1926,40 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&MP.clien
   if(a&&a.code===h&&Date.now()-a.t<6*3600e3&&store.get("asq_name","")){ $("mpMsg").textContent="กำลังกลับเข้าห้องเดิม…"; mpEnter(h,false,{wasHost:!!a.host}); }   // refreshed tab: take the same seat back
   else $("mpMsg").textContent="ใส่ชื่อแล้วกด 'เข้าห้อง' ได้เลย"; })();
 
+// ================= VOLUME: one control for every screen, remembered between visits =================
+const VOL={v:Math.min(1,Math.max(0,+store.get("asq_vol",0.8))), muted:!!store.get("asq_mute",false), gain:new Map(), fixed:false};
+try{ const t=new Audio(); t.volume=0.5; VOL.fixed=Math.abs(t.volume-0.5)>0.01; }catch(e){}   // iPhone/iPad ignore the volume of an <audio> element
+const volLevel=()=>VOL.muted?0:VOL.v*VOL.v;   // squared: finer steps at the quiet end
+function applyVolume(){
+  const lv=volLevel();
+  [audio,mpAudio].forEach(el=>{ const g=VOL.gain.get(el);
+    if(g){ try{ el.volume=1; }catch(e){} el.muted=false; try{ g.gain.setTargetAtTime(lv,g.context.currentTime,0.03); }catch(e){ g.gain.value=lv; } }
+    else { try{ el.volume=lv; }catch(e){} el.muted=lv===0; } });
+  const pct=Math.round(VOL.v*100), off=VOL.muted||pct===0;
+  $("volBtn").textContent= off?"🔇":pct<34?"🔈":pct<67?"🔉":"🔊";
+  $("volBtn").classList.toggle("muted",off);
+  $("volMute").textContent= VOL.muted?"🔊 เปิดเสียง":"🔇 ปิดเสียง";
+  $("volRange").value=pct; $("vol").value=pct; $("volPct").textContent= VOL.muted?"ปิดเสียงอยู่":pct+"%";
+  $("volRange").style.setProperty("--p",pct+"%");
+  const el=!$("mpView").classList.contains("hidden")?mpAudio:audio;
+  $("volNote").classList.toggle("hidden",!(VOL.fixed&&!VOL.gain.get(el)));
+}
+function saveVolume(){ store.set("asq_vol",VOL.v); store.set("asq_mute",VOL.muted); }
+function setVolume(v){ VOL.v=Math.min(1,Math.max(0,v)); if(VOL.v>0) VOL.muted=false; applyVolume(); saveVolume(); }
+function toggleMute(){ VOL.muted=!VOL.muted; if(!VOL.muted&&VOL.v===0) VOL.v=0.5; applyVolume(); saveVolume(); }
+$("volRange").addEventListener("input",e=>setVolume(+e.target.value/100));
+$("vol").addEventListener("input",e=>setVolume(+e.target.value/100));
+$("volMute").onclick=toggleMute;
+$("volPop").addEventListener("click",e=>{ const b=e.target.closest("[data-vol]"); if(b) setVolume(+b.dataset.vol/100); });
+$("volBtn").onclick=e=>{ e.stopPropagation(); const open=$("volPop").classList.toggle("hidden")===false; $("volBtn").setAttribute("aria-expanded",open); if(open){ applyVolume(); $("volRange").focus({preventScroll:true}); } };
+document.addEventListener("click",e=>{ if(!$("volPop").classList.contains("hidden")&&!e.target.closest("#volPop,#volBtn")) $("volPop").classList.add("hidden"); });
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&!$("volPop").classList.contains("hidden")){ $("volPop").classList.add("hidden"); $("volBtn").focus(); return; }
+  const tag=(e.target&&e.target.tagName)||""; if(/INPUT|TEXTAREA|SELECT/.test(tag)&&e.target.id!=="volRange") return;
+  if((e.key==="m"||e.key==="M")&&!e.ctrlKey&&!e.metaKey&&!e.altKey){ toggleMute(); }   // M = mute / unmute
+});
+applyVolume();
+
 // ================= VISUALS: a stage that moves with the music, then big artwork once the answer is out =================
 // The bars read the real sound (Deezer and Apple both allow it). Audio is only routed through the analyser once the
 // browser's audio engine is confirmed running, so the music can never be silenced by the visuals.
@@ -1922,16 +1971,16 @@ const VIZ={on:store.get("asq_viz",true), ctx:null, an:new Map(), lv:new Float32A
   // safety net: if a clip host ever refuses to share its sound, play it the plain way (no moving bars) instead of failing
   a.addEventListener("error",()=>{ if(a.crossOrigin&&!VIZ.an.has(a)&&a.src&&!a.src.startsWith("data:")){ a.removeAttribute("crossorigin"); const u=a.src; a.src=u; try{a.load()}catch(e){} } }); });
 function vizWake(){
-  if(!VIZ.on) return;
+  if(!VIZ.on&&!VOL.fixed) return;
   try{
     if(!VIZ.ctx){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; VIZ.ctx=new AC(); VIZ.ctx.onstatechange=vizRouteAll; }
     if(VIZ.ctx.state!=="running") VIZ.ctx.resume().then(vizRouteAll).catch(()=>{}); else vizRouteAll();
   }catch(e){}
 }
 function vizRoute(el){
-  if(!VIZ.on||!VIZ.ctx||VIZ.ctx.state!=="running"||VIZ.an.has(el)||!el.crossOrigin||!el._ok) return;
-  try{ const src=VIZ.ctx.createMediaElementSource(el), an=VIZ.ctx.createAnalyser(); an.fftSize=256; an.smoothingTimeConstant=0.75;
-    src.connect(an); an.connect(VIZ.ctx.destination); VIZ.an.set(el,an); }catch(e){}
+  if((!VIZ.on&&!VOL.fixed)||!VIZ.ctx||VIZ.ctx.state!=="running"||VIZ.an.has(el)||!el.crossOrigin||!el._ok) return;
+  try{ const src=VIZ.ctx.createMediaElementSource(el), an=VIZ.ctx.createAnalyser(), g=VIZ.ctx.createGain(); an.fftSize=256; an.smoothingTimeConstant=0.75;
+    src.connect(an); an.connect(g); g.connect(VIZ.ctx.destination); VIZ.an.set(el,an); VOL.gain.set(el,g); applyVolume(); }catch(e){}
 }
 function vizRouteAll(){ [audio,mpAudio].forEach(vizRoute); }
 document.addEventListener("pointerdown",vizWake,true); document.addEventListener("keydown",vizWake,true);
