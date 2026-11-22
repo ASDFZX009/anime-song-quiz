@@ -786,6 +786,35 @@ function jsonp(url){
   });
 }
 const norm = s => (s||"").toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu,"");
+// ----- typed-answer matching: forgiving on small typos, strict on fragments and pasted lists -----
+const loose = s => s.replace(/ou/g,"o").replace(/uu/g,"u").replace(/oo/g,"o").replace(/(.)\1+/g,"$1");   // shinzou=shinzo, silhouette=silhouete
+function editDist(a,b,max){   // Damerau (adjacent swap = 1 edit), gives up past max
+  if(Math.abs(a.length-b.length)>max) return max+1;
+  let pp=null, p=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){ const c=[i]; let best=i;
+    for(let j=1;j<=b.length;j++){ let v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));
+      if(pp&&i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1]) v=Math.min(v,pp[j-2]+1);
+      c[j]=v; if(v<best) best=v; }
+    if(best>max) return max+1; pp=p; p=c; }
+  return p[b.length];
+}
+function nameVariants(x){ const out=[x]; const cut=x.replace(/\s*(\(|\[|（|【|~|〜|～|\s-\s|\sfeat\.|\sft\.).*$/i,"").trim(); if(cut&&cut!==x&&norm(cut).length>=2) out.push(cut); return out; }
+function nearlySame(g,n){ if(g===n) return true; const a=loose(g), b=loose(n); if(a===b) return true;
+  const L=b.length, tol= L<=4?0 : L<=8?1 : L<=15?2 : 3; return tol>0 && editDist(a,b,tol)<=tol; }
+function matchGuess(guess, accepted, extras, others){   // extras: names (e.g. the artist) that may be typed alongside the answer; others: Set of norm()ed names of OTHER answers
+  const g=norm(guess); if(!g) return false;
+  const ex=(extras||[]).filter(Boolean).map(norm).filter(x=>x.length>=2);
+  const ns=[]; accepted.forEach(raw=>{ if(raw) nameVariants(String(raw)).forEach(v=>{ const n=norm(v); if(n) ns.push(n); }); });
+  if(ns.includes(g)) return true;
+  if(others&&others.has(g)) return false;   // typed the exact name of a different song: "Loser" is not "Closer"
+  for(const n of ns){
+    if(nearlySame(g,n)) return true;
+    if(g.includes(n)){ const rest=g.replace(n,""); if(ex.some(a=>nearlySame(rest,a))) return true; }   // "idol yoasobi" ok, a pasted list of titles is not
+    if(g.length>=4 && n.startsWith(g) && g.length>=0.75*n.length) return true;   // most of the title, from its start
+  }
+  return false;
+}
+function nameSet(list,key){ const S=new Set(); list.forEach(x=>{ const v=x&&x[key]; if(v) nameVariants(String(v)).forEach(y=>{ const n=norm(y); if(n) S.add(n); }); }); return S; }
 const BAD=/(live|instrumental|inst\.|off ?vocal|karaoke|カラオケ|オルゴール|music ?box|orgel|cover|remix|acoustic|tv ?size|tvサイズ|short|piano|ピアノ|tour|dome|ライブ|歌ってみた|first take|tribute|8-bit|originally performed|emulation)/i;
 // Apple allows ~20 searches/minute per IP; going faster gets you blocked for minutes.
 // So every search goes through ONE queue: 1 request / 3.1s, with wait-and-retry when blocked.
@@ -1156,7 +1185,7 @@ function checkTyped(){
   else if(t==="artist") acc=[cur.artist,cur.jaArtist,curInfo&&curInfo.artistName];
   else acc=[ansVal(cur,"year")];
   const ok= t==="year" ? acc.some(x=>x&&norm(x)===g) :
-    acc.filter(Boolean).some(x=>{const n=norm(x);return n&&(n===g||(g.length>=4&&(n.includes(g)||g.includes(n))))});
+    matchGuess($("guess").value, acc, t==="title"?[cur.artist,cur.jaArtist,curInfo&&curInfo.artistName]:[], nameSet(ALL.concat(pool()), t==="title"?"title":t==="anime"?"anime":"artist"));
   answer(ok);
 }
 
@@ -1200,6 +1229,7 @@ function reveal(verdict){
 $("play").onclick=()=>{ if(!curInfo) newRound(); else playClip(); };
 $("next").onclick=()=>{
   if(gmode==="surv"){ if(SV.over){ survStart(); return; } if(curInfo&&!answered){ answer(false); return; } }
+  if(!TA.on&&curInfo&&!answered&&curCorrect!==null){ stats.rounds++; stats.streak=0; renderStats(); }   // skipping a song counts as a miss
   newRound();
 };
 $("giveup").onclick=()=>{ if(!cur||!curInfo||answered) return; if(TA.on||gmode==="surv"){ answer(false); return; } stats.rounds++; stats.streak=0; renderStats();
@@ -1615,8 +1645,10 @@ function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.get
 function hashStr(x){ let h=2166136261; for(const ch of x){ h^=ch.codePointAt(0); h=Math.imul(h,16777619)>>>0; } return h; }
 function dailyCat(){ return ["anime","thai","inter","kpop","mix"].includes(cat)?cat:"mix"; }
 function dailyPick(day,c){
-  const L=listFor(c).filter(x=>x.diff!=="hard").sort((a,b)=>(a.title+a.artist).localeCompare(b.title+b.artist));
-  return L[hashStr(day+"|"+c)%L.length];
+  const L=listFor(c).filter(x=>x.diff!=="hard");
+  if(day<"2026-11-23"){ L.sort((a,b)=>(a.title+a.artist).localeCompare(b.title+b.artist)); return L[hashStr(day+"|"+c)%L.length]; }   // old rule, kept so today's song doesn't change
+  // each song gets its own score for the day; adding songs later rarely changes the pick
+  let best=null, bh=Infinity; for(const x of L){ const h=hashStr(day+"|"+c+"|"+x.title+"|"+x.artist); if(h<bh){ bh=h; best=x; } } return best;
 }
 async function dailyOpen(){
   const day=todayStr(), c=dailyCat(); const song=dailyPick(day,c);
@@ -1649,9 +1681,7 @@ function dailyPlay(){
 function dailyGuess(skip){
   if(!D||D.done||!D.info) return;
   const g=$("dGuess").value.trim(); if(!skip&&!g) return;
-  const acc=[D.song.title,D.song.jaTitle,D.info.track].filter(Boolean).map(norm);
-  const ng=norm(g);
-  const ok=!skip && acc.some(a=>a&&(a===ng||(ng.length>=4&&(a.includes(ng)||ng.includes(a)))));
+  const ok=!skip && matchGuess(g,[D.song.title,D.song.jaTitle,D.info.track],[D.song.artist,D.info.artistName],nameSet(listFor(D.c),"title"));
   D.res.push({r:skip?"skip":(ok?"ok":"bad"),g}); $("dGuess").value="";
   if(ok){ D.done=true; D.win=true; } else { D.step++; if(D.step>=DSTEPS.length){ D.done=true; D.win=false; D.step=DSTEPS.length-1; } }
   const all=store.get("asq_daily",{}); all[D.day+"|"+D.c]={res:D.res,done:D.done,win:D.win}; store.set("asq_daily",all);
