@@ -1584,7 +1584,7 @@ function hostTick(){
     if(id===MP.id){ p.away=false; continue; }
     const seen=MP.seen[id]||0, away=now-seen>AWAY_MS;
     if(away!==!!p.away){ p.away=away; if(away) mpToast(`📴 ${p.name} หลุดการเชื่อมต่อ`); }
-    if(away && MP.state!=="game" && now-seen>45000){ MP.gone[id]={score:p.score,pub:p.pub}; delete MP.players[id]; }
+    if(away && MP.state==="lobby" && now-seen>45000){   /* keep them on the scoreboard during and after a game */ MP.gone[id]={score:p.score,pub:p.pub}; delete MP.players[id]; }
   }
   hostCheckDone(); hostBroadcastLobby();
 }
